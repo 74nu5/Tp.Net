@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  labs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # Starting points must compile; their tests are expected to fail until the exercises are done.
+      - name: Build starting points
+        run: |
+          shopt -s nullglob
+          for sln in tp-*/depart/*.slnx; do
+            echo "::group::$sln"
+            dotnet build "$sln"
+            echo "::endgroup::"
+          done
+
+      # Reference solutions must be green.
+      - name: Test solutions
+        run: |
+          shopt -s nullglob
+          for sln in tp-*/solution/*.slnx; do
+            echo "::group::$sln"
+            dotnet test --solution "$sln"
+            echo "::endgroup::"
+          done
