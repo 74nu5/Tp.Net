@@ -230,76 +230,266 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
   "config": {
     "title": "Parcours .NET de l'alternant",
     "startDate": "2026-10-19",
-    "weekdays": [1, 2, 3, 4, 5],
-    "halves": [0],
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "halves": [
+      0
+    ],
     "phase2Start": "",
     "blocked": []
   },
   "modules": [
-    { "id": "m1", "phase": "dotnet", "order": 1, "title": "Semaine d'arrivée : une demi-journée de TP par matinée" },
-    { "id": "m2", "phase": "dotnet", "order": 2, "title": "Bonus, si le temps le permet" },
-    { "id": "m3", "phase": "3b", "order": 1, "title": "À cadrer avec l'équipe" }
+    {
+      "id": "m1",
+      "phase": "dotnet",
+      "order": 1,
+      "title": "Semaine d'arrivée : une demi-journée de TP par matinée"
+    },
+    {
+      "id": "m2",
+      "phase": "dotnet",
+      "order": 2,
+      "title": "Bonus, si le temps le permet"
+    },
+    {
+      "id": "m3",
+      "phase": "3b",
+      "order": 1,
+      "title": "À cadrer avec l'équipe"
+    }
   ],
   "tps": [
-    { "id": "t01", "moduleId": "m1", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
+    {
+      "id": "t01",
+      "moduleId": "m1",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "Tour de .NET et C# express",
       "summary": "L'écosystème, la CLI, les dépendances et l'essentiel du langage, en katas courts. Pas de théorie longue : on lit, on tape, on lance.",
-      "objectives": ["Installer le SDK, dotnet new console, lire le .csproj, dotnet run, puis un script sans projet avec dotnet run hello.cs (15 min)", "Ajouter un package NuGet, centraliser sa version dans Directory.Packages.props (15 min)", "Modéliser un petit domaine avec record, class et struct ; activer la nullabilité et corriger les avertissements (30 min)", "Pattern matching et switch expression sur ce domaine (20 min)", "LINQ sur une liste de commandes : filtrer, grouper, agréger (40 min)", "async/await : appeler 3 URL en parallèle avec HttpClient et Task.WhenAll, avec annulation (30 min)", "Écrire 3 tests xUnit sur le code de la matinée (30 min)"],
-      "notions": ["SDK et runtime", "TFM net10.0", "NuGet", "Central Package Management", "record / class / struct", "nullable reference types", "pattern matching", "LINQ", "Task et async/await", "xUnit"],
+      "objectives": [
+        "Installer le SDK, dotnet new console, lire le .csproj, dotnet run, puis un script sans projet avec dotnet run hello.cs (15 min)",
+        "Ajouter un package NuGet, centraliser sa version dans Directory.Packages.props (15 min)",
+        "Modéliser un petit domaine avec record, class et struct ; activer la nullabilité et corriger les avertissements (30 min)",
+        "Pattern matching et switch expression sur ce domaine (20 min)",
+        "LINQ sur une liste de commandes : filtrer, grouper, agréger (40 min)",
+        "async/await : appeler 3 URL en parallèle avec HttpClient et Task.WhenAll, avec annulation (30 min)",
+        "Écrire 3 tests xUnit sur le code de la matinée (30 min)"
+      ],
+      "notions": [
+        "SDK et runtime",
+        "TFM net10.0",
+        "NuGet",
+        "Central Package Management",
+        "record / class / struct",
+        "nullable reference types",
+        "pattern matching",
+        "LINQ",
+        "Task et async/await",
+        "xUnit"
+      ],
       "bridge": "dotnet ≈ cargo ou mvn, NuGet ≈ crates.io / Maven Central, LINQ ≈ Java Streams ou itérateurs Rust, Task ≈ Promise JS. Les nullable reference types sont une analyse à la compilation, moins stricte qu'Option<T>.",
       "start": "dotnet new console -n Katas",
       "deliverable": "Un dépôt « katas » avec un fichier par exercice et des tests au vert.",
-      "notes": "" },
-    { "id": "t02", "moduleId": "m1", "order": 2, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Serveur web : ASP.NET Core, injection de dépendances et données",
-      "summary": "Comment tourne une application web .NET : host, injection de dépendances, configuration, Minimal APIs et EF Core.",
-      "objectives": ["Lire le Program.cs d'un projet webapi et ajouter un middleware qui journalise chaque requête (20 min)", "Enregistrer un service en Singleton, Scoped et Transient et observer la différence (20 min)", "Lier une section d'appsettings.json à une classe d'options, la surcharger par variable d'environnement et user-secrets (20 min)", "Écrire une Minimal API CRUD de tickets en mémoire, avec TypedResults et validation (45 min)", "Explorer l'API via OpenAPI et Scalar (10 min)", "Remplacer la liste en mémoire par EF Core + SQLite, créer une migration, lire le SQL généré dans les logs (50 min)", "Un test d'intégration avec WebApplicationFactory (20 min)"],
-      "notions": ["Generic Host", "Kestrel", "middlewares", "injection de dépendances", "IConfiguration / IOptions", "ILogger", "Minimal APIs", "ProblemDetails", "OpenAPI", "EF Core", "migrations"],
-      "bridge": "ASP.NET Core ≈ Spring Boot, mais tout se déclare dans Program.cs. Minimal APIs ≈ Express ou Axum. EF Core ≈ JPA/Hibernate, migrations ≈ Flyway.",
-      "start": "dotnet new webapi -n Tickets.Api",
-      "deliverable": "Une API « tickets » persistée en SQLite, réutilisée par les demi-journées Blazor.",
-      "notes": "Les tickets font écho aux anomalies qu'il traitera l'après-midi." },
-    { "id": "t03", "moduleId": "m1", "order": 3, "days": 0.5, "status": "cadrer", "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "t02",
+      "moduleId": "m1",
+      "order": 2,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Serveur web et Entity Framework Core",
+      "summary": "Comment tourne une application web .NET (host, injection de dépendances, configuration, Minimal APIs), puis la persistance avec EF Core : la moitié de la séance y est consacrée.",
+      "objectives": [
+        "Lire le Program.cs d'un projet webapi et ajouter un middleware qui journalise chaque requête (15 min)",
+        "Enregistrer un service en Singleton, Scoped et Transient et observer la différence (15 min)",
+        "Lier une section d'appsettings.json à une classe d'options, la surcharger par variable d'environnement (15 min)",
+        "Écrire une Minimal API CRUD de tickets en mémoire, avec TypedResults, validation et OpenAPI (35 min)",
+        "EF Core : DbContext, entités Ticket et Commentaire (relation 1-n), SQLite, première migration et mise à jour du schéma (35 min)",
+        "EF Core : requêtes LINQ et SQL généré dans les logs ; Include, projection, AsNoTracking ; repérer et corriger un N+1 (30 min)",
+        "EF Core : écritures, suivi des modifications et SaveChanges, une migration qui ajoute une colonne (20 min)",
+        "Un test d'intégration de l'API avec WebApplicationFactory (15 min)"
+      ],
+      "notions": [
+        "Generic Host",
+        "Kestrel",
+        "middlewares",
+        "injection de dépendances",
+        "IConfiguration / IOptions",
+        "Minimal APIs",
+        "OpenAPI",
+        "DbContext",
+        "migrations",
+        "LINQ to Entities",
+        "Include et projections",
+        "change tracking",
+        "N+1"
+      ],
+      "bridge": "ASP.NET Core ≈ Spring Boot, tout se déclare dans Program.cs ; Minimal APIs ≈ Express ou Axum. EF Core ≈ JPA/Hibernate ; les migrations ≈ Flyway/Liquibase ou celles de diesel/sqlx ; LINQ to Entities ≈ Criteria API, typé à la compilation.",
+      "start": "dotnet new webapi -n Tickets.Api puis dotnet tool install --global dotnet-ef",
+      "deliverable": "Une API « tickets » persistée par EF Core, avec deux migrations, réutilisée par les demi-journées Blazor.",
+      "notes": "SQLite pour aller vite ; passer sur le SGBD de nos applis (SQL Server ou PostgreSQL) si on préfère coller au réel. Les tickets font écho aux anomalies qu'il traitera l'après-midi."
+    },
+    {
+      "id": "t03",
+      "moduleId": "m1",
+      "order": 3,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "Blazor : composants, modes de rendu et formulaires",
       "summary": "Le modèle de composants Razor et le choix du mode de rendu, puis un premier écran utile branché sur l'API.",
-      "objectives": ["Créer une Blazor Web App et lire sa structure : App.razor, Routes, layouts (15 min)", "Composant paramétré : [Parameter], EventCallback, RenderFragment (30 min)", "Charger les tickets de l'API dans OnInitializedAsync (30 min)", "Afficher la même page en Static SSR, Interactive Server et WebAssembly ; observer le réseau et SignalR dans les devtools (40 min)", "Formulaire de création avec EditForm et validation DataAnnotations (30 min)", "Liste paginée et triée avec QuickGrid (20 min)", "CSS isolation et un appel JavaScript via IJSRuntime (15 min)"],
-      "notions": [".razor et @code", "[Parameter]", "EventCallback", "RenderFragment", "cycle de vie", "Static SSR / Interactive Server / WebAssembly / Auto", "prérendu", "EditForm", "QuickGrid", "JS interop"],
+      "objectives": [
+        "Créer une Blazor Web App et lire sa structure : App.razor, Routes, layouts (15 min)",
+        "Composant paramétré : [Parameter], EventCallback, RenderFragment (30 min)",
+        "Charger les tickets de l'API dans OnInitializedAsync (30 min)",
+        "Afficher la même page en Static SSR, Interactive Server et WebAssembly ; observer le réseau et SignalR dans les devtools (40 min)",
+        "Formulaire de création avec EditForm et validation DataAnnotations (30 min)",
+        "Liste paginée et triée avec QuickGrid (20 min)",
+        "CSS isolation et un appel JavaScript via IJSRuntime (15 min)"
+      ],
+      "notions": [
+        ".razor et @code",
+        "[Parameter]",
+        "EventCallback",
+        "RenderFragment",
+        "cycle de vie",
+        "Static SSR / Interactive Server / WebAssembly / Auto",
+        "prérendu",
+        "EditForm",
+        "QuickGrid",
+        "JS interop"
+      ],
       "bridge": "Composants ≈ React ou Vue, en C#. Interactive Server garde l'état côté serveur via SignalR ; WebAssembly exécute .NET dans le navigateur (comme Rust compilé en wasm).",
       "start": "dotnet new blazor --interactivity Auto -n Tickets.Web",
       "deliverable": "Un front qui liste et crée des tickets via l'API, avec un mot sur le mode de rendu retenu et pourquoi.",
-      "notes": "" },
-    { "id": "t04", "moduleId": "m1", "order": 4, "days": 0.5, "status": "cadrer", "owner": "",
+      "notes": ""
+    },
+    {
+      "id": "t04",
+      "moduleId": "m1",
+      "order": 4,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "Blazor : authentification, état et composants réutilisables",
       "summary": "Sécuriser l'application de bout en bout et découvrir comment on structure du Blazor qui dure.",
-      "objectives": ["Authentification vs autorisation : schémas, ClaimsPrincipal, policies (15 min)", "Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE (30 min)", "Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] (40 min)", "Partager l'état entre composants : cascading value et service scoped (20 min)", "Éviter le double chargement au prérendu avec [PersistentState] (15 min)", "Extraire un composant dans une Razor Class Library (20 min)", "Tester ce composant avec bUnit (30 min)"],
-      "notions": ["authentication schemes", "JWT Bearer", "OpenID Connect (aperçu)", "policies", "AuthenticationStateProvider", "AuthorizeView", "state container", "[PersistentState]", "Razor Class Library", "bUnit"],
+      "objectives": [
+        "Authentification vs autorisation : schémas, ClaimsPrincipal, policies (15 min)",
+        "Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE (30 min)",
+        "Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] (40 min)",
+        "Partager l'état entre composants : cascading value et service scoped (20 min)",
+        "Éviter le double chargement au prérendu avec [PersistentState] (15 min)",
+        "Extraire un composant dans une Razor Class Library (20 min)",
+        "Tester ce composant avec bUnit (30 min)"
+      ],
+      "notions": [
+        "authentication schemes",
+        "JWT Bearer",
+        "OpenID Connect (aperçu)",
+        "policies",
+        "AuthenticationStateProvider",
+        "AuthorizeView",
+        "state container",
+        "[PersistentState]",
+        "Razor Class Library",
+        "bUnit"
+      ],
       "bridge": "≈ Spring Security en plus explicite. Un state container ≈ un store Redux ou Pinia. Une Razor Class Library ≈ une librairie de composants npm distribuée en package NuGet.",
       "start": "Solution Tickets des demi-journées précédentes",
       "deliverable": "L'application tickets authentifiée, avec un composant partagé testé.",
-      "notes": "Aligner l'exemple d'authentification sur le fournisseur d'identité de nos applis." },
-    { "id": "t05", "moduleId": "m2", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
+      "notes": "Aligner l'exemple d'authentification sur le fournisseur d'identité de nos applis."
+    },
+    {
+      "id": "t05",
+      "moduleId": "m2",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "S'orienter et déboguer dans une appli existante",
       "summary": "Les outils pour diagnostiquer vite, directement utiles pour la correction d'anomalies, et un coup d'œil à ce qu'apporte .NET 11.",
-      "objectives": ["Débogueur : points d'arrêt conditionnels, espions, Hot Reload (30 min)", "Lire une exception et une stack trace .NET, async comprise (15 min)", "Régler les niveaux de log par catégorie dans appsettings.json (15 min)", "Lancer une solution avec Aspire et suivre une requête dans le tableau de bord (traces, logs) (40 min)", "Aperçu de .NET 11 et C# 15 : union types, et où suivre les nouveautés (20 min)", "Corriger 3 anomalies semées dans une appli d'exemple (60 min)"],
-      "notions": ["débogueur", "Hot Reload", "stack traces", "logging structuré", "Aspire", "OpenTelemetry", "dotnet-counters", "union types (C# 15)"],
+      "objectives": [
+        "Débogueur : points d'arrêt conditionnels, espions, Hot Reload (30 min)",
+        "Lire une exception et une stack trace .NET, async comprise (15 min)",
+        "Régler les niveaux de log par catégorie dans appsettings.json (15 min)",
+        "Lancer une solution avec Aspire et suivre une requête dans le tableau de bord (traces, logs) (40 min)",
+        "Aperçu de .NET 11 et C# 15 : union types, et où suivre les nouveautés (20 min)",
+        "Corriger 3 anomalies semées dans une appli d'exemple, dont une liée à EF Core (N+1 ou suivi de modifications) (60 min)"
+      ],
+      "notions": [
+        "débogueur",
+        "Hot Reload",
+        "stack traces",
+        "logging structuré",
+        "Aspire",
+        "OpenTelemetry",
+        "dotnet-counters",
+        "union types (C# 15)",
+        "logs SQL d'EF Core"
+      ],
       "bridge": "Aspire ≈ un docker-compose piloté en C#, avec un tableau de bord de traces intégré.",
       "start": "dotnet new aspire-starter",
       "deliverable": "Trois anomalies corrigées, chacune avec sa cause expliquée en une phrase.",
-      "notes": ".NET 11 sort en novembre 2026 : vérifier l'état des union types au moment de rédiger." },
-    { "id": "t06", "moduleId": "m3", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
+      "notes": ".NET 11 sort en novembre 2026 : vérifier l'état des union types au moment de rédiger."
+    },
+    {
+      "id": "t06",
+      "moduleId": "m3",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "Nos conventions et notre architecture",
       "summary": "Comment sont organisées nos solutions et quelles règles de code on applique.",
-      "objectives": ["Naviguer dans une solution de référence", "Appliquer notre .editorconfig et nos analyzers", "Préparer une PR conforme à notre checklist de revue"],
-      "notions": ["structure de solution", "conventions de nommage", ".editorconfig", "analyzers"],
-      "bridge": "", "start": "Projet de référence à choisir", "deliverable": "",
-      "notes": "Dans un second temps, à cadrer avec l'équipe." },
-    { "id": "t07", "moduleId": "m3", "order": 2, "days": 0.5, "status": "cadrer", "owner": "",
+      "objectives": [
+        "Naviguer dans une solution de référence",
+        "Appliquer notre .editorconfig et nos analyzers",
+        "Préparer une PR conforme à notre checklist de revue"
+      ],
+      "notions": [
+        "structure de solution",
+        "conventions de nommage",
+        ".editorconfig",
+        "analyzers"
+      ],
+      "bridge": "",
+      "start": "Projet de référence à choisir",
+      "deliverable": "",
+      "notes": "Dans un second temps, à cadrer avec l'équipe."
+    },
+    {
+      "id": "t07",
+      "moduleId": "m3",
+      "order": 2,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
       "title": "Notre façon de livrer et nos composants Blazor",
       "summary": "Du ticket à la mise en production, et construire nos écrans avec notre bibliothèque de composants.",
-      "objectives": ["Suivre notre modèle de branches, de PR et de CI/CD", "Utiliser notre bibliothèque de composants Blazor et ses jetons de design"],
-      "notions": ["Git", "pull requests", "pipelines", "design system"],
-      "bridge": "", "start": "", "deliverable": "",
-      "notes": "Dans un second temps. Bibliothèque de composants : Ustilz.UI.Blazor si c'est bien notre référence, à confirmer." }
+      "objectives": [
+        "Suivre notre modèle de branches, de PR et de CI/CD",
+        "Utiliser notre bibliothèque de composants Blazor et ses jetons de design"
+      ],
+      "notions": [
+        "Git",
+        "pull requests",
+        "pipelines",
+        "design system"
+      ],
+      "bridge": "",
+      "start": "",
+      "deliverable": "",
+      "notes": "Dans un second temps. Bibliothèque de composants : Ustilz.UI.Blazor si c'est bien notre référence, à confirmer."
+    }
   ]
 }
 </script>
