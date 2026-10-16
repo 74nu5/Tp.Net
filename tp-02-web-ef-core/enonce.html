@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP-02 · Serveur web et EF Core</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/enonce.css">
+</head>
+<body data-tp="tp-02" data-solution="depart/Tickets.slnx">
+<div class="page">
+
+  <aside class="side" aria-label="Sommaire du TP">
+    <a class="home" href="../index.html">← Parcours .NET</a>
+    <div class="panel" id="progress"></div>
+    <div class="panel compare-picker"></div>
+    <nav class="panel" id="toc" aria-label="Exercices"></nav>
+    <div id="side-actions"></div>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">TP-02 · mardi 20 octobre, matin · environ 3 h</div>
+      <h1>Serveur web et Entity Framework Core</h1>
+      <p>Comment tourne une application web .NET, du démarrage jusqu'à la base de données. Vous construisez une petite API de tickets : d'abord en mémoire, puis branchée sur SQL Server avec Entity Framework Core, qui occupe la moitié de la matinée. Cette API servira de socle aux deux demi-journées Blazor.</p>
+      <p class="muted">Cochez « Terminé » à la fin de chaque exercice ; le chrono est facultatif. Tout reste dans ce navigateur.</p>
+      <p>Les exemples de code montrent le C#, et à côté le même principe dans le langage de votre choix :</p>
+      <div class="compare-picker"></div>
+    </header>
+
+    <div class="panel">
+      <h2>Avant de commencer</h2>
+      <ol>
+        <li><strong>SQL Server</strong> doit tourner sur votre poste. Connectez-vous-y une fois avec SSMS et notez le nom du serveur : <code>localhost</code>, <code>.\SQLEXPRESS</code> ou <code>(localdb)\MSSQLLocalDB</code> selon l'installation.</li>
+        <li>Installez l'outil EF Core : <code>dotnet tool install --global dotnet-ef</code>.</li>
+        <li>Ouvrez <code>depart/Tickets.slnx</code> dans votre IDE.</li>
+        <li><strong>Les tests ont leur propre base</strong>, <code>TicketsTests</code>, qu'ils créent et suppriment eux-mêmes. Leur chaîne de connexion est dans <code>tests/Tickets.Api.Tests/testsettings.json</code> :
+          <pre><code class="language-json">"TicketsTests": "Server=localhost;Database=TicketsTests;Trusted_Connection=True;TrustServerCertificate=True"</code></pre>
+          Adaptez <code>Server=</code> si votre instance a un autre nom. Les exercices 1 à 4 n'ont pas besoin de la base ; à partir du 5, oui.</li>
+        <li>Lancez tous les tests une première fois, depuis le dossier <code>tp-02-web-ef-core/</code> :
+          <pre><code class="language-bash">dotnet test --solution depart/Tickets.slnx</code></pre>
+          Une trentaine de tests échouent : c'est le travail de la matinée.</li>
+        <li>Pour lancer l'API : <code>dotnet run --project depart/src/Tickets.Api</code>, puis ouvrez <code>http://localhost:5080</code>.</li>
+      </ol>
+      <pre><code class="language-plaintext">depart/src/Tickets.Api/
+├─ Program.cs                  services, pipeline et routes : le point d'entrée
+├─ Diagnostics/                middleware (ex. 1) et classes de durée de vie (ex. 2)
+├─ Settings/TicketsOptions.cs  la configuration typée (ex. 3)
+├─ Contracts/                  ce que l'API reçoit et renvoie (ex. 4)
+├─ Endpoints/TicketEndpoints.cs  les routes /tickets (ex. 4 et 7)
+├─ Domain/Ticket.cs            les entités Ticket et Comment
+└─ Data/                       le dépôt en mémoire fourni, le DbContext et le dépôt EF (ex. 5 à 7)</code></pre>
+    </div>
+
+    <!-- ============================================================ 1 -->
+    <section class="exercise" id="ex1" data-minutes="15" data-tests="Tickets.Api.Tests.Exercise01">
+      <h2>Program.cs et un premier middleware</h2>
+      <p>Ouvrez <code>Program.cs</code>. Il a trois parties, dans cet ordre :</p>
+      <ol>
+        <li><strong>les services</strong> (<code>builder.Services.Add…</code>) : tout ce qui pourra être injecté ;</li>
+        <li><strong>le pipeline</strong> (<code>app.Use…</code>) : les middlewares que traverse chaque requête, dans l'ordre de déclaration ;</li>
+        <li><strong>les routes</strong> (<code>app.Map…</code>) : le code qui répond.</li>
+      </ol>
+      <p>Complétez <code>Diagnostics/RequestTimingMiddleware.cs</code> : mesurez la durée de chaque requête, ajoutez-la à la réponse dans l'en-tête <code>X-Request-Duration-Ms</code>, et journalisez une ligne avec la méthode, le chemin, le code de statut et la durée. Branchez-le ensuite <strong>tout au début</strong> du pipeline.</p>
+      <p>Lancez l'API, appelez <code>curl -i http://localhost:5080/</code> et regardez l'en-tête et la ligne de log dans la console.</p>
+      <div class="hints">
+        <details class="hint"><summary>mesurer</summary><p><code>var stopwatch = Stopwatch.StartNew();</code> avant <code>await next(context)</code>, puis <code>stopwatch.ElapsedMilliseconds</code>.</p></details>
+        <details class="hint"><summary>l'en-tête</summary><p>Une fois la réponse commencée, les en-têtes sont partis : on ne peut plus les modifier après <code>await next(context)</code>. Enregistrez plutôt un rappel avec <code>context.Response.OnStarting(() =&gt; { …; return Task.CompletedTask; })</code>.</p></details>
+        <details class="hint"><summary>le log et l'enregistrement</summary><p>Un modèle de message, pas une interpolation : <code>_logger.LogInformation("{Method} {Path} answered {StatusCode} in {ElapsedMs} ms", …)</code>. Chaque <code>{…}</code> devient un champ interrogeable. Enregistrement : <code>app.UseMiddleware&lt;RequestTimingMiddleware&gt;();</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Un middleware ≈ un <code>Filter</code> de servlet, ou <code>OncePerRequestFilter</code> en Spring. L'ordre d'enregistrement dans <code>Program.cs</code> remplace <code>@Order</code>.</p>
+        <p data-lang="rust">≈ <code>axum::middleware::from_fn</code> ou une <code>Layer</code> de tower : une fonction qui reçoit la requête et l'étape suivante.</p>
+        <p data-lang="python">≈ <code>@app.middleware("http")</code> de FastAPI ou un middleware ASGI : on reçoit la requête et <code>call_next</code>.</p>
+        <p data-lang="javascript">≈ un middleware Express : <code>next</code> est ici un délégué qu'on <code>await</code>, ce qui permet d'agir avant et après la suite du pipeline.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public sealed class TimingMiddleware(RequestDelegate next, ILogger&lt;TimingMiddleware&gt; logger)
+{
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        await next(context);
+        logger.LogInformation("{Path} answered in {ElapsedMs} ms",
+            context.Request.Path, stopwatch.ElapsedMilliseconds);
+    }
+}
+
+app.UseMiddleware&lt;TimingMiddleware&gt;();</code></pre>
+          <pre data-lang="java"><code class="language-java">@Component
+public class TimingFilter extends OncePerRequestFilter {
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        long start = System.nanoTime();
+        chain.doFilter(request, response);
+        log.info("{} answered in {} ms", request.getRequestURI(),
+                 (System.nanoTime() - start) / 1_000_000);
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">async fn timing(request: Request, next: Next) -&gt; Response {
+    let path = request.uri().path().to_owned();
+    let start = Instant::now();
+    let response = next.run(request).await;
+    tracing::info!(%path, elapsed_ms = start.elapsed().as_millis() as u64, "answered");
+    response
+}
+
+let app = Router::new().route("/", get(root)).layer(middleware::from_fn(timing));</code></pre>
+          <pre data-lang="python"><code class="language-python">@app.middleware("http")
+async def timing(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed_ms = int((time.perf_counter() - start) * 1000)
+    logger.info("%s answered in %d ms", request.url.path, elapsed_ms)
+    return response</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">app.use((req, res, next) =&gt; {
+  const start = performance.now();
+  res.on("finish", () =&gt;
+    console.log(`${req.path} answered in ${Math.round(performance.now() - start)} ms`));
+  next();
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="exercise" id="ex2" data-minutes="15" data-tests="Tickets.Api.Tests.Exercise02">
+      <h2>Injection de dépendances et durées de vie</h2>
+      <p>Le conteneur d'injection de dépendances est intégré : on enregistre un service dans <code>builder.Services</code>, et ASP.NET Core le fournit à qui le demande, en paramètre de constructeur ou de route. Chaque enregistrement choisit une <strong>durée de vie</strong> :</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Durée de vie</th><th>Une instance…</th><th>Exemple typique</th></tr></thead>
+        <tbody>
+          <tr><td><code>AddSingleton</code></td><td>pour toute l'application</td><td>cache, horloge, client HTTP partagé</td></tr>
+          <tr><td><code>AddScoped</code></td><td>par requête HTTP</td><td><code>DbContext</code>, unité de travail</td></tr>
+          <tr><td><code>AddTransient</code></td><td>à chaque fois qu'on la demande</td><td>petit objet léger sans état</td></tr>
+        </tbody>
+      </table></div>
+      <p><code>Diagnostics/Operations.cs</code> définit trois classes identiques, qui tirent chacune un identifiant au hasard à leur création. Enregistrez <code>SingletonOperation</code>, <code>ScopedOperation</code> et <code>TransientOperation</code> avec la durée de vie que leur nom indique. Appelez ensuite <code>GET /lifetimes</code> deux fois, et observez quels identifiants changent.</p>
+      <h3>Question</h3>
+      <p>Que se passerait-il si un service singleton recevait un service scoped dans son constructeur ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Le singleton garderait pour toujours l'instance de la première requête : c'est une <em>captive dependency</em>, source de bugs subtils (un <code>DbContext</code> partagé entre requêtes, par exemple). En développement, ASP.NET Core vérifie les portées et refuse de démarrer dans ce cas.</p></details>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ le conteneur Spring : <code>AddSingleton</code> = scope par défaut, <code>AddScoped</code> = <code>@RequestScope</code>, <code>AddTransient</code> = <code>@Scope("prototype")</code>. Ici pas d'annotations ni de scan de classpath : tout se déclare dans <code>Program.cs</code>.</p>
+        <p data-lang="rust">Rust n'a pas de conteneur standard : on partage explicitement avec <code>Arc</code> dans l'état de l'application et on crée le reste à la main. Le conteneur .NET automatise ce câblage.</p>
+        <p data-lang="python">≈ <code>Depends</code> de FastAPI, qui crée les dépendances par requête ; un singleton s'obtient avec <code>@lru_cache</code>.</p>
+        <p data-lang="javascript">≈ les scopes de NestJS (<code>DEFAULT</code>, <code>REQUEST</code>, <code>TRANSIENT</code>). Express seul n'a pas de conteneur.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">builder.Services.AddSingleton&lt;IClock, SystemClock&gt;();
+builder.Services.AddScoped&lt;IUnitOfWork, UnitOfWork&gt;();
+builder.Services.AddTransient&lt;IEmailBuilder, EmailBuilder&gt;();
+
+// Injecté par le constructeur, sans annotation :
+public sealed class InvoiceService(IClock clock, IUnitOfWork unitOfWork) { }</code></pre>
+          <pre data-lang="java"><code class="language-java">@Service                      // singleton par défaut
+class SystemClock implements Clock { }
+
+@Service @RequestScope        // une instance par requête HTTP
+class UnitOfWork { }
+
+@Service @Scope("prototype")  // une instance à chaque injection
+class EmailBuilder { }
+
+@Service
+class InvoiceService {
+    InvoiceService(Clock clock, UnitOfWork unitOfWork) { }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[derive(Clone)]
+struct AppState { clock: Arc&lt;SystemClock&gt; }   // ≈ singleton, partagé
+
+async fn handler(State(state): State&lt;AppState&gt;) -&gt; String {
+    let unit_of_work = UnitOfWork::new();       // ≈ scoped : créé pour cette requête
+    invoice(&amp;state.clock, &amp;unit_of_work)
+}
+
+let app = Router::new().route("/", get(handler))
+    .with_state(AppState { clock: Arc::new(SystemClock) });</code></pre>
+          <pre data-lang="python"><code class="language-python">@lru_cache                                # ≈ singleton
+def get_clock() -&gt; Clock:
+    return SystemClock()
+
+def get_unit_of_work() -&gt; UnitOfWork:     # ≈ scoped : une fois par requête
+    return UnitOfWork()
+
+@app.get("/")
+def handler(clock: Clock = Depends(get_clock),
+            uow: UnitOfWork = Depends(get_unit_of_work)):
+    ...</code></pre>
+          <pre data-lang="javascript"><code class="language-typescript">// NestJS (TypeScript)
+@Injectable()                              // singleton par défaut
+export class SystemClock {}
+
+@Injectable({ scope: Scope.REQUEST })      // une instance par requête
+export class UnitOfWork {}
+
+@Injectable({ scope: Scope.TRANSIENT })    // une instance à chaque injection
+export class EmailBuilder {}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="exercise" id="ex3" data-minutes="15" data-tests="Tickets.Api.Tests.Exercise03">
+      <h2>Configuration et options typées</h2>
+      <p>La configuration est une pile de sources : chaque source peut remplacer une valeur des précédentes.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Ordre</th><th>Source</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>appsettings.json</code></td><td>valeurs par défaut, versionnées</td></tr>
+          <tr><td>2</td><td><code>appsettings.Development.json</code></td><td>réglages propres à un environnement</td></tr>
+          <tr><td>3</td><td>user-secrets (en développement)</td><td>secrets locaux, hors du dépôt</td></tr>
+          <tr><td>4</td><td>variables d'environnement</td><td>serveurs, conteneurs, CI</td></tr>
+          <tr><td>5</td><td>ligne de commande</td><td>essais ponctuels</td></tr>
+        </tbody>
+      </table></div>
+      <ol>
+        <li>Dans <code>Settings/TicketsOptions.cs</code>, ajoutez les règles : <code>PageSize</code> entre 1 et 100, <code>SupportEmail</code> obligatoire et au format email.</li>
+        <li>Dans <code>Program.cs</code>, liez la section <code>"Tickets"</code> de la configuration à <code>TicketsOptions</code>, validez-la, et faites échouer le démarrage si elle est invalide.</li>
+        <li>Appelez <code>GET /settings</code> : vous devez voir les valeurs d'<code>appsettings.json</code>.</li>
+        <li>Remplacez une valeur par une variable d'environnement : <code>$env:Tickets__PageSize=5</code> sous PowerShell, <code>Tickets__PageSize=5</code> sous bash. Le double tiret bas remplace le <code>:</code> des sections.</li>
+        <li>Remplacez <code>SupportEmail</code> avec un secret local, depuis <code>depart/src/Tickets.Api</code> : <code>dotnet user-secrets set "Tickets:SupportEmail" "vous@3b.studio"</code>. Où ce secret est-il stocké ?</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>les règles</summary><p>Les attributs de <code>System.ComponentModel.DataAnnotations</code> : <code>[Range(1, 100)]</code>, <code>[Required, EmailAddress]</code>.</p></details>
+        <details class="hint"><summary>la liaison</summary><pre><code class="language-csharp">builder.Services.AddOptions&lt;TicketsOptions&gt;()
+    .BindConfiguration(TicketsOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();</code></pre></details>
+        <details class="hint"><summary>où est le secret ?</summary><p>Dans votre profil utilisateur (<code>%APPDATA%\Microsoft\UserSecrets\tp-net-tickets-api\secrets.json</code> sous Windows), jamais dans le dépôt. L'identifiant vient de <code>&lt;UserSecretsId&gt;</code> dans le <code>.csproj</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ <code>@ConfigurationProperties</code> + <code>@Validated</code>, et <code>application.yml</code> surchargé par les variables d'environnement.</p>
+        <p data-lang="rust">≈ la crate <code>config</code> avec <code>serde</code> ; la validation au démarrage s'écrit à la main ou avec la crate <code>validator</code>.</p>
+        <p data-lang="python">≈ <code>pydantic-settings</code> : une classe typée, remplie depuis l'environnement, validée à la création.</p>
+        <p data-lang="javascript">≈ <code>dotenv</code> pour charger les variables, et <code>zod</code> pour les typer et les valider.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public sealed class SmtpOptions
+{
+    [Required] public string Host { get; set; } = "";
+    [Range(1, 65535)] public int Port { get; set; } = 25;
+}
+
+builder.Services.AddOptions&lt;SmtpOptions&gt;()
+    .BindConfiguration("Smtp")       // section "Smtp", variable Smtp__Host…
+    .ValidateDataAnnotations()
+    .ValidateOnStart();</code></pre>
+          <pre data-lang="java"><code class="language-java">@ConfigurationProperties(prefix = "smtp")   // smtp.host, variable SMTP_HOST…
+@Validated
+public record SmtpProperties(
+    @NotBlank String host,
+    @Min(1) @Max(65535) int port) {}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[derive(Deserialize)]
+struct SmtpSettings { host: String, port: u16 }
+
+let settings: SmtpSettings = config::Config::builder()
+    .add_source(config::File::with_name("settings"))
+    .add_source(config::Environment::with_prefix("SMTP"))   // SMTP_HOST…
+    .build()?
+    .try_deserialize()?;</code></pre>
+          <pre data-lang="python"><code class="language-python">class SmtpSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="SMTP_")   # SMTP_HOST…
+    host: str
+    port: int = Field(25, ge=1, le=65535)
+
+settings = SmtpSettings()   # lève une erreur si la configuration est invalide</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">import "dotenv/config";
+import { z } from "zod";
+
+const smtp = z.object({
+  host: z.string().min(1),
+  port: z.coerce.number().int().min(1).max(65535).default(25),
+}).parse({ host: process.env.SMTP_HOST, port: process.env.SMTP_PORT });</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="exercise" id="ex4" data-minutes="35" data-tests="Tickets.Api.Tests.Exercise04">
+      <h2>Une API REST avec les Minimal APIs</h2>
+      <p>Pour l'instant, les tickets sont stockés en mémoire par <code>InMemoryTicketRepository</code>, fourni. Dans <code>Endpoints/TicketEndpoints.cs</code>, <code>GET /tickets</code> est écrit en exemple ; ajoutez les autres routes.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Route</th><th>Réponses attendues</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET /tickets/{id}</code></td><td>200 avec le ticket, 404 en ProblemDetails</td></tr>
+          <tr><td><code>POST /tickets</code></td><td>201 avec le ticket et l'en-tête <code>Location</code>, 400 si la requête est invalide</td></tr>
+          <tr><td><code>PUT /tickets/{id}</code></td><td>204, 404, 400</td></tr>
+          <tr><td><code>DELETE /tickets/{id}</code></td><td>204, 404</td></tr>
+        </tbody>
+      </table></div>
+      <ol>
+        <li>Ajoutez les règles de validation dans <code>Contracts/TicketContracts.cs</code> : titre obligatoire, 200 caractères au plus, description de 2 000 caractères au plus.</li>
+        <li>Dans <code>Program.cs</code>, activez la validation des requêtes (nouveauté de .NET 10) et le document OpenAPI.</li>
+        <li>En développement uniquement, exposez <code>/openapi/v1.json</code> et la page interactive Scalar (<code>/scalar</code>). Testez vos routes depuis Scalar.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>les types de retour</summary><p><code>TypedResults.Ok(…)</code>, <code>TypedResults.NoContent()</code>… Quand une route peut répondre de plusieurs façons, déclarez l'union : <code>Task&lt;Results&lt;Ok&lt;TicketResponse&gt;, ProblemHttpResult&gt;&gt;</code>. Le helper <code>NotFound(id)</code> du fichier renvoie déjà le ProblemDetails.</p></details>
+        <details class="hint"><summary>201 Created</summary><p>Nommez la route de lecture avec <code>.WithName("GetTicket")</code>, puis <code>TypedResults.CreatedAtRoute(response, "GetTicket", new { id = ticket.Id })</code> remplit l'en-tête <code>Location</code>.</p></details>
+        <details class="hint"><summary>validation et OpenAPI</summary><p><code>[Required, StringLength(200)]</code> sur les propriétés, puis <code>builder.Services.AddValidation();</code> et <code>builder.Services.AddOpenApi();</code>. Dans le pipeline : <code>if (app.Environment.IsDevelopment()) { app.MapOpenApi(); app.MapScalarApiReference(); }</code>.</p></details>
+      </div>
+      <p><strong>Lisez aussi</strong> le bloc <code>UseExceptionHandler</code> de <code>Program.cs</code> : sans lui, un JSON invalide reçu en développement donnerait une erreur 500 au lieu d'une 400.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Minimal APIs ≈ les routes fonctionnelles de Spring WebFlux, ou Javalin. L'équivalent d'un <code>@RestController</code> existe aussi en .NET : les Controllers MVC.</p>
+        <p data-lang="rust">Très proche d'Axum : une fonction par route, et des paramètres extraits de la requête selon leur type.</p>
+        <p data-lang="python">Très proche de FastAPI : paramètres liés par nom et par type, documentation OpenAPI générée.</p>
+        <p data-lang="javascript">≈ Express, avec en plus le typage des paramètres, la validation et le document OpenAPI générés.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">app.MapGet("/products/{id:int}", async Task&lt;Results&lt;Ok&lt;Product&gt;, NotFound&gt;&gt; (
+    int id, ProductStore store) =&gt;
+    await store.FindAsync(id) is { } product
+        ? TypedResults.Ok(product)
+        : TypedResults.NotFound());</code></pre>
+          <pre data-lang="java"><code class="language-java">@RestController
+@RequestMapping("/products")
+class ProductController {
+    @GetMapping("/{id}")
+    ResponseEntity&lt;Product&gt; get(@PathVariable int id) {
+        return store.find(id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">async fn get_product(
+    Path(id): Path&lt;u32&gt;,
+    State(store): State&lt;ProductStore&gt;,
+) -&gt; Result&lt;Json&lt;Product&gt;, StatusCode&gt; {
+    store.find(id).await.map(Json).ok_or(StatusCode::NOT_FOUND)
+}
+
+let app = Router::new().route("/products/{id}", get(get_product));</code></pre>
+          <pre data-lang="python"><code class="language-python">@app.get("/products/{id}")
+async def get_product(id: int) -&gt; Product:
+    product = await store.find(id)
+    if product is None:
+        raise HTTPException(status_code=404)
+    return product</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">app.get("/products/:id", async (req, res) =&gt; {
+  const product = await store.find(Number(req.params.id));
+  product ? res.json(product) : res.sendStatus(404);
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="exercise" id="ex5" data-minutes="35" data-tests="Tickets.Api.Tests.Exercise05">
+      <h2>Entity Framework Core : modèle, connexion et migrations</h2>
+      <p>On remplace le stockage en mémoire par SQL Server. Les entités <code>Ticket</code> et <code>Comment</code> sont fournies, tout comme <code>TicketsDbContext</code> et ses <code>DbSet</code>.</p>
+      <ol>
+        <li><strong>Le modèle</strong> : dans <code>Data/TicketsDbContext.cs</code>, décrivez le mapping avec la <em>Fluent API</em> (le détail est dans le <code>TODO</code>) : longueurs maximales, énumérations stockées en texte, index, relation un-à-plusieurs avec suppression en cascade.</li>
+        <li><strong>La connexion</strong> : enregistrez le contexte dans <code>Program.cs</code> avec <code>AddDbContext</code> et <code>UseSqlServer</code>. Lisez la chaîne de connexion <code>"Tickets"</code> <em>à l'intérieur</em> de la lambda, sinon les tests ne pourront pas la remplacer.</li>
+        <li><strong>Le secret</strong> : depuis <code>depart/src/Tickets.Api</code>, enregistrez la chaîne de votre base de développement :
+          <pre><code class="language-bash">dotnet user-secrets set "ConnectionStrings:Tickets" "Server=localhost;Database=TicketsDev;Trusted_Connection=True;TrustServerCertificate=True"</code></pre></li>
+        <li><strong>Le dépôt</strong> : implémentez les 5 méthodes marquées <code>Exercise 05</code> de <code>Data/EfTicketRepository.cs</code>, puis remplacez l'enregistrement de <code>InMemoryTicketRepository</code> par celui d'<code>EfTicketRepository</code>, en <em>scoped</em> comme le contexte.</li>
+        <li><strong>La migration</strong> : depuis <code>depart/src/Tickets.Api</code>,
+          <pre><code class="language-bash">dotnet ef migrations add InitialCreate -o Data/Migrations
+dotnet ef database update</code></pre>
+          Lisez le fichier de migration généré, puis ouvrez la base <code>TicketsDev</code> dans SSMS : tables <code>Tickets</code>, <code>Comments</code> et <code>__EFMigrationsHistory</code>.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la Fluent API</summary><pre><code class="language-csharp">modelBuilder.Entity&lt;Ticket&gt;(ticket =&gt;
+{
+    ticket.Property(t =&gt; t.Title).HasMaxLength(200).IsRequired();
+    ticket.Property(t =&gt; t.Priority).HasConversion&lt;string&gt;().HasMaxLength(20);
+    ticket.HasIndex(t =&gt; t.Status);
+    ticket.HasMany(t =&gt; t.Comments).WithOne(c =&gt; c.Ticket)
+        .HasForeignKey(c =&gt; c.TicketId).OnDelete(DeleteBehavior.Cascade);
+});</code></pre></details>
+        <details class="hint"><summary>AddDbContext</summary><pre><code class="language-csharp">builder.Services.AddDbContext&lt;TicketsDbContext&gt;((services, options) =&gt;
+    options.UseSqlServer(services.GetRequiredService&lt;IConfiguration&gt;().GetConnectionString("Tickets")));
+builder.Services.AddScoped&lt;ITicketRepository, EfTicketRepository&gt;();</code></pre></details>
+        <details class="hint"><summary>le dépôt</summary><p>Lire : <code>db.Tickets.OrderBy(t =&gt; t.Id).Skip(…).Take(…).ToListAsync(ct)</code>, <code>FirstOrDefaultAsync(t =&gt; t.Id == id, ct)</code>. Écrire : <code>db.Tickets.Add(ticket)</code> puis <code>await db.SaveChangesAsync(ct)</code>. Supprimer sans charger : <code>db.Tickets.Where(t =&gt; t.Id == id).ExecuteDeleteAsync(ct)</code>.</p></details>
+      </div>
+      <p><strong>Pourquoi <code>TrustServerCertificate=True</code> ?</strong> Le client SQL Server chiffre la connexion par défaut. En local, le serveur présente un certificat auto-signé que le client refuserait. En production, on installe un vrai certificat et on retire cette option.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">EF Core ≈ JPA/Hibernate : entité ≈ <code>@Entity</code>, <code>DbContext</code> ≈ <code>EntityManager</code> (une unité de travail par requête), Fluent API ≈ les annotations de mapping ou un <code>orm.xml</code>.</p>
+        <p data-lang="rust">Plus haut niveau que Diesel ou SQLx : on écrit les requêtes en LINQ, EF génère le SQL, et le schéma se déduit du modèle C# au lieu d'être écrit à la main.</p>
+        <p data-lang="python">≈ SQLAlchemy en mode ORM : <code>DbContext</code> ≈ <code>Session</code>, entités ≈ classes déclaratives, <code>SaveChanges</code> ≈ <code>commit</code>.</p>
+        <p data-lang="javascript">≈ Prisma ou TypeORM : le modèle C# joue le rôle du <code>schema.prisma</code>, et les migrations se génèrent de la même façon.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public sealed class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public List&lt;Review&gt; Reviews { get; set; } = [];
+}
+
+modelBuilder.Entity&lt;Product&gt;(product =&gt;
+{
+    product.Property(p =&gt; p.Name).HasMaxLength(100).IsRequired();
+    product.HasMany(p =&gt; p.Reviews).WithOne().OnDelete(DeleteBehavior.Cascade);
+});</code></pre>
+          <pre data-lang="java"><code class="language-java">@Entity
+public class Product {
+    @Id @GeneratedValue
+    private Integer id;
+
+    @Column(length = 100, nullable = false)
+    private String name;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List&lt;Review&gt; reviews = new ArrayList&lt;&gt;();
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">diesel::table! {
+    products (id) {
+        id -&gt; Integer,
+        name -&gt; Varchar,
+    }
+}
+
+#[derive(Queryable, Selectable)]
+#[diesel(table_name = products)]
+struct Product { id: i32, name: String }
+// La longueur et la cascade sont dans la migration SQL, écrite à la main.</code></pre>
+          <pre data-lang="python"><code class="language-python">class Product(Base):
+    __tablename__ = "products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    reviews: Mapped[list["Review"]] = relationship(cascade="all, delete-orphan")</code></pre>
+          <pre data-lang="javascript"><code class="language-plaintext">// Prisma : schema.prisma
+model Product {
+  id      Int      @id @default(autoincrement())
+  name    String   @db.VarChar(100)
+  reviews Review[]
+}
+
+model Review {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="exercise" id="ex6" data-minutes="30" data-tests="Tickets.Api.Tests.Exercise06">
+      <h2>EF Core : requêtes, Include et le problème N+1</h2>
+      <p>Les requêtes SQL envoyées par EF s'affichent dans la console de l'API (réglage <code>Microsoft.EntityFrameworkCore.Database.Command</code> dans <code>appsettings.json</code>).</p>
+      <ol>
+        <li>Créez trois ou quatre tickets, puis appelez <code>GET /tickets/summary</code>. Comptez les <code>SELECT</code> dans la console. D'où viennent-ils ? Corrigez <code>GetSummariesAsync</code> pour n'envoyer <strong>qu'une seule requête</strong>, quel que soit le nombre de tickets. Un test compte les commandes SQL.</li>
+        <li><code>GET /tickets/{id}</code> renvoie une liste de commentaires vide, même quand il y en a : EF Core ne charge pas les relations tout seul. Chargez-les dans <code>GetAsync</code>.</li>
+        <li>Les lectures n'ont pas besoin du suivi des modifications : désactivez-le dans <code>ListAsync</code> et <code>GetAsync</code>. Un test vérifie que le contexte ne suit aucune entité après ces lectures.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>N+1</summary><p>Une requête pour les tickets, puis une par ticket pour compter ses commentaires : 1 + N. Une <strong>projection</strong> fait tout en une fois : <code>db.Tickets.Select(t =&gt; new TicketSummary(t.Id, t.Title, t.Status, t.Comments.Count))</code>. EF traduit <code>Count</code> en sous-requête SQL.</p></details>
+        <details class="hint"><summary>charger les commentaires</summary><p><code>db.Tickets.Include(t =&gt; t.Comments).FirstOrDefaultAsync(…)</code> : une jointure, dans la même requête.</p></details>
+        <details class="hint"><summary>sans suivi</summary><p><code>db.Tickets.AsNoTracking()…</code> en tête de requête.</p></details>
+      </div>
+      <h3>Question</h3>
+      <p>Pourquoi la version de départ fonctionne-t-elle quand même, et pourquoi le problème passe-t-il souvent inaperçu en développement ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Elle donne le bon résultat, seulement trop lentement : avec 5 tickets en local, 6 requêtes passent inaperçues. Avec 5 000 tickets en production et un serveur de base distant, ce sont 5 001 allers-retours réseau. Lire les logs SQL pendant le développement est le meilleur réflexe.</p></details>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Le même piège qu'avec Hibernate et les collections <code>LAZY</code>. <code>Include</code> ≈ <code>JOIN FETCH</code>, la projection ≈ une requête JPQL avec <code>select new …</code>, <code>AsNoTracking</code> ≈ une transaction en lecture seule.</p>
+        <p data-lang="rust">Avec Diesel ou SQLx, on écrit la jointure soi-même, donc le N+1 est plus visible. Ici, LINQ le cache : il faut lire le SQL généré.</p>
+        <p data-lang="python">Le même piège qu'avec le chargement paresseux de SQLAlchemy. <code>Include</code> ≈ <code>selectinload</code> ou <code>joinedload</code>.</p>
+        <p data-lang="javascript">≈ <code>include</code> et <code>_count</code> de Prisma. Avec TypeORM, le même piège existe sur les relations paresseuses.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">var summaries = await db.Products
+    .AsNoTracking()
+    .Select(p =&gt; new { p.Id, p.Name, ReviewCount = p.Reviews.Count })
+    .ToListAsync();
+
+var product = await db.Products
+    .Include(p =&gt; p.Reviews)
+    .FirstOrDefaultAsync(p =&gt; p.Id == id);</code></pre>
+          <pre data-lang="java"><code class="language-java">@Query("select new com.shop.ProductSummary(p.id, p.name, size(p.reviews)) from Product p")
+List&lt;ProductSummary&gt; summaries();
+
+@Query("select p from Product p left join fetch p.reviews where p.id = :id")
+Optional&lt;Product&gt; findWithReviews(@Param("id") int id);</code></pre>
+          <pre data-lang="rust"><code class="language-rust">let summaries: Vec&lt;(i32, String, i64)&gt; = products::table
+    .left_join(reviews::table)
+    .group_by((products::id, products::name))
+    .select((products::id, products::name, count(reviews::id.nullable())))
+    .load(&amp;mut conn)?;</code></pre>
+          <pre data-lang="python"><code class="language-python">summaries = session.execute(
+    select(Product.id, Product.name, func.count(Review.id))
+    .outerjoin(Product.reviews)
+    .group_by(Product.id, Product.name)
+).all()
+
+product = session.scalars(
+    select(Product).options(selectinload(Product.reviews)).where(Product.id == id)
+).one_or_none()</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const summaries = await prisma.product.findMany({
+  select: { id: true, name: true, _count: { select: { reviews: true } } },
+});
+
+const product = await prisma.product.findUnique({
+  where: { id },
+  include: { reviews: true },
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 7 -->
+    <section class="exercise" id="ex7" data-minutes="20" data-tests="Tickets.Api.Tests.Exercise07">
+      <h2>EF Core : écritures et seconde migration</h2>
+      <p>On ajoute les commentaires et la clôture d'un ticket, avec sa date de clôture.</p>
+      <ol>
+        <li>Ajoutez une propriété <code>DateTimeOffset? ClosedAt</code> à <code>Ticket</code>, à <code>TicketResponse</code> et à son mapping.</li>
+        <li>Générez et appliquez la migration :
+          <pre><code class="language-bash">dotnet ef migrations add AddClosedAt -o Data/Migrations
+dotnet ef database update</code></pre>
+          Ouvrez le fichier généré : EF a comparé le modèle au dernier instantané et n'ajoute que la colonne.</li>
+        <li>Implémentez <code>AddCommentAsync</code> et <code>CloseAsync</code> dans <code>EfTicketRepository</code> : on ne commente pas un ticket clos, et on ne clôt pas deux fois.</li>
+        <li>Ajoutez les routes <code>POST /tickets/{id}/comments</code> (201, 404, 409) et <code>POST /tickets/{id}/close</code> (200, 404, 409), et validez <code>AddCommentRequest</code>.</li>
+        <li>Clôturez un ticket et regardez l'<code>UPDATE</code> dans la console : seules les colonnes modifiées y figurent.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>modifier une entité</summary><p>Chargez le ticket <strong>avec</strong> suivi (sans <code>AsNoTracking</code>), modifiez ses propriétés, puis <code>await db.SaveChangesAsync(ct)</code>. EF compare avec les valeurs d'origine et génère l'<code>UPDATE</code>.</p></details>
+        <details class="hint"><summary>ajouter un commentaire</summary><p><code>ticket.Comments.Add(new Comment { … })</code> sur un ticket suivi, puis <code>SaveChangesAsync</code> : EF insère le commentaire avec la bonne clé étrangère.</p></details>
+        <details class="hint"><summary>les routes</summary><p>Un <code>switch</code> sur le résultat : <code>TicketChange.Applied =&gt; TypedResults.Created(…)</code>, <code>TicketChange.AlreadyClosed =&gt; Conflict(…)</code>, <code>_ =&gt; NotFound(id)</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">EF génère la migration à partir du modèle, comme Liquibase avec son plugin Hibernate. Avec Flyway, on écrit le SQL soi-même.</p>
+        <p data-lang="rust">Avec Diesel, on écrit <code>up.sql</code> et <code>down.sql</code> à la main ; EF les déduit du modèle C#.</p>
+        <p data-lang="python">≈ Alembic avec <code>--autogenerate</code> : même principe, à relire avant de l'appliquer.</p>
+        <p data-lang="javascript">≈ <code>prisma migrate dev</code> : même principe, le modèle fait foi.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-bash">dotnet ef migrations add AddClosedAt   # compare le modèle au dernier instantané
+dotnet ef database update              # applique les migrations manquantes
+dotnet ef migrations script            # le SQL, pour une mise en production relue</code></pre>
+          <pre data-lang="java"><code class="language-bash"># Flyway : la migration s'écrit en SQL, à la main
+cat &gt; src/main/resources/db/migration/V2__add_closed_at.sql &lt;&lt;'SQL'
+ALTER TABLE tickets ADD closed_at TIMESTAMP NULL;
+SQL
+mvn flyway:migrate</code></pre>
+          <pre data-lang="rust"><code class="language-bash">diesel migration generate add_closed_at   # crée up.sql et down.sql, vides
+diesel migration run</code></pre>
+          <pre data-lang="python"><code class="language-bash">alembic revision --autogenerate -m "add closed_at"   # compare les modèles à la base
+alembic upgrade head</code></pre>
+          <pre data-lang="javascript"><code class="language-bash">npx prisma migrate dev --name add_closed_at   # compare schema.prisma à la base, applique
+npx prisma migrate deploy                     # en production</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 8 -->
+    <section class="exercise" id="ex8" data-minutes="15" data-tests="Tickets.Api.Tests.Exercise08">
+      <h2>Écrire ses propres tests d'intégration</h2>
+      <p><code>WebApplicationFactory&lt;Program&gt;</code> démarre toute l'application en mémoire, sans port réseau : routage, validation, dépôt et SQL Server. C'est ce qu'utilisent tous les tests du TP, via <code>Support/TicketsApiFactory.cs</code>.</p>
+      <p>Dans <code>tests/Tickets.Api.Tests/MyApiTests.cs</code>, écrivez <strong>au moins deux tests</strong>. Quelques idées :</p>
+      <ul>
+        <li>une priorité inconnue (<code>"Urgent"</code>) est refusée avec une 400 ;</li>
+        <li>un ticket créé apparaît dans <code>GET /tickets/summary</code> avec zéro commentaire ;</li>
+        <li>un ticket supprimé disparaît du résumé.</li>
+      </ul>
+      <p>Utilisez <code>HttpExtensions.UniqueTitle(…)</code> pour retrouver vos tickets : la base de test est partagée par tous les tests.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ <code>@SpringBootTest</code> avec <code>MockMvc</code> ou <code>TestRestTemplate</code>.</p>
+        <p data-lang="rust">≈ appeler le <code>Router</code> d'Axum avec <code>tower::ServiceExt::oneshot</code>.</p>
+        <p data-lang="python">≈ <code>TestClient</code> de FastAPI.</p>
+        <p data-lang="javascript">≈ <code>supertest</code> sur une application Express.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public class ProductApiTests(WebApplicationFactory&lt;Program&gt; factory)
+    : IClassFixture&lt;WebApplicationFactory&lt;Program&gt;&gt;
+{
+    [Fact]
+    public async Task UnknownProduct_Is404()
+    {
+        var response = await factory.CreateClient().GetAsync("/products/42");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">@SpringBootTest
+@AutoConfigureMockMvc
+class ProductApiTests {
+    @Autowired MockMvc mvc;
+
+    @Test
+    void unknownProductIs404() throws Exception {
+        mvc.perform(get("/products/42")).andExpect(status().isNotFound());
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[tokio::test]
+async fn unknown_product_is_404() {
+    let response = app()
+        .oneshot(Request::get("/products/42").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">client = TestClient(app)
+
+def test_unknown_product_is_404():
+    assert client.get("/products/42").status_code == 404</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">import request from "supertest";
+
+test("unknown product is 404", async () =&gt; {
+  await request(app).get("/products/42").expect(404);
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li><code>dotnet ef migrations script --idempotent</code> : le script SQL qu'on relit et qu'on applique en production, plutôt que <code>database update</code>.</li>
+        <li>Ajoutez une route <code>GET /tickets?status=Open</code> : un paramètre de requête facultatif, filtré côté SQL.</li>
+        <li>Créez un fichier <code>Tickets.Api.http</code> : Rider et Visual Studio exécutent les requêtes HTTP qu'il contient, pratique pour garder des exemples d'appels.</li>
+      </ul>
+    </div>
+
+    <section class="panel" id="summary">
+      <h2>Valider le TP et faire le bilan</h2>
+      <pre><code class="language-bash">dotnet build depart/Tickets.slnx                 # 0 avertissement
+dotnet test --solution depart/Tickets.slnx       # tous les tests au vert</code></pre>
+      <p>C'est terminé. Comparez avec <code>solution/</code>. Demain, le <code>depart/</code> du TP-03 reprend cette solution : un TP inachevé ne vous bloque pas.</p>
+      <div data-report></div>
+      <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/enonce.js"></script>
+</body>
+</html>

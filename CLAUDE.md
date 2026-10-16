@@ -31,6 +31,8 @@ The shared script turns plain markup into the interactive page; see the header c
 - One `.slnx` per `depart/` and per `solution/`.
 - Package versions live only in the root `Directory.Packages.props` (Central Package Management); never put `Version=` on a `PackageReference`.
 - Database: SQL Server. Locally the apprentice uses their own instance; connection strings go in user-secrets, never in `appsettings.json`. Local connection strings need `TrustServerCertificate=True`.
+- In `Program.cs`, read the connection string inside the `AddDbContext((services, options) => …)` lambda: `WebApplicationFactory` applies the test configuration after `Program.cs` has run.
+- Integration tests that touch SQL Server go in the `Database` collection (`DatabaseFixture` recreates `TicketsTests` once per run). The test connection string comes from `testsettings.json`, overridden by `ConnectionStrings__TicketsTests` (set by CI).
 - Tests use xUnit v3 on Microsoft.Testing.Platform (opted in by `global.json`): test projects are `OutputType=Exe`, no `Microsoft.NET.Test.Sdk`, and the command is `dotnet test --solution <file>.slnx`.
 - NuGetAudit is on: fix a vulnerable transitive dependency with a pinned `PackageVersion` in `Directory.Packages.props` (transitive pinning is enabled).
 - Self-validation is the point: every exercise should have an automated test the apprentice can turn green.

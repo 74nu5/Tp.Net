@@ -8,6 +8,21 @@ on:
 jobs:
   labs:
     runs-on: ubuntu-latest
+
+    # SQL Server for the integration tests of TP-02 to TP-04. The password only lives for this run.
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: Ci-${{ github.run_id }}-Pwd!
+        ports:
+          - 1433:1433
+
+    env:
+      SA_PASSWORD: Ci-${{ github.run_id }}-Pwd!
+      ConnectionStrings__TicketsTests: Server=localhost,1433;Database=TicketsTests;User Id=sa;Password=Ci-${{ github.run_id }}-Pwd!;TrustServerCertificate=True
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +39,16 @@ jobs:
             dotnet build "$sln"
             echo "::endgroup::"
           done
+
+      - name: Wait for SQL Server
+        run: |
+          for attempt in $(seq 1 30); do
+            if docker exec "${{ job.services.mssql.id }}" /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -Q "SELECT 1" > /dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "SQL Server did not start in time." && exit 1
 
       # Reference solutions must be green.
       - name: Test solutions
