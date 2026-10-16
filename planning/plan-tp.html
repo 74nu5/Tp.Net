@@ -231,204 +231,75 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
     "title": "Parcours .NET de l'alternant",
     "startDate": "2026-10-19",
     "weekdays": [1, 2, 3, 4, 5],
+    "halves": [0],
     "phase2Start": "",
     "blocked": []
   },
   "modules": [
-    { "id": "m1", "phase": "dotnet", "order": 1, "title": "Écosystème et outillage" },
-    { "id": "m2", "phase": "dotnet", "order": 2, "title": "Le langage C#" },
-    { "id": "m3", "phase": "dotnet", "order": 3, "title": "Fondations applicatives" },
-    { "id": "m4", "phase": "dotnet", "order": 4, "title": "Web et données" },
-    { "id": "m5", "phase": "dotnet", "order": 5, "title": "Blazor" },
-    { "id": "m6", "phase": "dotnet", "order": 6, "title": "Mise en production et synthèse" },
-    { "id": "m7", "phase": "3b", "order": 1, "title": "Nos standards 3B Studio" },
-    { "id": "m8", "phase": "3b", "order": 2, "title": "Immersion projet" }
+    { "id": "m1", "phase": "dotnet", "order": 1, "title": "Semaine d'arrivée : une demi-journée de TP par matinée" },
+    { "id": "m2", "phase": "dotnet", "order": 2, "title": "Bonus, si le temps le permet" },
+    { "id": "m3", "phase": "3b", "order": 1, "title": "À cadrer avec l'équipe" }
   ],
   "tps": [
     { "id": "t01", "moduleId": "m1", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Premiers pas : SDK, CLI et anatomie d'un projet",
-      "summary": "Installer le SDK .NET 10 (et .NET 11), découvrir la CLI dotnet, les projets SDK-style et les solutions .slnx.",
-      "objectives": ["Installer et épingler un SDK avec global.json", "Créer, compiler, exécuter et publier depuis la CLI", "Lire un .csproj : TargetFramework, Nullable, ImplicitUsings", "Lancer un script C# sans projet avec dotnet run app.cs"],
-      "notions": ["SDK vs runtime", "TFM net10.0 / net11.0", "global.json", ".slnx", "file-based apps", "Rider / Visual Studio / VS Code + C# Dev Kit"],
-      "bridge": "dotnet new ≈ cargo new, dotnet run ≈ cargo run / mvn exec. Le .csproj joue le rôle du Cargo.toml ou du pom.xml.",
-      "start": "dotnet new console -n Hello",
-      "deliverable": "Une solution .slnx avec une app console et un script app.cs, poussée sur Git.",
+      "title": "Tour de .NET et C# express",
+      "summary": "L'écosystème, la CLI, les dépendances et l'essentiel du langage, en katas courts. Pas de théorie longue : on lit, on tape, on lance.",
+      "objectives": ["Installer le SDK, dotnet new console, lire le .csproj, dotnet run, puis un script sans projet avec dotnet run hello.cs (15 min)", "Ajouter un package NuGet, centraliser sa version dans Directory.Packages.props (15 min)", "Modéliser un petit domaine avec record, class et struct ; activer la nullabilité et corriger les avertissements (30 min)", "Pattern matching et switch expression sur ce domaine (20 min)", "LINQ sur une liste de commandes : filtrer, grouper, agréger (40 min)", "async/await : appeler 3 URL en parallèle avec HttpClient et Task.WhenAll, avec annulation (30 min)", "Écrire 3 tests xUnit sur le code de la matinée (30 min)"],
+      "notions": ["SDK et runtime", "TFM net10.0", "NuGet", "Central Package Management", "record / class / struct", "nullable reference types", "pattern matching", "LINQ", "Task et async/await", "xUnit"],
+      "bridge": "dotnet ≈ cargo ou mvn, NuGet ≈ crates.io / Maven Central, LINQ ≈ Java Streams ou itérateurs Rust, Task ≈ Promise JS. Les nullable reference types sont une analyse à la compilation, moins stricte qu'Option<T>.",
+      "start": "dotnet new console -n Katas",
+      "deliverable": "Un dépôt « katas » avec un fichier par exercice et des tests au vert.",
       "notes": "" },
     { "id": "t02", "moduleId": "m1", "order": 2, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Dépendances : NuGet et Central Package Management",
-      "summary": "Gérer les packages d'une solution multi-projets proprement, des versions centralisées à l'audit de sécurité.",
-      "objectives": ["Ajouter, mettre à jour et retirer un package NuGet", "Centraliser les versions avec Directory.Packages.props", "Factoriser les réglages communs avec Directory.Build.props", "Auditer les vulnérabilités (NuGetAudit, dotnet list package --vulnerable)"],
-      "notions": ["PackageReference", "ProjectReference", "Central Package Management", "packages.lock.json", "nuget.config et feeds privés", "dépendances transitives"],
-      "bridge": "NuGet ≈ crates.io / Maven Central. Directory.Packages.props ≈ <dependencyManagement> Maven ou [workspace.dependencies] Cargo.",
-      "start": "dotnet new classlib puis dotnet add package",
-      "deliverable": "Solution multi-projets avec CPM activé et un feed privé déclaré dans nuget.config.",
-      "notes": "Montrer notre feed NuGet interne s'il existe." },
-    { "id": "t03", "moduleId": "m2", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "C# pour un dev Java/Rust : types et modélisation",
-      "summary": "Les bases du langage vues depuis Java et Rust : types valeur et référence, records, nullabilité, pattern matching.",
-      "objectives": ["Distinguer types valeur (struct) et référence (class)", "Modéliser avec record, record struct, init et required", "Activer et respecter les nullable reference types", "Utiliser le pattern matching et les switch expressions"],
-      "notions": ["class / struct / record", "string? et nullabilité", "propriétés", "primary constructors", "pattern matching", "raw string literals"],
-      "bridge": "record ≈ record Java ou struct + derive en Rust. Les nullable reference types sont une analyse à la compilation, moins stricte qu'Option<T>.",
-      "start": "dotnet new console",
-      "deliverable": "Modèle de domaine d'une petite boutique, couvert par des tests.",
+      "title": "Serveur web : ASP.NET Core, injection de dépendances et données",
+      "summary": "Comment tourne une application web .NET : host, injection de dépendances, configuration, Minimal APIs et EF Core.",
+      "objectives": ["Lire le Program.cs d'un projet webapi et ajouter un middleware qui journalise chaque requête (20 min)", "Enregistrer un service en Singleton, Scoped et Transient et observer la différence (20 min)", "Lier une section d'appsettings.json à une classe d'options, la surcharger par variable d'environnement et user-secrets (20 min)", "Écrire une Minimal API CRUD de tickets en mémoire, avec TypedResults et validation (45 min)", "Explorer l'API via OpenAPI et Scalar (10 min)", "Remplacer la liste en mémoire par EF Core + SQLite, créer une migration, lire le SQL généré dans les logs (50 min)", "Un test d'intégration avec WebApplicationFactory (20 min)"],
+      "notions": ["Generic Host", "Kestrel", "middlewares", "injection de dépendances", "IConfiguration / IOptions", "ILogger", "Minimal APIs", "ProblemDetails", "OpenAPI", "EF Core", "migrations"],
+      "bridge": "ASP.NET Core ≈ Spring Boot, mais tout se déclare dans Program.cs. Minimal APIs ≈ Express ou Axum. EF Core ≈ JPA/Hibernate, migrations ≈ Flyway.",
+      "start": "dotnet new webapi -n Tickets.Api",
+      "deliverable": "Une API « tickets » persistée en SQLite, réutilisée par les demi-journées Blazor.",
+      "notes": "Les tickets font écho aux anomalies qu'il traitera l'après-midi." },
+    { "id": "t03", "moduleId": "m1", "order": 3, "days": 0.5, "status": "cadrer", "owner": "",
+      "title": "Blazor : composants, modes de rendu et formulaires",
+      "summary": "Le modèle de composants Razor et le choix du mode de rendu, puis un premier écran utile branché sur l'API.",
+      "objectives": ["Créer une Blazor Web App et lire sa structure : App.razor, Routes, layouts (15 min)", "Composant paramétré : [Parameter], EventCallback, RenderFragment (30 min)", "Charger les tickets de l'API dans OnInitializedAsync (30 min)", "Afficher la même page en Static SSR, Interactive Server et WebAssembly ; observer le réseau et SignalR dans les devtools (40 min)", "Formulaire de création avec EditForm et validation DataAnnotations (30 min)", "Liste paginée et triée avec QuickGrid (20 min)", "CSS isolation et un appel JavaScript via IJSRuntime (15 min)"],
+      "notions": [".razor et @code", "[Parameter]", "EventCallback", "RenderFragment", "cycle de vie", "Static SSR / Interactive Server / WebAssembly / Auto", "prérendu", "EditForm", "QuickGrid", "JS interop"],
+      "bridge": "Composants ≈ React ou Vue, en C#. Interactive Server garde l'état côté serveur via SignalR ; WebAssembly exécute .NET dans le navigateur (comme Rust compilé en wasm).",
+      "start": "dotnet new blazor --interactivity Auto -n Tickets.Web",
+      "deliverable": "Un front qui liste et crée des tickets via l'API, avec un mot sur le mode de rendu retenu et pourquoi.",
       "notes": "" },
-    { "id": "t04", "moduleId": "m2", "order": 2, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Collections, génériques et LINQ",
-      "summary": "Manipuler des données en mémoire avec les bonnes collections et LINQ, et comprendre l'exécution différée.",
-      "objectives": ["Choisir la bonne collection (List, Dictionary, HashSet, FrozenDictionary…)", "Écrire des requêtes LINQ en syntaxe méthode", "Comprendre l'exécution différée de IEnumerable<T>", "Écrire des méthodes génériques avec contraintes"],
-      "notions": ["IEnumerable<T> / IReadOnlyList<T>", "LINQ", "yield return", "contraintes where T :", "collection expressions [..]", "Span<T> (aperçu)"],
-      "bridge": "LINQ ≈ Java Streams ou itérateurs Rust : map → Select, filter → Where, collect → ToList. Paresseux comme les itérateurs Rust.",
-      "start": "Jeu de données CSV fourni",
-      "deliverable": "Analyseur de ventes : 10 requêtes LINQ testées.",
-      "notes": "" },
-    { "id": "t05", "moduleId": "m2", "order": 3, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Asynchronisme : Task, async/await et annulation",
-      "summary": "Écrire du code asynchrone correct de bout en bout, avec annulation et concurrence maîtrisée.",
-      "objectives": ["Écrire du code async de bout en bout", "Propager un CancellationToken", "Paralléliser avec Task.WhenAll et Parallel.ForEachAsync", "Consommer un flux avec IAsyncEnumerable<T>"],
-      "notions": ["Task / ValueTask", "async/await", "CancellationToken", "IAsyncEnumerable", "ThreadPool", "pièges : async void, .Result, deadlocks"],
-      "bridge": "Proche de async/await en JS (Promise ≈ Task). Contrairement à Rust, pas de runtime à choisir : le ThreadPool est intégré.",
-      "start": "dotnet new console + HttpClient",
-      "deliverable": "Crawler concurrent qui télécharge N pages avec délai maximal et annulation.",
-      "notes": "" },
-    { "id": "t06", "moduleId": "m2", "order": 4, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Nouveautés C# 14 et C# 15 (.NET 10 → .NET 11)",
-      "summary": "Ce qui change dans les deux dernières versions du langage, et comment suivre les nouveautés.",
-      "objectives": ["Utiliser les extension members et le mot-clé field (C# 14)", "Découvrir les union types et les closed hierarchies (C# 15)", "Comparer avec les enums Rust et les sealed interfaces Java", "Lire des notes de version et cibler net11.0"],
-      "notions": ["extension members", "mot-clé field", "affectation null-conditionnelle ?.=", "union types", "closed hierarchies", "collection expression arguments", "LTS vs STS"],
-      "bridge": "Les union types de C# 15 rapprochent C# des enums Rust : le switch est vérifié exhaustif par le compilateur.",
-      "start": "<TargetFramework>net11.0</TargetFramework>",
-      "deliverable": "Refactor du modèle du TP-03 avec une union pour les résultats d'opération.",
-      "notes": ".NET 10 est LTS (support jusqu'à novembre 2028). .NET 11 est STS, sortie prévue en novembre 2026 : vérifier l'état des union types au moment de rédiger." },
-    { "id": "t07", "moduleId": "m2", "order": 5, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Tests automatisés",
-      "summary": "Écrire des tests unitaires et d'intégration utiles, et les faire tourner en CI.",
-      "objectives": ["Écrire des tests xUnit v3", "Paramétrer avec [Theory] et [InlineData]", "Isoler avec des doubles (NSubstitute)", "Tester contre une vraie base avec Testcontainers", "Mesurer la couverture"],
-      "notions": ["xUnit v3", "Microsoft.Testing.Platform", "dotnet test", "NSubstitute", "Testcontainers", "Verify (snapshots)", "Arrange / Act / Assert"],
-      "bridge": "xUnit ≈ JUnit 5, [Theory] ≈ @ParameterizedTest. Pas d'équivalent de #[cfg(test)] : les tests vivent dans un projet séparé.",
-      "start": "dotnet new xunit3",
-      "deliverable": "Suite de tests pour les TP-03 et TP-04, exécutée en CI.",
-      "notes": "Aligner le framework de test sur celui de nos projets." },
-    { "id": "t08", "moduleId": "m3", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Generic Host : injection de dépendances, configuration et logs",
-      "summary": "Le socle commun à toutes les applications .NET modernes : DI, configuration, options et journalisation.",
-      "objectives": ["Enregistrer des services et choisir leur durée de vie", "Lire la configuration (appsettings, variables d'environnement, user-secrets)", "Lier la configuration au pattern Options et la valider au démarrage", "Journaliser en structuré avec ILogger<T>"],
-      "notions": ["IServiceCollection", "Singleton / Scoped / Transient", "keyed services", "IOptions / IOptionsSnapshot", "user-secrets", "ILogger<T>", "BackgroundService"],
-      "bridge": "Le conteneur DI intégré ≈ Spring IoC sans annotations : tout se déclare dans Program.cs. Scoped ≈ @RequestScope.",
-      "start": "dotnet new worker",
-      "deliverable": "Worker qui interroge une API à intervalle configurable, options validées au démarrage.",
-      "notes": "" },
-    { "id": "t09", "moduleId": "m4", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "API web avec ASP.NET Core Minimal APIs",
-      "summary": "Construire une API REST documentée et testée, et comprendre le pipeline de requêtes.",
-      "objectives": ["Comprendre le pipeline de middlewares", "Exposer des endpoints typés avec TypedResults et route groups", "Valider les entrées avec la validation intégrée (.NET 10)", "Documenter avec OpenAPI et Scalar", "Renvoyer des erreurs ProblemDetails"],
-      "notions": ["WebApplication", "Kestrel", "middlewares", "route groups", "model binding", "TypedResults", "OpenAPI", "ProblemDetails", "Controllers vs Minimal APIs"],
-      "bridge": "Minimal APIs ≈ Express ou Axum, Controllers ≈ Spring MVC. Kestrel est le serveur HTTP embarqué (≈ Tomcat embarqué).",
-      "start": "dotnet new webapi",
-      "deliverable": "API CRUD « bibliothèque » documentée, avec tests d'intégration via WebApplicationFactory.",
-      "notes": "" },
-    { "id": "t10", "moduleId": "m4", "order": 2, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Persistance avec Entity Framework Core",
-      "summary": "Brancher une base relationnelle, faire évoluer le schéma et écrire des requêtes efficaces.",
-      "objectives": ["Modéliser un DbContext et ses relations", "Gérer le schéma avec les migrations", "Écrire des requêtes efficaces (projection, AsNoTracking, pagination)", "Repérer et corriger un problème N+1"],
-      "notions": ["DbContext", "migrations", "Fluent API", "change tracking", "Include / projections", "transactions", "Npgsql / SQL Server", "interceptors"],
-      "bridge": "EF Core ≈ Hibernate/JPA. Les migrations ≈ Flyway/Liquibase, ou les migrations sqlx/diesel.",
-      "start": "dotnet tool install --global dotnet-ef",
-      "deliverable": "L'API du TP-09 branchée sur PostgreSQL via EF Core, migrations versionnées.",
-      "notes": "Choisir le SGBD de nos projets." },
-    { "id": "t11", "moduleId": "m4", "order": 3, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Authentification et autorisation",
-      "summary": "Sécuriser une API : schémas d'authentification, OpenID Connect, policies d'autorisation.",
-      "objectives": ["Distinguer authentification et autorisation dans ASP.NET Core", "Protéger une API avec JWT Bearer", "Brancher un fournisseur OpenID Connect (Entra ID ou Keycloak)", "Écrire des policies et des requirements", "Découvrir ASP.NET Core Identity et les passkeys (.NET 10)"],
-      "notions": ["authentication schemes", "cookies", "JWT Bearer", "OpenID Connect", "ClaimsPrincipal", "policies", "Identity", "passkeys", "CORS"],
-      "bridge": "≈ Spring Security, en plus explicite : schémas et policies sont déclarés dans Program.cs.",
-      "start": "Keycloak en conteneur + API du TP-10",
-      "deliverable": "API du TP-10 protégée par OIDC, avec des rôles lecteur et admin.",
-      "notes": "Aligner sur notre fournisseur d'identité réel." },
-    { "id": "t12", "moduleId": "m5", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Blazor : composants et modes de rendu",
-      "summary": "Le modèle de composants Razor et le choix du mode de rendu, sujet central de nos projets.",
-      "objectives": ["Écrire des composants avec [Parameter] et EventCallback", "Maîtriser le cycle de vie (OnInitializedAsync, OnParametersSetAsync)", "Choisir un mode de rendu : Static SSR, Interactive Server, WebAssembly, Auto", "Structurer l'app avec layouts et routage"],
-      "notions": [".razor", "@code", "[Parameter]", "EventCallback", "RenderFragment", "render modes", "prerendering", "enhanced navigation", "CSS isolation"],
-      "bridge": "Composants ≈ React/Vue, en C#. Interactive Server garde l'état côté serveur via SignalR ; WebAssembly exécute .NET dans le navigateur (≈ Rust → wasm).",
-      "start": "dotnet new blazor --interactivity Auto",
-      "deliverable": "Mini-app « catalogue » avec une page par mode de rendu et un comparatif écrit.",
-      "notes": "" },
-    { "id": "t13", "moduleId": "m5", "order": 2, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Blazor : formulaires, état et interop JS",
-      "summary": "Les briques d'un écran métier : formulaires validés, état partagé, grilles et interop JavaScript.",
-      "objectives": ["Construire un EditForm validé (DataAnnotations, validation asynchrone en .NET 11)", "Partager l'état entre composants (cascading values, service scoped)", "Conserver l'état au prérendu avec [PersistentState]", "Appeler du JavaScript via IJSRuntime et un module JS collocalisé", "Afficher des listes avec QuickGrid et Virtualize"],
-      "notions": ["EditForm", "validation", "CascadingValue", "state container", "[PersistentState]", "JS interop", "QuickGrid", "Virtualize", "ErrorBoundary"],
-      "bridge": "Un state container ≈ un store Redux ou Pinia. L'interop JS ≈ wasm-bindgen côté Rust.",
-      "start": "Solution du TP-12",
-      "deliverable": "Écran d'édition produit avec validation, grille paginée et un graphique via interop JS.",
-      "notes": "" },
-    { "id": "t14", "moduleId": "m5", "order": 3, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Blazor full-stack : auth, API et bibliothèque de composants",
-      "summary": "Relier le front Blazor à l'API sécurisée et extraire des composants réutilisables et testés.",
-      "objectives": ["Sécuriser une Blazor Web App (AuthorizeView, [Authorize], AuthenticationStateProvider)", "Appeler l'API du TP-11 avec un HttpClient typé", "Extraire des composants dans une Razor Class Library", "Tester des composants avec bUnit"],
-      "notions": ["AuthenticationState", "AuthorizeView", "IHttpClientFactory", "Razor Class Library", "bUnit", "OIDC dans une Blazor Web App"],
-      "bridge": "Une RCL ≈ une librairie de composants npm, distribuée en package NuGet.",
-      "start": "dotnet new razorclasslib",
-      "deliverable": "Front Blazor authentifié branché sur l'API, avec 3 composants en RCL testés par bUnit.",
-      "notes": "" },
-    { "id": "t15", "moduleId": "m6", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Observabilité, Aspire et conteneurs",
-      "summary": "Faire tourner la solution complète en local comme en production, et voir ce qui s'y passe.",
-      "objectives": ["Orchestrer API, base et front en local avec Aspire", "Tracer et mesurer avec OpenTelemetry", "Exposer des health checks", "Publier une image conteneur sans Dockerfile"],
-      "notions": ["Aspire AppHost", "ServiceDefaults", "OpenTelemetry", "health checks", "résilience HttpClient", "dotnet publish /t:PublishContainer", "configuration par environnement"],
+    { "id": "t04", "moduleId": "m1", "order": 4, "days": 0.5, "status": "cadrer", "owner": "",
+      "title": "Blazor : authentification, état et composants réutilisables",
+      "summary": "Sécuriser l'application de bout en bout et découvrir comment on structure du Blazor qui dure.",
+      "objectives": ["Authentification vs autorisation : schémas, ClaimsPrincipal, policies (15 min)", "Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE (30 min)", "Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] (40 min)", "Partager l'état entre composants : cascading value et service scoped (20 min)", "Éviter le double chargement au prérendu avec [PersistentState] (15 min)", "Extraire un composant dans une Razor Class Library (20 min)", "Tester ce composant avec bUnit (30 min)"],
+      "notions": ["authentication schemes", "JWT Bearer", "OpenID Connect (aperçu)", "policies", "AuthenticationStateProvider", "AuthorizeView", "state container", "[PersistentState]", "Razor Class Library", "bUnit"],
+      "bridge": "≈ Spring Security en plus explicite. Un state container ≈ un store Redux ou Pinia. Une Razor Class Library ≈ une librairie de composants npm distribuée en package NuGet.",
+      "start": "Solution Tickets des demi-journées précédentes",
+      "deliverable": "L'application tickets authentifiée, avec un composant partagé testé.",
+      "notes": "Aligner l'exemple d'authentification sur le fournisseur d'identité de nos applis." },
+    { "id": "t05", "moduleId": "m2", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
+      "title": "S'orienter et déboguer dans une appli existante",
+      "summary": "Les outils pour diagnostiquer vite, directement utiles pour la correction d'anomalies, et un coup d'œil à ce qu'apporte .NET 11.",
+      "objectives": ["Débogueur : points d'arrêt conditionnels, espions, Hot Reload (30 min)", "Lire une exception et une stack trace .NET, async comprise (15 min)", "Régler les niveaux de log par catégorie dans appsettings.json (15 min)", "Lancer une solution avec Aspire et suivre une requête dans le tableau de bord (traces, logs) (40 min)", "Aperçu de .NET 11 et C# 15 : union types, et où suivre les nouveautés (20 min)", "Corriger 3 anomalies semées dans une appli d'exemple (60 min)"],
+      "notions": ["débogueur", "Hot Reload", "stack traces", "logging structuré", "Aspire", "OpenTelemetry", "dotnet-counters", "union types (C# 15)"],
       "bridge": "Aspire ≈ un docker-compose piloté en C#, avec un tableau de bord de traces intégré.",
       "start": "dotnet new aspire-starter",
-      "deliverable": "La solution complète lancée par un AppHost, traces visibles dans le dashboard.",
-      "notes": "" },
-    { "id": "t16", "moduleId": "m6", "order": 2, "days": 2, "status": "cadrer", "owner": "",
-      "title": "Projet fil rouge",
-      "summary": "Réunir tous les acquis sur un mini-produit, en autonomie, avec une revue de code finale.",
-      "objectives": ["Cadrer un besoin court et le découper en tickets", "Livrer une Blazor Web App + API + EF Core + authentification", "Écrire les tests essentiels", "Présenter et défendre ses choix en revue"],
-      "notions": ["synthèse", "découpage", "revue de code", "démo"],
-      "bridge": "",
-      "start": "Sujet à fournir",
-      "deliverable": "Application déployable et démo de 20 minutes.",
-      "notes": "Idée de sujet : gestionnaire de collection de figurines (étapes de peinture, photos, inventaire de pots)." },
-    { "id": "t17", "moduleId": "m7", "order": 1, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Architecture type d'une solution 3B Studio",
-      "summary": "L'organisation de nos solutions : découpage en projets, couches, nommage, configuration.",
-      "objectives": ["Naviguer dans une solution de référence", "Comprendre nos choix d'architecture et leurs raisons", "Démarrer un projet depuis notre template"],
-      "notions": ["structure de solution", "couches", "conventions de nommage", "template interne"],
-      "bridge": "",
-      "start": "Projet de référence à choisir",
-      "deliverable": "",
-      "notes": "À cadrer avec l'équipe : quel projet sert de référence ?" },
-    { "id": "t18", "moduleId": "m7", "order": 2, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Conventions de code et qualité",
-      "summary": "Nos règles de style et d'analyse, et la checklist de revue.",
-      "objectives": ["Appliquer notre .editorconfig et nos analyzers", "Corriger les avertissements traités en erreurs", "Préparer une PR conforme à la checklist de revue"],
-      "notions": [".editorconfig", "Roslyn analyzers", "TreatWarningsAsErrors", "dotnet format", "checklist de revue"],
-      "bridge": "", "start": "", "deliverable": "", "notes": "" },
-    { "id": "t19", "moduleId": "m7", "order": 3, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Git, revues de code et CI/CD",
-      "summary": "Le cycle de vie d'une modification chez nous, du ticket à la mise en production.",
-      "objectives": ["Suivre notre modèle de branches et de commits", "Ouvrir et faire relire une PR", "Lire et corriger un pipeline en échec", "Connaître nos environnements et la procédure de livraison"],
-      "notions": ["branches", "pull requests", "pipelines", "environnements", "livraison"],
-      "bridge": "", "start": "", "deliverable": "", "notes": "" },
-    { "id": "t20", "moduleId": "m7", "order": 4, "days": 1, "status": "cadrer", "owner": "",
-      "title": "Nos composants Blazor et notre design system",
-      "summary": "Construire nos écrans avec la bibliothèque de composants et la charte de la maison.",
-      "objectives": ["Utiliser les composants de notre bibliothèque Blazor", "Respecter les jetons de design (couleurs, typographie, espacements)", "Proposer un nouveau composant selon nos règles"],
-      "notions": ["bibliothèque de composants", "design tokens", "accessibilité"],
+      "deliverable": "Trois anomalies corrigées, chacune avec sa cause expliquée en une phrase.",
+      "notes": ".NET 11 sort en novembre 2026 : vérifier l'état des union types au moment de rédiger." },
+    { "id": "t06", "moduleId": "m3", "order": 1, "days": 0.5, "status": "cadrer", "owner": "",
+      "title": "Nos conventions et notre architecture",
+      "summary": "Comment sont organisées nos solutions et quelles règles de code on applique.",
+      "objectives": ["Naviguer dans une solution de référence", "Appliquer notre .editorconfig et nos analyzers", "Préparer une PR conforme à notre checklist de revue"],
+      "notions": ["structure de solution", "conventions de nommage", ".editorconfig", "analyzers"],
+      "bridge": "", "start": "Projet de référence à choisir", "deliverable": "",
+      "notes": "Dans un second temps, à cadrer avec l'équipe." },
+    { "id": "t07", "moduleId": "m3", "order": 2, "days": 0.5, "status": "cadrer", "owner": "",
+      "title": "Notre façon de livrer et nos composants Blazor",
+      "summary": "Du ticket à la mise en production, et construire nos écrans avec notre bibliothèque de composants.",
+      "objectives": ["Suivre notre modèle de branches, de PR et de CI/CD", "Utiliser notre bibliothèque de composants Blazor et ses jetons de design"],
+      "notions": ["Git", "pull requests", "pipelines", "design system"],
       "bridge": "", "start": "", "deliverable": "",
-      "notes": "Par exemple Ustilz.UI.Blazor, si c'est bien notre référence : à confirmer." },
-    { "id": "t21", "moduleId": "m7", "order": 5, "days": 0.5, "status": "cadrer", "owner": "",
-      "title": "Sécurité, RGPD et gestion des secrets",
-      "summary": "Nos obligations et nos pratiques : données personnelles, secrets, dépendances vulnérables.",
-      "objectives": ["Savoir où et comment stocker un secret", "Identifier une donnée personnelle et son traitement", "Réagir à une alerte de dépendance vulnérable"],
-      "notions": ["coffre de secrets", "RGPD", "OWASP Top 10", "audit de dépendances"],
-      "bridge": "", "start": "", "deliverable": "", "notes": "" },
-    { "id": "t22", "moduleId": "m8", "order": 1, "days": 2, "status": "cadrer", "owner": "",
-      "title": "Premier ticket accompagné",
-      "summary": "Traiter un vrai ticket d'un projet client en binôme, jusqu'à la mise en recette.",
-      "objectives": ["Comprendre un besoin à partir d'un ticket", "Livrer la modification avec tests et PR", "Recevoir et intégrer une revue de code"],
-      "notions": ["pair programming", "revue", "recette"],
-      "bridge": "", "start": "Ticket à sélectionner", "deliverable": "Une PR fusionnée.", "notes": "" }
+      "notes": "Dans un second temps. Bibliothèque de composants : Ustilz.UI.Blazor si c'est bien notre référence, à confirmer." }
   ]
 }
 </script>
@@ -438,8 +309,8 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
   "use strict";
 
   const PHASES = [
-    { id: "dotnet", cls: "p1", tag: "Phase 1", title: "Socle .NET 10 / 11", intro: "Le langage, l'outillage, le web, l'authentification et Blazor, avec un pont systématique depuis Java, Rust et JavaScript." },
-    { id: "3b", cls: "p2", tag: "Phase 2", title: "Bonnes pratiques 3B Studio", intro: "Nos conventions, notre architecture et notre façon de livrer. Contenus à cadrer avec l'équipe, possiblement dans un second temps." }
+    { id: "dotnet", cls: "p1", tag: "Phase 1", title: "Vernis .NET 10 / 11", intro: "Un tour d'horizon de ce que permet .NET et de comment ça marche, en manipulant : chaque demi-journée enchaîne des exercices courts, avec un pont depuis Java, Rust et JavaScript. Le reste du temps, l'alternant corrige des anomalies sur nos applis." },
+    { id: "3b", cls: "p2", tag: "Phase 2", title: "Bonnes pratiques 3B Studio", intro: "Nos conventions, notre architecture et notre façon de livrer. Dans un second temps, à cadrer avec l'équipe : fixez la date de début dans les réglages." }
   ];
   const STATUSES = [
     { id: "cadrer", label: "À cadrer", color: "var(--st-cadrer)" },
@@ -451,7 +322,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
   const ST = Object.fromEntries(STATUSES.map(s => [s.id, s]));
   const DAY_NAMES = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
   const SEED = JSON.parse(document.getElementById("seed").textContent);
-  const LS_KEY = "plan-tp-dotnet-v1";
+  const LS_KEY = "plan-tp-dotnet-v2";
 
   const state = {
     mode: "loading",
@@ -474,6 +345,10 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
   const fmtShort = d => d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
   const fmtDM = d => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
   const fmtDays = n => (Number.isInteger(n) ? String(n) : String(n).replace(".", ",")) + " j";
+  const fmtDur = n => n === 0.5 ? "½ j" : fmtDays(n);
+  const fmtHalves = n => { const h = Math.round(n * 2); return h + (h > 1 ? " demi-journées" : " demi-journée"); };
+  const fmtMin = m => Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+  const exMinutes = list => (list || []).reduce((s, x) => { const r = /\((\d+)\s*min\)/.exec(x); return s + (r ? Number(r[1]) : 0); }, 0);
   const today = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; })();
   const isoWeek = d => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y) / 864e5 + 1) / 7); };
   const lines = s => String(s || "").split("\n").map(x => x.trim()).filter(Boolean);
@@ -608,12 +483,13 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
     const blocked = (c.blocked || []).map(b => ({ from: parseDate(b.from), to: parseDate(b.to || b.from), label: b.label || "Indisponible" })).filter(b => b.from && b.to);
     const blockOf = d => blocked.find(b => d >= b.from && d <= b.to);
     const isWork = d => wd.has(d.getDay()) && !blockOf(d);
+    const hv = new Set(c.halves && c.halves.length ? c.halves : [0, 1]);
     const slots = new Map();
     const byTp = new Map();
     const phaseRange = new Map();
     let cur = parseDate(c.startDate) || today, half = 0, guard = 0;
     const advance = () => { half++; if (half > 1) { half = 0; cur = addDays(cur, 1); } };
-    const toWork = () => { while (!isWork(cur) && guard++ < 4000) { cur = addDays(cur, 1); half = 0; } };
+    const toWork = () => { while ((!isWork(cur) || !hv.has(half)) && guard++ < 4000) advance(); };
     phases.forEach((ph, i) => {
       if (i > 0 && c.phase2Start) { const p = parseDate(c.phase2Start); if (p && p > cur) { cur = p; half = 0; } }
       let first = null, last = null;
@@ -635,7 +511,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       }
       phaseRange.set(ph.id, { first, last });
     });
-    return { slots, byTp, phaseRange, blockOf, isWork, wd };
+    return { slots, byTp, phaseRange, blockOf, isWork, wd, hv };
   }
 
   function urgency(t, sch) {
@@ -671,7 +547,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
 
     if (state.tps.size === 0 && state.modules.size === 0) {
       app.innerHTML = `<div class="empty"><h2>Aucun TP dans ce plan</h2>
-        <p>Le plan est vide. Chargez le cursus proposé (22 TP répartis en deux phases) pour partir d'une base, ou créez vos modules un par un.</p>
+        <p>Le plan est vide. Chargez le cursus proposé (${SEED.tps.length} demi-journées réparties en deux phases) pour partir d'une base, ou créez vos modules un par un.</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn primary" data-act="seed" ${ro ? "disabled" : ""}>Charger le cursus proposé</button>
           <button class="btn" data-act="add-module" data-phase="dotnet" ${ro ? "disabled" : ""}>Créer un premier module</button>
@@ -690,21 +566,23 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
     const daysByStatus = Object.fromEntries(STATUSES.map(s => [s.id, 0]));
     all.forEach(t => { const s = ST[t.status] ? t.status : "cadrer"; byStatus[s]++; daysByStatus[s] += Number(t.days) || 0; });
     const ready = byStatus.pret + byStatus.fait;
-    const lastEnd = [...sch.phaseRange.values()].map(r => r.last).filter(Boolean).pop();
+    const p1 = phases[0].modules.flatMap(m => m.tps), p1Days = p1.reduce((s, t) => s + (Number(t.days) || 0), 0);
+    const laterDays = totalDays - p1Days;
+    const lastEnd = (sch.phaseRange.get(phases[0].id) || {}).last;
     const next = all.find(t => t.status !== "pret" && t.status !== "fait");
     const nextS = next && sch.byTp.get(next.id);
     const lateCount = all.filter(t => urgency(t, sch)).length;
-    const bar = STATUSES.map(s => daysByStatus[s.id] ? `<i style="width:${(daysByStatus[s.id] / totalDays * 100).toFixed(2)}%;background:${s.color}" title="${esc(s.label)} : ${fmtDays(daysByStatus[s.id])}"></i>` : "").join("");
+    const bar = STATUSES.map(s => daysByStatus[s.id] ? `<i style="width:${(daysByStatus[s.id] / totalDays * 100).toFixed(2)}%;background:${s.color}" title="${esc(s.label)} : ${fmtHalves(daysByStatus[s.id])}"></i>` : "").join("");
     $("#summary").innerHTML = `
       <div class="figures">
         <div class="fig"><b>${ready} / ${all.length}</b><span>TP prêts ou réalisés</span></div>
-        <div class="fig"><b>${fmtDays(totalDays)}</b><span>de formation planifiés</span></div>
-        <div class="fig"><b>${lastEnd ? esc(fmtDM(lastEnd.d)) : "—"}</b><span>fin estimée du parcours</span></div>
+        <div class="fig"><b>${fmtHalves(p1Days)}</b><span>de TP .NET${laterDays ? ` · + ${fmtHalves(laterDays)} 3B Studio ensuite` : ""}</span></div>
+        <div class="fig"><b>${lastEnd ? esc(fmtShort(lastEnd.d)) : "—"}</b><span>dernière séance .NET prévue</span></div>
         <div class="fig next"><b>${next ? `<span class="mono">${esc(next.code)}</span> ${esc(next.title)}` : "Tout est prêt"}</b>
           <span>${next ? "prochain TP à préparer" + (nextS && nextS.start ? ", requis le " + esc(fmtShort(nextS.start.d)) : "") : "aucun TP en attente"}${lateCount ? ` · <span style="color:var(--warn);font-weight:600">${lateCount} en tension</span>` : ""}</span></div>
       </div>
       <div class="bar" role="img" aria-label="Avancement de la préparation, pondéré par la durée">${bar}</div>
-      <div class="legend">${STATUSES.map(s => `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)} · ${byStatus[s.id]}</span>`).join("")}<span class="muted">Barre pondérée par jours de formation</span></div>`;
+      <div class="legend">${STATUSES.map(s => `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)} · ${byStatus[s.id]}</span>`).join("")}<span class="muted">Barre pondérée par durée</span></div>`;
   }
 
   function matches(t) {
@@ -736,7 +614,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       if (filtering && !mods.length) continue;
       html += `<section class="phase ${ph.cls}">
         <div class="phase-head"><div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span class="phase-tag">${ph.tag}</span><h2>${esc(ph.title)}</h2></div>
-          <span class="meta">${fmtDays(days)}${r && r.first ? " · " + esc(fmtDM(r.first.d)) + " → " + esc(fmtDM(r.last.d)) : ""}</span></div>
+          <span class="meta">${fmtHalves(days)}${r && r.first ? " · " + esc(fmtDM(r.first.d)) + " → " + esc(fmtDM(r.last.d)) : ""}</span></div>
         <p class="phase-intro">${esc(ph.intro)}</p>`;
       mods.forEach((m, mi) => {
         const mdays = m.tps.reduce((a, t) => a + (Number(t.days) || 0), 0);
@@ -744,7 +622,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         html += `<div class="module">
           <div class="module-head">
             <input class="mtitle" data-mod="${esc(m.id)}" value="${esc(m.title)}" aria-label="Nom du module" ${ro || !real ? "readonly" : ""}>
-            <span class="mdays">${m.tps.length} TP · ${fmtDays(mdays)}</span>
+            <span class="mdays">${m.tps.length} TP · ${fmtDur(mdays)}</span>
             ${real && !ro ? `<button class="btn ghost icon-btn" data-act="mod-up" data-id="${esc(m.id)}" title="Monter le module" aria-label="Monter le module" ${mi === 0 ? "disabled" : ""}>↑</button>
             <button class="btn ghost icon-btn" data-act="mod-down" data-id="${esc(m.id)}" title="Descendre le module" aria-label="Descendre le module" ${mi === mods.length - 1 ? "disabled" : ""}>↓</button>
             ${m.tps.length === 0 ? `<button class="btn ghost icon-btn danger" data-act="mod-del" data-id="${esc(m.id)}" title="Supprimer le module vide" aria-label="Supprimer le module vide">✕</button>` : ""}` : ""}
@@ -758,6 +636,11 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
     }
     if (filtering && !phases.some(p => p.modules.some(m => m.tps.some(matches)))) html += `<p class="muted">Aucun TP ne correspond à ce filtre.</p>`;
     return html + `</div>`;
+  }
+
+  function exHint(t) {
+    const m = exMinutes(t.objectives), cap = Math.round((Number(t.days) || 0.5) * 2) * 210;
+    return "Un exercice par ligne, durée entre parenthèses, par ex. (20 min)" + (m ? ` · total ${fmtMin(m)} pour ~${fmtMin(cap)} disponibles` : "");
   }
 
   function renderTp(t, sch, m, phases) {
@@ -775,7 +658,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         <span class="tp-code">${esc(t.code)}</span>
         <div class="tp-main"><button class="tp-title" data-act="toggle" data-id="${esc(t.id)}" aria-expanded="${open}">${esc(t.title || "Sans titre")}</button>
           <div class="tp-sub">${sub.join("")}</div></div>
-        <span class="tp-days">${fmtDays(Number(t.days) || 0)}</span>
+        <span class="tp-days">${fmtDur(Number(t.days) || 0)}</span>
         <select class="status s-${st}" id="st-${esc(t.id)}" data-act="status" data-id="${esc(t.id)}" aria-label="Statut de ${esc(t.code)}" ${ro ? "disabled" : ""}>
           ${STATUSES.map(x => `<option value="${x.id}" ${x.id === st ? "selected" : ""}>${esc(x.label)}</option>`).join("")}
         </select>
@@ -796,8 +679,8 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         ${f("title", "Titre", t.title)}
         ${f("summary", "Résumé", t.summary, { area: true, rows: 2 })}
         <div class="grid2">
-          ${f("objectives", "Objectifs pédagogiques", (t.objectives || []).join("\n"), { area: true, rows: 5, hint: "Un objectif par ligne" })}
-          ${f("notions", "Notions abordées", (t.notions || []).join(", "), { area: true, rows: 5, hint: "Séparées par des virgules" })}
+          ${f("objectives", "Exercices", (t.objectives || []).join("\n"), { area: true, rows: 8, hint: exHint(t) })}
+          ${f("notions", "Notions abordées", (t.notions || []).join(", "), { area: true, rows: 8, hint: "Séparées par des virgules" })}
         </div>
         ${f("bridge", "Pont depuis Java / Rust / JS", t.bridge, { area: true, rows: 2, cls: "bridge" })}
         <div class="grid2">
@@ -807,7 +690,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         <div class="grid2">
           <div class="field"><label for="f-${esc(t.id)}-days">Durée</label>
             <select id="f-${esc(t.id)}-days" data-field="days" data-id="${esc(t.id)}" ${ro ? "disabled" : ""}>
-              ${[0.5, 1, 1.5, 2, 3, 4, 5].map(v => `<option value="${v}" ${Number(t.days) === v ? "selected" : ""}>${fmtDays(v)}</option>`).join("")}
+              ${[0.5, 1, 1.5, 2].map(v => `<option value="${v}" ${Number(t.days) === v ? "selected" : ""}>${fmtHalves(v)}</option>`).join("")}
             </select></div>
           ${f("owner", "Rédigé par", t.owner)}
           <div class="field"><label for="f-${esc(t.id)}-module">Module</label>
@@ -839,7 +722,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
     const end = parseDate(keys[keys.length - 1]);
     const showDays = [1, 2, 3, 4, 5].concat(sch.wd.has(6) ? [6] : []).concat(sch.wd.has(0) ? [0] : []);
     let monday = addDays(start, -((start.getDay() + 6) % 7));
-    let html = `<div class="cal"><p class="muted" style="margin:0">Planning calculé à partir du ${esc(fmtShort(start))}, par demi-journées, dans l'ordre du cursus. Les périodes d'école et jours non travaillés se règlent dans l'onglet Réglages.</p>`;
+    let html = `<div class="cal"><p class="muted" style="margin:0">Planning calculé à partir du ${esc(fmtShort(start))}, une demi-journée par TP, sur les créneaux réservés aux TP. Créneaux, périodes d'école et jours non travaillés se règlent dans l'onglet Réglages.</p>`;
     let guard = 0;
     while (monday <= end && guard++ < 120) {
       const days = showDays.map(wd => addDays(monday, (wd + 6) % 7));
@@ -857,7 +740,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         if (off) { html += `<div class="day off">${head}<div class="half"><span class="off-label">Non travaillé</span></div><div class="half"></div></div>`; continue; }
         const halfHtml = h => {
           const ids = sl ? sl[h] : [];
-          if (!ids.length) return `<div class="half">${before ? "" : `<span class="cal-empty">${d > end ? "" : "Libre"}</span>`}</div>`;
+          if (!ids.length) return `<div class="half">${before || d > end ? "" : `<span class="cal-empty">${sch.hv.has(h) ? "Libre" : "Anomalies / projets"}</span>`}</div>`;
           return `<div class="half">${ids.map(id => { const t = tpById.get(id); if (!t) return ""; const col = ST[t.status] ? ST[t.status].color : ST.cadrer.color; return `<div class="slot" style="--c:${col}" title="${esc(t.title)} · ${esc((ST[t.status] || ST.cadrer).label)}"><b>${esc(t.code)}</b><span>${esc(t.title)}</span></div>`; }).join("")}</div>`;
         };
         html += `<div class="day">${head}${halfHtml(0)}${halfHtml(1)}</div>`;
@@ -885,6 +768,9 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         </div>
         <div class="field"><span class="lbl">Jours en entreprise</span>
           <div class="weekdays">${[1, 2, 3, 4, 5, 6].map(d => `<label><input type="checkbox" data-wd="${d}" ${wd.has(d) ? "checked" : ""} ${dis}> ${["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"][d]}</label>`).join("")}</div></div>
+        <div class="field"><span class="lbl">Créneaux réservés aux TP</span>
+          <div class="weekdays">${[[0, "Matin"], [1, "Après-midi"]].map(([h, l]) => `<label><input type="checkbox" data-hv="${h}" ${sch.hv.has(h) ? "checked" : ""} ${dis}> ${l}</label>`).join("")}</div>
+          <span class="hint">Les autres demi-journées sont laissées aux anomalies et aux projets.</span></div>
         <div class="field"><span class="lbl">Périodes d'école et absences</span>
           <div class="blocked">
             ${(c.blocked || []).map((b, i) => `<div class="blocked-row">
@@ -923,9 +809,9 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         md += `\n### ${m.title}\n`;
         for (const t of m.tps) {
           const s = sch.byTp.get(t.id);
-          md += `\n#### ${t.code} · ${t.title}\n\n- Durée : ${fmtDays(Number(t.days) || 0)}${s && s.start ? ` · prévu le ${fmtShort(s.start.d)} ${s.start.h ? "après-midi" : "matin"}` : ""}\n- Statut : ${(ST[t.status] || ST.cadrer).label}${t.owner ? ` · rédaction : ${t.owner}` : ""}\n`;
+          md += `\n#### ${t.code} · ${t.title}\n\n- Durée : ${fmtHalves(Number(t.days) || 0)}${s && s.start ? ` · prévu le ${fmtShort(s.start.d)} ${s.start.h ? "après-midi" : "matin"}` : ""}\n- Statut : ${(ST[t.status] || ST.cadrer).label}${t.owner ? ` · rédaction : ${t.owner}` : ""}\n`;
           if (t.summary) md += `- Résumé : ${t.summary}\n`;
-          if ((t.objectives || []).length) md += `- Objectifs :\n${t.objectives.map(o => `  - ${o}`).join("\n")}\n`;
+          if ((t.objectives || []).length) md += `- Exercices :\n${t.objectives.map(o => `  - ${o}`).join("\n")}\n`;
           if ((t.notions || []).length) md += `- Notions : ${t.notions.join(", ")}\n`;
           if (t.bridge) md += `- Pont Java/Rust/JS : ${t.bridge}\n`;
           if (t.start) md += `- Point de départ : \`${t.start}\`\n`;
@@ -1037,6 +923,12 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       el.checked ? set.add(d) : set.delete(d);
       if (!set.size) { el.checked = true; toast("Gardez au moins un jour en entreprise."); return; }
       store.setConfig({ ...cfg(), weekdays: [...set].sort() }); return;
+    }
+    if (el.dataset.hv) {
+      const set = new Set(cfg().halves && cfg().halves.length ? cfg().halves : [0, 1]); const h = Number(el.dataset.hv);
+      el.checked ? set.add(h) : set.delete(h);
+      if (!set.size) { el.checked = true; toast("Gardez au moins un créneau de TP."); return; }
+      store.setConfig({ ...cfg(), halves: [...set].sort() }); return;
     }
     if (el.dataset.b) {
       const c = { ...cfg() }; const i = Number(el.dataset.i);
