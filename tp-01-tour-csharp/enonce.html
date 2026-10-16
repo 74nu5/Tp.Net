@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP-01 · Tour de .NET et C#</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/enonce.css">
+</head>
+<body data-tp="tp-01" data-solution="depart/Katas.slnx">
+<div class="page">
+
+  <aside class="side" aria-label="Sommaire du TP">
+    <a class="home" href="../index.html">← Parcours .NET</a>
+    <div class="panel" id="progress"></div>
+    <div class="panel compare-picker"></div>
+    <nav class="panel" id="toc" aria-label="Exercices"></nav>
+    <div id="side-actions"></div>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">TP-01 · lundi 19 octobre, matin · environ 3 h</div>
+      <h1>Tour de .NET et C# express</h1>
+      <p>L'objectif de la matinée : prendre en main l'outillage .NET et l'essentiel du langage C#, en tapant du code plutôt qu'en lisant de la théorie. Chaque exercice vient avec ses tests : ils sont rouges au départ, et l'exercice est terminé quand ils passent au vert.</p>
+      <p class="muted">Cochez « Terminé » à la fin de chaque exercice, et lancez le chrono si vous voulez comparer avec la durée prévue. Tout reste dans ce navigateur.</p>
+      <p>Les exemples de code montrent toujours le C#, et à côté le même code dans le langage que vous connaissez le mieux. Choisissez-le ici ou dans le panneau latéral :</p>
+      <div class="compare-picker"></div>
+    </header>
+
+    <div class="panel">
+      <h2>Avant de commencer</h2>
+      <ol>
+        <li>Vérifiez que le SDK .NET 10 est installé : <code>dotnet --list-sdks</code> doit afficher une ligne <code>10.0.x</code>.</li>
+        <li>Ouvrez <code>depart/Katas.slnx</code> dans votre IDE (Rider, Visual Studio ou VS Code avec C# Dev Kit).</li>
+        <li>Lancez tous les tests une première fois, depuis le dossier <code>tp-01-tour-csharp/</code> :
+          <pre><code class="language-bash">dotnet test --solution depart/Katas.slnx</code></pre>
+          Une cinquantaine de tests échouent : c'est normal, c'est le travail de la matinée. Le build affiche aussi 3 avertissements, qui font partie de l'exercice 3.</li>
+        <li>Chaque exercice donne la commande qui ne lance que ses tests. Le panneau de tests de l'IDE fait la même chose en un clic.</li>
+      </ol>
+      <p>Le code à compléter est marqué <code>TODO Exercise XX</code>. Le code, les commentaires et les noms sont en anglais, comme dans nos projets.</p>
+      <pre><code class="language-plaintext">depart/
+├─ Katas.slnx
+├─ Directory.Packages.props        versions de packages propres au TP (exercice 2)
+├─ src/Katas/                      le code à compléter, un dossier par exercice
+└─ tests/Katas.Tests/              les tests, un fichier par exercice
+   ├─ Support/FakeHttpHandler.cs   un faux serveur HTTP pour l'exercice 6
+   └─ MyTests.cs                   vos propres tests (exercice 7)</code></pre>
+    </div>
+
+    <!-- ============================================================ 1 -->
+    <section class="exercise" id="ex1" data-minutes="15">
+      <h2>SDK, CLI et anatomie d'un projet</h2>
+      <p>Pas de test automatique pour celui-ci : vous validez en répondant aux questions. Tout se fait avec la commande <code>dotnet</code>. Travaillez dans un dossier <code>depart/sandbox/</code>, ignoré par Git.</p>
+      <pre><code class="language-bash">dotnet --info                 # SDK et runtimes installés
+dotnet new list               # les modèles de projets disponibles
+cd depart &amp;&amp; mkdir sandbox &amp;&amp; cd sandbox
+dotnet new console -n Hello
+cd Hello
+dotnet run</code></pre>
+      <p>Ouvrez <code>Hello.csproj</code> et <code>Program.cs</code>, puis répondez :</p>
+      <ol class="questions">
+        <li>Que signifie <code>&lt;TargetFramework&gt;net10.0&lt;/TargetFramework&gt;</code> ?
+          <details class="answer"><summary>Voir la réponse</summary><p>C'est le <em>Target Framework Moniker</em> : le projet cible .NET 10. On peut en viser plusieurs avec <code>&lt;TargetFrameworks&gt;</code>.</p></details></li>
+        <li><code>Program.cs</code> n'a ni classe ni méthode <code>Main</code>. Comment le programme démarre-t-il ?
+          <details class="answer"><summary>Voir la réponse</summary><p>Ce sont des <em>top-level statements</em> : le compilateur génère la classe et la méthode <code>Main</code> à partir des instructions du fichier.</p></details></li>
+        <li>Où le binaire est-il produit ? À quoi servent <code>bin/</code> et <code>obj/</code> ?
+          <details class="answer"><summary>Voir la réponse</summary><p>Dans <code>bin/Debug/net10.0/</code>. <code>obj/</code> contient les fichiers intermédiaires (restauration des packages, code généré). Les deux sont ignorés par Git.</p></details></li>
+        <li>Lancez <code>dotnet publish -c Release</code>. Qu'obtenez-vous, et où ?
+          <details class="answer"><summary>Voir la réponse</summary><p>Le dossier <code>bin/Release/net10.0/publish/</code> : la DLL et ses dépendances, prêtes à déployer. Avec <code>--self-contained</code> ou une publication AOT, on obtient un exécutable autonome.</p></details></li>
+        <li><code>Nullable</code> et <code>ImplicitUsings</code> apparaissent dans <code>Hello.csproj</code>, mais aussi dans <code>Directory.Build.props</code> à la racine du dépôt. Comment MSBuild trouve-t-il ce fichier ?
+          <details class="answer"><summary>Voir la réponse</summary><p>MSBuild cherche <code>Directory.Build.props</code> (et <code>Directory.Packages.props</code>) en remontant les dossiers depuis le projet, et importe le premier trouvé. C'est ainsi qu'un réglage s'applique à tous les projets d'un dépôt.</p></details></li>
+      </ol>
+      <p>Enfin, depuis .NET 10, un fichier C# seul se lance sans projet. Créez <code>hello.cs</code> :</p>
+      <pre><code class="language-csharp">Console.WriteLine($"Hello from .NET {Environment.Version}");</code></pre>
+      <p>et lancez <code>dotnet run hello.cs</code>.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <div class="table-wrap"><table>
+          <thead><tr><th>.NET</th><th data-lang="java">Java</th><th data-lang="rust">Rust</th><th data-lang="python">Python</th><th data-lang="javascript">JavaScript</th></tr></thead>
+          <tbody>
+            <tr><td><code>dotnet new console</code></td><td data-lang="java"><code>mvn archetype:generate</code></td><td data-lang="rust"><code>cargo new</code></td><td data-lang="python"><code>uv init</code></td><td data-lang="javascript"><code>npm init</code></td></tr>
+            <tr><td><code>dotnet run</code></td><td data-lang="java"><code>mvn exec:java</code></td><td data-lang="rust"><code>cargo run</code></td><td data-lang="python"><code>uv run main.py</code></td><td data-lang="javascript"><code>npm start</code></td></tr>
+            <tr><td><code>.csproj</code></td><td data-lang="java"><code>pom.xml</code></td><td data-lang="rust"><code>Cargo.toml</code></td><td data-lang="python"><code>pyproject.toml</code></td><td data-lang="javascript"><code>package.json</code></td></tr>
+            <tr><td><code>bin/</code> + <code>obj/</code></td><td data-lang="java"><code>target/</code></td><td data-lang="rust"><code>target/</code></td><td data-lang="python"><code>__pycache__/</code>, <code>dist/</code></td><td data-lang="javascript"><code>dist/</code></td></tr>
+            <tr><td><code>dotnet run hello.cs</code></td><td data-lang="java"><code>java Hello.java</code></td><td data-lang="rust"><code>cargo +nightly -Zscript hello.rs</code></td><td data-lang="python"><code>python hello.py</code></td><td data-lang="javascript"><code>node hello.js</code></td></tr>
+          </tbody>
+        </table></div>
+        <p data-lang="java">Comme Java, C# est compilé en bytecode (IL) exécuté par une machine virtuelle (le CLR), avec un compilateur JIT.</p>
+        <p data-lang="rust">Contrairement à Rust, le binaire produit n'est pas natif par défaut : c'est de l'IL exécuté par le runtime .NET, avec un ramasse-miettes. La publication AOT donne un exécutable natif.</p>
+        <p data-lang="python">Contrairement à Python, tout est compilé avant l'exécution : les erreurs de type apparaissent au build, pas au lancement.</p>
+        <p data-lang="javascript">Le SDK fait à la fois le travail de npm, du bundler et du compilateur TypeScript : une seule commande, <code>dotnet</code>.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="exercise" id="ex2" data-minutes="15" data-tests="Katas.Tests.Exercise02">
+      <h2>NuGet et gestion centralisée des versions</h2>
+      <p>Dans ce dépôt, aucun projet n'écrit de numéro de version de package : toutes les versions sont centralisées (<em>Central Package Management</em>).</p>
+      <ol>
+        <li>Ouvrez <code>Directory.Packages.props</code> à la <strong>racine du dépôt</strong>. Repérez la ligne <code>System.Security.Cryptography.Pkcs</code> et son commentaire : c'est ce qu'on fait quand l'audit NuGet signale une faille dans une dépendance indirecte.</li>
+        <li>Ouvrez <code>depart/Directory.Packages.props</code> : il importe le fichier racine et ajoute les versions propres au TP.</li>
+        <li>Ajoutez le package <code>Humanizer.Core</code> en version <code>3.0.10</code> :
+          <ul>
+            <li>une ligne <code>&lt;PackageVersion Include="Humanizer.Core" Version="3.0.10" /&gt;</code> dans <code>depart/Directory.Packages.props</code> ;</li>
+            <li>une ligne <code>&lt;PackageReference Include="Humanizer.Core" /&gt;</code>, <strong>sans version</strong>, dans <code>src/Katas/Katas.csproj</code>.</li>
+          </ul>
+          Vous pouvez aussi essayer <code>dotnet add src/Katas package Humanizer.Core</code> et regarder où la version a été écrite.</li>
+        <li>Implémentez les deux méthodes de <code>Exercise02/TextFormatter.cs</code> avec Humanizer.</li>
+        <li>Listez les dépendances : <code>dotnet list src/Katas package --include-transitive</code>, puis avec <code>--vulnerable</code>.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la durée</summary><p><code>TimeSpan</code> reçoit une méthode d'extension <code>Humanize(precision, culture)</code>.</p></details>
+        <details class="hint"><summary>la phrase</summary><p><code>string</code> reçoit <code>Humanize(LetterCasing.Sentence)</code>.</p></details>
+        <details class="hint"><summary>la langue</summary><p>Le test attend de l'anglais : passez <code>CultureInfo.GetCultureInfo("en-US")</code>, sinon le résultat dépend des réglages régionaux de la machine.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p>NuGet est le registre de packages de .NET. Le fichier de versions centralisé fixe une version pour tous les projets du dépôt.</p>
+        <p data-lang="java">≈ Maven Central, et <code>&lt;dependencyManagement&gt;</code> dans un pom parent.</p>
+        <p data-lang="rust">≈ crates.io, et <code>[workspace.dependencies]</code> dans le <code>Cargo.toml</code> du workspace.</p>
+        <p data-lang="python">≈ PyPI. Le plus proche est un fichier de contraintes partagé par tous les projets (<code>pip install -c constraints.txt</code>).</p>
+        <p data-lang="javascript">≈ npm. Le plus proche est le <em>catalog</em> de pnpm, ou <code>overrides</code> dans <code>package.json</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">&lt;!-- Directory.Packages.props --&gt;
+&lt;ItemGroup&gt;
+  &lt;PackageVersion Include="Humanizer.Core" Version="3.0.10" /&gt;
+&lt;/ItemGroup&gt;
+
+&lt;!-- Katas.csproj --&gt;
+&lt;PackageReference Include="Humanizer.Core" /&gt;</code></pre>
+          <pre data-lang="java"><code class="language-xml">&lt;!-- parent pom.xml --&gt;
+&lt;dependencyManagement&gt;
+  &lt;dependencies&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;com.fasterxml.jackson.core&lt;/groupId&gt;
+      &lt;artifactId&gt;jackson-databind&lt;/artifactId&gt;
+      &lt;version&gt;2.17.2&lt;/version&gt;
+    &lt;/dependency&gt;
+  &lt;/dependencies&gt;
+&lt;/dependencyManagement&gt;</code></pre>
+          <pre data-lang="rust"><code class="language-ini"># Cargo.toml du workspace
+[workspace.dependencies]
+serde = "1.0"
+
+# Cargo.toml d'un crate
+[dependencies]
+serde = { workspace = true }</code></pre>
+          <pre data-lang="python"><code class="language-ini"># pyproject.toml
+[project]
+dependencies = ["requests&gt;=2.32"]
+
+# constraints.txt partagé : pip install -c constraints.txt
+requests==2.32.3</code></pre>
+          <pre data-lang="javascript"><code class="language-yaml"># pnpm-workspace.yaml
+catalog:
+  lodash: ^4.17.21
+
+# package.json d'un paquet : "lodash": "catalog:"</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="exercise" id="ex3" data-minutes="30" data-tests="Katas.Tests.Exercise03">
+      <h2>Modéliser : class, struct, record et nullabilité</h2>
+      <p>C# offre plusieurs façons de déclarer un type. Le bon choix dépend de ce que représente l'objet :</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Déclaration</th><th>Égalité</th><th>Usage typique</th></tr></thead>
+        <tbody>
+          <tr><td><code>class</code></td><td>par référence</td><td>objet avec une identité, qui change dans le temps</td></tr>
+          <tr><td><code>struct</code></td><td>par valeur</td><td>petite valeur, copiée à chaque affectation</td></tr>
+          <tr><td><code>record</code> (classe)</td><td>par valeur</td><td>donnée immuable : DTO, message, valeur métier</td></tr>
+          <tr><td><code>readonly record struct</code></td><td>par valeur</td><td>petite valeur immuable : montant, coordonnée</td></tr>
+        </tbody>
+      </table></div>
+      <p>Dans <code>src/Katas/Exercise03/</code> :</p>
+      <ol>
+        <li><strong><code>Money</code></strong> est une <code>class</code> : deux montants identiques ne sont pas égaux. Transformez-la en <code>readonly record struct</code>, implémentez l'opérateur <code>+</code> (exception <code>InvalidOperationException</code> si les devises diffèrent) et <code>ToString()</code> (<code>"12.50 EUR"</code>).</li>
+        <li><strong><code>Customer</code></strong> : deux clients aux mêmes données doivent être égaux et avoir un <code>ToString()</code> lisible. Le nom est obligatoire, l'email est facultatif : exprimez-le dans le type.</li>
+        <li><strong><code>Order</code></strong> reste une <code>class</code>, car une commande a une identité. Implémentez <code>Total</code> et refusez une quantité nulle ou négative dans <code>AddLine</code>. Remarquez le <em>primary constructor</em> : <code>class Order(int id, …)</code>.</li>
+        <li><strong>Nullabilité</strong> : le build affiche des avertissements <code>CS8618</code> et <code>CS8602</code>. Corrigez <code>Customer</code>, puis <code>CustomerDirectory</code>, jusqu'à zéro avertissement. Quand l'email devient <code>string?</code>, le compilateur vous montre l'endroit à protéger dans <code>EmailDomain</code>.</li>
+      </ol>
+      <p>Validez aussi avec <code>dotnet build depart/Katas.slnx</code> : 0 avertissement.</p>
+      <div class="hints">
+        <details class="hint"><summary>Money</summary><p>Un <code>record struct</code> positionnel : <code>public readonly record struct Money(decimal Amount, string Currency)</code>. Pour copier en changeant une propriété : <code>left with { Amount = … }</code>.</p></details>
+        <details class="hint"><summary>Customer</summary><p>Une propriété obligatoire : <code>public required string Name { get; init; }</code>. Un email facultatif : <code>string?</code>.</p></details>
+        <details class="hint"><summary>null et garde-fous</summary><p><code>customer?.Name ?? "ANONYMOUS"</code> combine <code>?.</code> et <code>??</code>. <code>ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity)</code> fait la vérification de quantité en une ligne.</p></details>
+        <details class="hint"><summary>ToString</summary><p>Pour formater sans dépendre de la culture de la machine : <code>string.Create(CultureInfo.InvariantCulture, $"{Amount:0.00} {Currency}")</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Un <code>record</code> C# ressemble beaucoup au <code>record</code> Java, avec en plus <code>with</code> pour copier en modifiant. <code>string?</code> joue le rôle d'<code>Optional</code>, mais sans objet enveloppe : c'est une annotation vérifiée par le compilateur.</p>
+        <p data-lang="rust">Un <code>record struct</code> ≈ une <code>struct</code> avec <code>#[derive(Clone, Copy, PartialEq)]</code>. Les <em>nullable reference types</em> rappellent <code>Option&lt;T&gt;</code>, mais ne sont vérifiés qu'à la compilation, par des avertissements : rien n'empêche un <code>null</code> d'arriver à l'exécution si on les ignore.</p>
+        <p data-lang="python">Un <code>record</code> ≈ une <code>@dataclass(frozen=True)</code>, mais vérifiée à la compilation. <code>string?</code> ≈ <code>str | None</code>, sauf que le compilateur avertit vraiment.</p>
+        <p data-lang="javascript">JavaScript n'a pas d'égalité par valeur : deux objets identiques ne sont jamais <code>===</code>. Les records C# l'apportent. <code>string?</code> ≈ <code>string | null</code> en TypeScript strict.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public readonly record struct Point(int X, int Y);
+
+var a = new Point(1, 2);
+var b = a with { Y = 5 };                  // copie modifiée
+Console.WriteLine(a == new Point(1, 2));   // True : égalité par valeur
+
+string? nickname = null;                   // peut être null, et le compilateur le sait</code></pre>
+          <pre data-lang="java"><code class="language-java">public record Point(int x, int y) {}
+
+var a = new Point(1, 2);
+var b = new Point(a.x(), 5);               // pas de "with" en Java
+System.out.println(a.equals(new Point(1, 2)));   // true
+
+Optional&lt;String&gt; nickname = Optional.empty();</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[derive(Debug, Clone, Copy, PartialEq)]
+struct Point { x: i32, y: i32 }
+
+let a = Point { x: 1, y: 2 };
+let b = Point { y: 5, ..a };               // struct update syntax
+println!("{}", a == Point { x: 1, y: 2 });   // true
+
+let nickname: Option&lt;String&gt; = None;</code></pre>
+          <pre data-lang="python"><code class="language-python">from dataclasses import dataclass, replace
+
+@dataclass(frozen=True)
+class Point:
+    x: int
+    y: int
+
+a = Point(1, 2)
+b = replace(a, y=5)                        # copie modifiée
+print(a == Point(1, 2))                    # True
+
+nickname: str | None = None</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const a = Object.freeze({ x: 1, y: 2 });
+const b = { ...a, y: 5 };                  // copie modifiée
+console.log(a === { x: 1, y: 2 });         // false : comparaison par référence
+
+let nickname = null;                       // en TypeScript : string | null</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="exercise" id="ex4" data-minutes="20" data-tests="Katas.Tests.Exercise04">
+      <h2>Pattern matching</h2>
+      <p>Dans <code>Exercise04/Shipping.cs</code>, écrivez chaque méthode avec une <strong>switch expression</strong>.</p>
+      <ol>
+        <li><strong><code>Cost(Order)</code></strong> : frais de port gratuits à partir de 100 EUR, 4,90 en France, 9,90 ailleurs dans l'Union européenne, 19,90 dans le reste du monde. Un article fragile ajoute 5,00, même quand le port est gratuit.</li>
+        <li><strong><code>Describe(object?)</code></strong> : décrit n'importe quelle valeur, selon les règles du commentaire XML de la méthode (null, entier négatif, chaîne vide, <code>Money</code> à zéro, tableau vide, tableau d'un seul élément…).</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>motifs de propriété</summary><p><code>{ Total: &gt;= 100m } =&gt; 0m</code> combine un motif de propriété et un motif relationnel.</p></details>
+        <details class="hint"><summary>gardes</summary><p><code>{ Country: var country } when EuropeanUnion.Contains(country) =&gt; …</code>, et pour combiner : <code>int and &lt; 0</code>.</p></details>
+        <details class="hint"><summary>tableaux</summary><p>Les motifs de liste : <code>int[] and []</code>, <code>int[] and [var single]</code>, <code>int[] and [var first, .., var last]</code>. Les branches sont testées de haut en bas : les plus spécifiques d'abord, <code>_</code> en dernier.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Proche du <code>switch</code> avec motifs de Java 21, en plus concis : pas de <code>case</code>, et des motifs relationnels (<code>&lt; 0</code>) directement.</p>
+        <p data-lang="rust">Très proche de <code>match</code>. Différence importante : un cas oublié ne bloque pas la compilation, il donne un avertissement (<code>CS8509</code>) puis une exception à l'exécution. Le <code>_</code> final est votre filet.</p>
+        <p data-lang="python">Proche du <code>match</code> de Python 3.10, mais c'est une expression qui renvoie une valeur, et les types sont vérifiés à la compilation.</p>
+        <p data-lang="javascript">JavaScript n'a pas de pattern matching : on enchaîne des <code>if</code> ou des ternaires. C'est l'un des gros gains en passant à C#.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">var label = n switch
+{
+    &lt; 0 =&gt; "négatif",
+    0 =&gt; "zéro",
+    _ =&gt; "positif",
+};</code></pre>
+          <pre data-lang="java"><code class="language-java">Integer n = 42;
+String label = switch (n) {
+    case Integer i when i &lt; 0 -&gt; "négatif";
+    case Integer i when i == 0 -&gt; "zéro";
+    case Integer i -&gt; "positif";
+};</code></pre>
+          <pre data-lang="rust"><code class="language-rust">let label = match n {
+    i32::MIN..=-1 =&gt; "négatif",
+    0 =&gt; "zéro",
+    _ =&gt; "positif",
+};</code></pre>
+          <pre data-lang="python"><code class="language-python">match n:
+    case _ if n &lt; 0:
+        label = "négatif"
+    case 0:
+        label = "zéro"
+    case _:
+        label = "positif"</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const label = n &lt; 0 ? "négatif"
+            : n === 0 ? "zéro"
+            : "positif";</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="exercise" id="ex5" data-minutes="40" data-tests="Katas.Tests.Exercise05">
+      <h2>LINQ</h2>
+      <p><code>Exercise05/SampleData.cs</code> fournit 5 clients, 7 produits et 10 commandes : n'y touchez pas, les tests en dépendent. Dans <code>SalesReport.cs</code>, implémentez les 10 méthodes, chacune en <strong>une seule requête LINQ</strong>, de préférence en syntaxe méthode (<code>.Where(…).Select(…)</code>).</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Méthode</th><th>Opérateurs utiles</th></tr></thead>
+        <tbody>
+          <tr><td><code>TotalRevenue</code>, <code>CountOrdersTo</code>, <code>AverageOrderValue</code></td><td><code>Sum</code>, <code>Count</code>, <code>Average</code>, <code>Math.Round</code></td></tr>
+          <tr><td><code>TopCustomers</code></td><td><code>GroupBy</code>, <code>Select</code>, <code>OrderByDescending</code>, <code>Take</code></td></tr>
+          <tr><td><code>RevenueByMonth</code></td><td><code>GroupBy</code> sur un tuple <code>(Year, Month)</code>, <code>OrderBy</code>, <code>ThenBy</code></td></tr>
+          <tr><td><code>RevenueByCategory</code></td><td><code>SelectMany</code>, <code>GroupBy</code>, <code>ToDictionary</code></td></tr>
+          <tr><td><code>BestSellingProducts</code></td><td><code>SelectMany</code>, <code>GroupBy</code>, <code>OrderByDescending</code>, <code>ThenBy</code></td></tr>
+          <tr><td><code>CustomersWithoutOrders</code></td><td><code>ExceptBy</code> (ou <code>Where</code> + <code>Any</code>), <code>Order</code></td></tr>
+          <tr><td><code>CountriesServed</code>, <code>LargestOrder</code></td><td><code>Distinct</code>, <code>Order</code>, <code>MaxBy</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Pour transformer une requête en liste : <code>[.. query]</code> (<em>collection expression</em>) ou <code>query.ToList()</code>.</p>
+      <h3>Question</h3>
+      <p>Le constructeur de <code>SalesReport</code> fait <code>_orders = [.. orders]</code>. Pourquoi ne pas garder directement <code>orders</code> ? Pour le vérifier, écrivez dans votre <code>hello.cs</code> une requête avec un <code>Select</code> qui affiche quelque chose, parcourez-la deux fois, et observez.</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Une requête LINQ sur <code>IEnumerable&lt;T&gt;</code> est <strong>paresseuse</strong> : elle ne s'exécute qu'au moment où on la parcourt, et elle se ré-exécute à chaque parcours. Si <code>orders</code> est une requête, chaque méthode du rapport la recalculerait. <code>[.. orders]</code> la matérialise une fois pour toutes.</p></details>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p>Exemple : les numéros des 3 plus grosses commandes françaises.</p>
+        <p data-lang="java">LINQ ≈ les Streams : <code>Where</code> = <code>filter</code>, <code>Select</code> = <code>map</code>, <code>SelectMany</code> = <code>flatMap</code>, <code>GroupBy</code> = <code>Collectors.groupingBy</code>, <code>ToList</code> = <code>toList</code>.</p>
+        <p data-lang="rust">LINQ ≈ les itérateurs, et tout aussi paresseux : <code>Where</code> = <code>filter</code>, <code>Select</code> = <code>map</code>, <code>SelectMany</code> = <code>flat_map</code>, <code>ToList</code> = <code>collect</code>.</p>
+        <p data-lang="python">LINQ ≈ les compréhensions et les générateurs, en chaîne de méthodes. <code>Where</code> = <code>if</code> dans la compréhension, <code>Select</code> = l'expression, <code>GroupBy</code> ≈ <code>itertools.groupby</code> (sans le tri préalable).</p>
+        <p data-lang="javascript">LINQ ≈ les méthodes des tableaux, à une différence près : LINQ est paresseux, alors que <code>filter</code> et <code>map</code> créent un tableau à chaque étape.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">var ids = orders
+    .Where(o =&gt; o.Country == "FR")
+    .OrderByDescending(o =&gt; o.Total)
+    .Take(3)
+    .Select(o =&gt; o.Id)
+    .ToList();</code></pre>
+          <pre data-lang="java"><code class="language-java">var ids = orders.stream()
+    .filter(o -&gt; o.country().equals("FR"))
+    .sorted(Comparator.comparing(Order::total).reversed())
+    .limit(3)
+    .map(Order::id)
+    .toList();</code></pre>
+          <pre data-lang="rust"><code class="language-rust">let mut fr: Vec&lt;&amp;Order&gt; = orders.iter().filter(|o| o.country == "FR").collect();
+fr.sort_by(|a, b| b.total.cmp(&amp;a.total));
+let ids: Vec&lt;u32&gt; = fr.iter().take(3).map(|o| o.id).collect();</code></pre>
+          <pre data-lang="python"><code class="language-python">french = (o for o in orders if o.country == "FR")
+biggest = sorted(french, key=lambda o: o.total, reverse=True)[:3]
+ids = [o.id for o in biggest]</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const ids = orders
+  .filter(o =&gt; o.country === "FR")
+  .toSorted((a, b) =&gt; b.total - a.total)
+  .slice(0, 3)
+  .map(o =&gt; o.id);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="exercise" id="ex6" data-minutes="30" data-tests="Katas.Tests.Exercise06">
+      <h2>Asynchronisme : async/await et annulation</h2>
+      <p><code>Exercise06/PageFetcher.cs</code> télécharge des pages web avec <code>HttpClient</code>. Les tests utilisent un faux serveur (<code>Support/FakeHttpHandler.cs</code>) : pas besoin de réseau.</p>
+      <ol>
+        <li><strong><code>FetchSizesAsync</code></strong> : télécharge toutes les pages <strong>en même temps</strong> et renvoie leur taille, dans l'ordre des adresses. Un test vérifie que les 3 requêtes se chevauchent bien.</li>
+        <li><strong><code>FetchSizesWithTimeoutAsync</code></strong> : abandonne une page au bout de <code>timeout</code> et renvoie <code>-1</code> pour elle. Si l'appelant annule son <code>CancellationToken</code>, tout doit s'arrêter avec une <code>OperationCanceledException</code>.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>en parallèle</summary><p>Démarrez toutes les tâches, puis attendez-les ensemble avec <code>Task.WhenAll</code>. Un <code>await</code> dans une boucle <code>foreach</code> téléchargerait les pages l'une après l'autre. Une méthode <code>async</code> qui renvoie une liste se déclare <code>async Task&lt;IReadOnlyList&lt;int&gt;&gt;</code>.</p></details>
+        <details class="hint"><summary>un délai par page</summary><pre><code class="language-csharp">using var timeoutSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+timeoutSource.CancelAfter(timeout);</code></pre></details>
+        <details class="hint"><summary>qui a annulé ?</summary><p>Pour distinguer « mon délai a expiré » de « l'appelant a annulé » : <code>catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)</code>.</p></details>
+      </div>
+      <p><strong>Pièges à connaître</strong> : <code>async void</code> (réservé aux gestionnaires d'événements), <code>.Result</code> et <code>.Wait()</code> qui bloquent un thread et peuvent provoquer un interblocage, et le <code>CancellationToken</code> qu'on oublie de transmettre.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java"><code>Task</code> ≈ <code>CompletableFuture</code>, mais <code>await</code> évite les chaînes de <code>thenApply</code>. <code>CancellationToken</code> n'a pas d'équivalent direct : en Java, on interrompt un thread ou on annule un futur.</p>
+        <p data-lang="rust"><code>Task.WhenAll</code> ≈ <code>try_join_all</code>. Contrairement à Rust, pas de runtime à choisir : le pool de threads est intégré, et une <code>Task</code> démarre dès qu'on l'appelle, sans attendre d'être <code>.await</code>.</p>
+        <p data-lang="python"><code>Task.WhenAll</code> ≈ <code>asyncio.gather</code>. Pas de boucle d'événements à lancer, et le code async peut aussi utiliser plusieurs cœurs.</p>
+        <p data-lang="javascript"><code>Task</code> ≈ <code>Promise</code>, <code>Task.WhenAll</code> ≈ <code>Promise.all</code>, <code>CancellationToken</code> ≈ <code>AbortSignal</code>. Comme en JS, une tâche démarre dès qu'on l'appelle.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">var pages = await Task.WhenAll(
+    urls.Select(url =&gt; http.GetStringAsync(url, cancellationToken)));</code></pre>
+          <pre data-lang="java"><code class="language-java">var futures = urls.stream()
+    .map(url -&gt; http.sendAsync(
+        HttpRequest.newBuilder(URI.create(url)).build(),
+        HttpResponse.BodyHandlers.ofString()))
+    .toList();
+var pages = futures.stream()
+    .map(CompletableFuture::join)
+    .map(HttpResponse::body)
+    .toList();</code></pre>
+          <pre data-lang="rust"><code class="language-rust">let client = &amp;client;
+let pages = futures::future::try_join_all(urls.iter().map(|url| async move {
+    client.get(*url).send().await?.text().await
+})).await?;</code></pre>
+          <pre data-lang="python"><code class="language-python">async def fetch(session, url):
+    async with session.get(url) as response:
+        return await response.text()
+
+pages = await asyncio.gather(*(fetch(session, url) for url in urls))</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const pages = await Promise.all(
+  urls.map(url =&gt; fetch(url, { signal }).then(r =&gt; r.text())));</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 7 -->
+    <section class="exercise" id="ex7" data-minutes="30" data-tests="Katas.Tests.Exercise07">
+      <h2>Écrire ses propres tests</h2>
+      <p>Dans <code>tests/Katas.Tests/MyTests.cs</code>, écrivez <strong>au moins trois tests</strong> sur le code de la matinée. Un test vérifie qu'il y en a au moins trois. Par exemple :</p>
+      <ul>
+        <li>un <code>[Theory]</code> avec plusieurs <code>[InlineData]</code>, pour les frais de port selon le pays ;</li>
+        <li>un test qui vérifie une exception avec <code>Assert.Throws&lt;T&gt;(…)</code> ;</li>
+        <li>un test asynchrone (méthode <code>async Task</code>) pour <code>PageFetcher</code>, avec <code>FakeHttpHandler</code>.</li>
+      </ul>
+      <pre><code class="language-csharp">[Fact]                                   // un test simple
+[Theory, InlineData(1), InlineData(2)]   // un test paramétré, joué une fois par jeu de données
+Assert.Equal(expected, actual);
+Assert.Throws&lt;InvalidOperationException&gt;(() =&gt; …);
+TestContext.Current.CancellationToken    // le jeton d'annulation du test, à passer aux méthodes async</code></pre>
+      <p>Lancez-les aussi depuis le panneau de tests de votre IDE, et essayez de déboguer un test avec un point d'arrêt.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p>Les tests vivent dans un projet séparé, qui référence le projet testé.</p>
+        <p data-lang="java">xUnit ≈ JUnit 5 : <code>[Fact]</code> = <code>@Test</code>, <code>[Theory]</code> = <code>@ParameterizedTest</code>.</p>
+        <p data-lang="rust">Pas de <code>#[cfg(test)]</code> dans le même fichier : le projet de tests est à part, comme le dossier <code>tests/</code> de Cargo.</p>
+        <p data-lang="python">xUnit ≈ pytest : <code>[Theory]</code> + <code>[InlineData]</code> = <code>@pytest.mark.parametrize</code>, <code>Assert.Throws</code> = <code>pytest.raises</code>.</p>
+        <p data-lang="javascript">xUnit ≈ Jest ou Vitest : <code>[Theory]</code> = <code>test.each</code>, <code>Assert.Equal</code> = <code>expect(…).toBe(…)</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">[Theory]
+[InlineData(2, 3, 5)]
+public void Adds(int a, int b, int expected) =&gt;
+    Assert.Equal(expected, a + b);</code></pre>
+          <pre data-lang="java"><code class="language-java">@ParameterizedTest
+@CsvSource({"2, 3, 5"})
+void adds(int a, int b, int expected) {
+    assertEquals(expected, a + b);
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[test]
+fn adds() {
+    assert_eq!(2 + 3, 5);
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">@pytest.mark.parametrize("a, b, expected", [(2, 3, 5)])
+def test_adds(a, b, expected):
+    assert a + b == expected</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">test.each([[2, 3, 5]])("adds %i + %i", (a, b, expected) =&gt; {
+  expect(a + b).toBe(expected);
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <h2>Pour aller plus loin</h2>
+      <p>Si vous êtes en avance, deux nouveautés de C# 14 (.NET 10) :</p>
+      <ul>
+        <li><strong>Extension members</strong> : dans un nouveau fichier, ajoutez une propriété d'extension à <code>Order</code> sans toucher à la classe, puis testez-la. Le test ne la verra qu'avec un <code>using Katas.Exercise03;</code>, comme une méthode d'extension classique.</li>
+      </ul>
+      <pre><code class="language-csharp">public static class OrderExtensions
+{
+    extension(Order order)
+    {
+        public bool IsLarge =&gt; order.Lines.Sum(line =&gt; line.Quantity) &gt; 5;
+    }
+}</code></pre>
+      <ul>
+        <li><strong>Le mot-clé <code>field</code></strong> : faites en sorte que <code>Customer.Name</code> soit toujours sans espaces superflus, sans déclarer de champ : <code>public required string Name { get; init =&gt; field = value.Trim(); }</code>.</li>
+      </ul>
+    </div>
+
+    <section class="panel" id="summary">
+      <h2>Valider le TP et faire le bilan</h2>
+      <pre><code class="language-bash">dotnet build depart/Katas.slnx                 # 0 avertissement
+dotnet test --solution depart/Katas.slnx       # tous les tests au vert</code></pre>
+      <p>C'est terminé. Comparez ensuite avec <code>solution/</code> : il y a souvent plusieurs bonnes réponses, et la correction explique ses choix en commentaire.</p>
+      <div data-report></div>
+      <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/enonce.js"></script>
+</body>
+</html>

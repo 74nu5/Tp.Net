@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parcours .NET 3B Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/enonce.css">
+</head>
+<body data-tp="home">
+<div class="page single">
+  <main>
+    <header class="intro">
+      <div class="eyebrow">3B Studio · onboarding · .NET 10 LTS &amp; .NET 11</div>
+      <h1>Parcours .NET</h1>
+      <p>Quatre demi-journées de manipulation, plus une en bonus, pour avoir un vernis global sur ce que permet .NET et comment ça marche. Chaque demi-journée enchaîne des exercices courts, validés par des tests automatiques ; le reste du temps se passe sur nos applis.</p>
+    </header>
+
+    <section class="cards" id="labs" aria-label="Les TP"></section>
+
+    <div class="panel compare-picker"></div>
+
+    <section class="panel">
+      <h2>Préparer son poste</h2>
+      <p class="muted">Cochez au fur et à mesure ; c'est enregistré dans ce navigateur.</p>
+      <ul class="checklist" id="setup"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Comment travailler</h2>
+      <ol>
+        <li>Ouvrez l'énoncé du TP (<code>enonce.html</code> dans son dossier) et la solution <code>.slnx</code> de <code>depart/</code> dans votre IDE.</li>
+        <li>Faites les exercices dans l'ordre. Chaque exercice donne la commande qui lance ses tests.</li>
+        <li>Quand tous les tests sont verts, c'est terminé : on se valide soi-même. Comparez ensuite avec <code>solution/</code>.</li>
+      </ol>
+      <p>Les TP 02 à 04 construisent la même application de tickets : le <code>depart/</code> de chacun reprend la <code>solution/</code> du précédent, donc un TP non terminé ne bloque pas le suivant. Vous pouvez pousser votre travail sur une branche si vous le souhaitez.</p>
+    </section>
+
+    <p class="muted" style="font-size:.85rem">Pour le formateur : <a href="planning/plan-tp.html">planificateur du cursus</a>.</p>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const labs = [
+    { code: "TP-01", key: "tp-01", exercises: 7, href: "tp-01-tour-csharp/enonce.html", when: "Lundi 19 octobre, matin", title: "Tour de .NET et C# express", text: "CLI et NuGet, records et nullabilité, pattern matching, LINQ, async/await, tests xUnit." },
+    { code: "TP-02", key: "tp-02", exercises: 8, href: "", when: "Mardi 20 octobre, matin", title: "Serveur web et Entity Framework Core", text: "ASP.NET Core, injection de dépendances, configuration, Minimal APIs, EF Core sur SQL Server." },
+    { code: "TP-03", key: "tp-03", exercises: 7, href: "", when: "Mercredi 21 octobre, matin", title: "Blazor : composants, modes de rendu et formulaires", text: "Composants Razor, cycle de vie, modes de rendu comparés, EditForm, QuickGrid." },
+    { code: "TP-04", key: "tp-04", exercises: 7, href: "", when: "Jeudi 22 octobre, matin", title: "Blazor : authentification, état et composants réutilisables", text: "JWT et policies, AuthorizeView, état partagé, bibliothèque de composants, bUnit." },
+    { code: "TP-05", key: "tp-05", exercises: 6, href: "", when: "Vendredi 23 octobre, matin · bonus", title: "S'orienter et déboguer dans une appli existante", text: "Débogueur, stack traces, logs, Aspire, aperçu de .NET 11, trois anomalies à corriger." },
+    { code: "3B", key: "3b", exercises: 0, href: "", when: "Dans un second temps", title: "Bonnes pratiques 3B Studio", text: "Nos conventions, notre architecture, notre façon de livrer et nos composants Blazor." },
+  ];
+  const setup = [
+    "SDK .NET 10 installé : dotnet --list-sdks affiche 10.0.x",
+    "Un IDE : Rider, Visual Studio 2026, ou VS Code avec C# Dev Kit",
+    "Git, et ce dépôt cloné",
+    "SQL Server installé en local, et SSMS (TP-02)",
+    "L'outil EF Core : dotnet tool install --global dotnet-ef (TP-02)",
+    "Docker ou Podman, pour Aspire (TP-05)",
+    "Le SDK .NET 11, pour la fin du TP-05",
+  ];
+  const read = key => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
+  const esc = value => String(value).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  document.getElementById("labs").innerHTML = labs.map(lab => {
+    const saved = read(`tpnet:${lab.key}:v1`);
+    const done = saved && saved.done ? Object.values(saved.done).filter(Boolean).length : 0;
+    const status = lab.href
+      ? `<span class="status ${done && done >= lab.exercises ? "ready" : ""}">${done ? `${done} / ${lab.exercises} faits` : "Disponible"}</span>`
+      : `<span class="status">En préparation</span>`;
+    const inner = `<div class="top"><span class="code">${esc(lab.code)}</span>${status}</div>
+      <h3>${esc(lab.title)}</h3><p>${esc(lab.when)}</p><p>${esc(lab.text)}</p>`;
+    return lab.href ? `<a class="card" href="${esc(lab.href)}">${inner}</a>` : `<div class="card soon">${inner}</div>`;
+  }).join("");
+
+  const checked = read("tpnet:setup:v1") || {};
+  const list = document.getElementById("setup");
+  list.innerHTML = setup.map((item, i) => `<li><label><input type="checkbox" data-setup="${i}" ${checked[i] ? "checked" : ""}> <span>${esc(item)}</span></label></li>`).join("");
+  list.addEventListener("change", event => {
+    checked[event.target.dataset.setup] = event.target.checked;
+    try { localStorage.setItem("tpnet:setup:v1", JSON.stringify(checked)); } catch (e) { /* ignore */ }
+  });
+})();
+</script>
+<script src="assets/enonce.js"></script>
+</body>
+</html>

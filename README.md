@@ -2,6 +2,8 @@
 
 Travaux pratiques d'onboarding .NET pour les alternants de 3B Studio : quatre demi-journées de manipulation, plus une en bonus, pour avoir un vernis global sur ce que permet .NET 10 / 11 et comment ça marche. Chaque demi-journée enchaîne des exercices courts ; le reste du temps se passe sur nos applis.
 
+Le point d'entrée est **[`index.html`](index.html)** : ouvrez-le dans un navigateur après avoir cloné le dépôt. Chaque TP a son énoncé interactif (`enonce.html`) : progression, chronomètre, indices à dévoiler un par un, et les exemples de code en C# comparés au langage de votre choix (Java, Rust, Python ou JavaScript).
+
 ## Les TP
 
 | TP | Quand | Sujet |
@@ -29,12 +31,13 @@ Chaque dossier `tp-xx-…/` contient :
 
 | Élément | Rôle |
 |---|---|
-| `README.md` | l'énoncé |
+| `enonce.html` | l'énoncé interactif |
+| `README.md` | un résumé et la commande de validation |
 | `depart/` | le point de départ : du code à compléter et des tests qui échouent |
 | `solution/` | une correction commentée |
 | `NOTES-FORMATEUR.md` | les notes pour animer la séance |
 
-1. Ouvrir la solution `.slnx` de `depart/`.
+1. Ouvrir `enonce.html` dans un navigateur, et la solution `.slnx` de `depart/` dans l'IDE.
 2. Faire les exercices dans l'ordre.
 3. Lancer `dotnet test --solution depart/<fichier>.slnx` (ou le panneau de tests de l'IDE) : quand tout est vert, c'est terminé. On se valide soi-même.
 4. Comparer avec `solution/`.

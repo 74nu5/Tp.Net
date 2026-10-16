@@ -4,12 +4,25 @@ This repository holds the .NET onboarding labs for 3B Studio apprentices: short,
 
 ## Layout
 
-- `tp-XX-<slug>/README.md` — the lab statement, **in French**.
+- `index.html` — course home page (lab cards, setup checklist, language picker).
+- `tp-XX-<slug>/enonce.html` — the lab statement, **in French**, as an interactive page. It links `../assets/enonce.css` and `../assets/enonce.js` and loads highlight.js 11.9.0 from cdnjs.
+- `tp-XX-<slug>/README.md` — a short pointer to `enonce.html` plus the validation commands (GitHub does not render HTML).
 - `tp-XX-<slug>/depart/` — starting point: compiles, contains `// TODO` markers and tests that fail until the exercises are done.
 - `tp-XX-<slug>/solution/` — reference solution: all tests pass. Comments explain the choices.
 - `tp-XX-<slug>/NOTES-FORMATEUR.md` — trainer notes, in French.
 - Labs 02 → 04 build one "Tickets" app: each `depart/` starts from the previous `solution/` (copied, not referenced).
 - `planning/plan-tp.html` — the curriculum planner; its embedded seed JSON is the source for lab titles, exercises and timings. Keep READMEs in sync with it.
+
+## Statement markup (`enonce.html`)
+
+The shared script turns plain markup into the interactive page; see the header comment of `assets/enonce.js`.
+
+- `<body data-tp="tp-01" data-solution="depart/Katas.slnx">`; side panel slots `#progress`, `#toc`, `#side-actions`, and `.compare-picker` (also allowed in the intro).
+- One `<section class="exercise" id="exN" data-minutes="20" data-tests="Katas.Tests.ExerciseNN">` per exercise, starting with an `<h2>`; the script adds the number, duration, timer, "done" checkbox and the filtered `dotnet test` command.
+- Hints: `<div class="hints">` of `<details class="hint"><summary>topic</summary>…</details>`, unlocked one after the other. Answers: `<details class="answer">`.
+- Comparisons: `<div class="bridge">` holding `<div class="compare">` with one `<pre data-lang="…">` per language: `csharp` (always shown), `java`, `rust`, `python`, `javascript`. Provide all five. Language-specific explanations use `<p data-lang="rust">…</p>`; table cells can carry `data-lang` too.
+- `<section id="summary">` with `<div data-report>` and a `data-copy-report` button gives the time report.
+- Escape `<`, `>` and `&` inside code. Check every non-C# snippet for correctness: the apprentice knows those languages.
 
 ## Conventions
 
