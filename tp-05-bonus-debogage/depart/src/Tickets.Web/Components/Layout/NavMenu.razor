@@ -1,0 +1,33 @@
+@* NavLink adds the "active" class when its address matches the current page.
+   TP-04, exercise 03: AuthorizeView shows a different menu to anonymous and logged-in users. *@
+
+<nav class="nav">
+    <a class="brand" href="">Tickets</a>
+    <NavLink href="" Match="NavLinkMatch.All">Home</NavLink>
+    <NavLink href="tickets" Match="NavLinkMatch.All">Tickets</NavLink>
+    <AuthorizeView>
+        <NavLink href="tickets/new">New ticket</NavLink>
+    </AuthorizeView>
+    <NavLink href="tickets/grid">Grid</NavLink>
+    <NavLink href="render-modes/static">Render modes</NavLink>
+    <NavLink href="about">About</NavLink>
+
+    <div class="account">
+        <AuthorizeView>
+            <Authorized>
+                <span class="user">Hello, @context.User.Identity?.Name</span>
+                <AuthorizeView Roles="admin" Context="adminContext">
+                    <span class="role">administrator</span>
+                </AuthorizeView>
+                @* A form, not a link: logging out changes state, so it is a POST, protected by an antiforgery token. *@
+                <form method="post" action="account/logout">
+                    <AntiforgeryToken />
+                    <button type="submit">Log out</button>
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <NavLink href="account/login">Log in</NavLink>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+</nav>

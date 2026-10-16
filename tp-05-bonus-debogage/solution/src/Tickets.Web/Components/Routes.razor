@@ -1,0 +1,12 @@
+<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }" NotFoundPage="typeof(Pages.NotFound)">
+    <Found Context="routeData">
+        @* AuthorizeRouteView honours [Authorize] on pages rendered interactively; on a first request,
+           the authorization middleware has already redirected an anonymous user to the login page. *@
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <p class="error">You are not allowed to see this page. <a href="account/login">Log in</a></p>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

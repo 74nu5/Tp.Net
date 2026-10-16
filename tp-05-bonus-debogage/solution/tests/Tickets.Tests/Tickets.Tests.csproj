@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <!-- Exercise 03: FakeLogger records the log entries, with their structured fields. -->
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <!-- Exercise 04: loads the Aspire application model of Tickets.AppHost. -->
+    <PackageReference Include="Aspire.Hosting.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Tickets.Api/Tickets.Api.csproj" />
+    <!-- The app host has a Program class too: the alias keeps it apart from the API's. -->
+    <ProjectReference Include="../../src/Tickets.AppHost/Tickets.AppHost.csproj" Aliases="AppHost" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+    <Content Include="testsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../samples/legacy-tickets.csv" Link="legacy-tickets.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

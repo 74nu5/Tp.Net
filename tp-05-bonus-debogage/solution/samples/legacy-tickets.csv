@@ -1,0 +1,241 @@
+title,priority,description
+File upload does not load,Urgent,Happens on Firefox only
+Order history shows old data,Low,
+User settings displays wrong totals,Urgent,Reported by the support team
+Help center times out,Low,Happens on Firefox only
+User settings displays wrong totals,normal,Reproduced on staging
+Invoice export sends duplicates,Normal,Reported by the support team
+Customer list displays wrong totals,normal,Happens on Firefox only
+Search ignores the filter,Normal,
+Order history shows an error,Normal,Reproduced on staging
+File upload loses the selection,Normal,Seen since the last release
+Login page is slow,Normal,
+Dashboard times out,Normal,Happens on Firefox only
+Mobile app displays wrong totals,HIGH,Only for admin accounts
+Calendar sync displays wrong totals,Normal,Only for admin accounts
+Dashboard ignores the filter,High,Reported by the support team
+Mobile app ignores the filter,Normal,Seen since the last release
+Password reset shows an error,High,Happens on Firefox only
+Payment form sends duplicates,HIGH,Reported by the support team
+File upload crashes on save,Low,Happens on Firefox only
+Mobile app does not load,normal,Only for admin accounts
+Mobile app times out,normal,Several customers complain
+Customer list times out,Low,Happens on Firefox only
+Login page crashes on save,normal,Reported by the support team
+Notifications ignores the filter,High,Several customers complain
+File upload is slow,normal,Reported by the support team
+Customer list times out,HIGH,Seen since the last release
+Invoice export displays wrong totals,normal,Happens on Firefox only
+Notifications crashes on save,HIGH,Happens on Firefox only
+"Login page slow on Mondays",Normal,Reported by the support team
+Order history loses the selection,Low,Reproduced on staging
+Customer list crashes on save,High,Reported by the support team
+Report builder shows an error,Normal,Happens on Firefox only
+Notifications sends duplicates,High,Seen since the last release
+Mobile app does not load,Urgent,Reproduced on staging
+Invoice export does not load,Urgent,Happens on Firefox only
+Password reset times out,Low,Only for admin accounts
+Search does not load,normal,Seen since the last release
+Customer list is slow,Low,Reproduced on staging
+Notifications ignores the filter,Low,Seen since the last release
+Customer list sends duplicates,High,
+Password reset loses the selection,Urgent,Several customers complain
+Search is slow,Urgent,Reported by the support team
+Order history loses the selection,High,
+Dashboard times out,Urgent,Reproduced on staging
+Search ignores the filter,Low,Seen since the last release
+Report builder crashes on save,Normal,Reported by the support team
+Payment form ignores the filter,High,Seen since the last release
+User settings sends duplicates,Normal,Reproduced on staging
+User settings loses the selection,Urgent,Only for admin accounts
+Mobile app loses the selection,High,Happens on Firefox only
+User settings ignores the filter,Normal,Reported by the support team
+Report builder shows old data,Normal,Only for admin accounts
+Help center loses the selection,High,Seen since the last release
+Invoice export loses the selection,High,Reproduced on staging
+Order history shows old data,HIGH,Happens on Firefox only
+Invoice export crashes on save,Urgent,Reproduced on staging
+Calendar sync is slow,High,Happens on Firefox only
+Notifications does not load,normal,Happens on Firefox only
+Order history does not load,High,Only for admin accounts
+Search sends duplicates,Low,Several customers complain
+Notifications does not load,High,Only for admin accounts
+Password reset loses the selection,High,
+Notifications crashes on save,High,Happens on Firefox only
+Calendar sync crashes on save,Urgent,
+Report builder crashes on save,Normal,
+Payment form loses the selection,High,Happens on Firefox only
+Notifications times out,HIGH,Seen since the last release
+Dashboard crashes on save,normal,Happens on Firefox only
+Customer list shows an error,Urgent,Only for admin accounts
+Customer list ignores the filter,Normal,Reproduced on staging
+Order history sends duplicates,HIGH,Only for admin accounts
+Help center ignores the filter,High,Reproduced on staging
+Notifications does not load,Urgent,Reported by the support team
+Dashboard times out,HIGH,Several customers complain
+File upload times out,Normal,
+Calendar sync times out,Urgent,Only for admin accounts
+Login page loses the selection,Normal,Seen since the last release
+Login page times out,Low,Happens on Firefox only
+Search loses the selection,Normal,Reproduced on staging
+Login page ignores the filter,normal,Happens on Firefox only
+Report builder sends duplicates,Low,Reproduced on staging
+Dashboard displays wrong totals,Urgent,Happens on Firefox only
+Login page crashes on save,normal,Happens on Firefox only
+Payment form ignores the filter,Low,Only for admin accounts
+Payment form shows old data,High,Reported by the support team
+"Printer, 2nd floor",High,Out of toner since Friday
+Notifications sends duplicates,High,Reported by the support team
+Password reset shows old data,HIGH,Happens on Firefox only
+File upload does not load,High,
+Search ignores the filter,normal,
+File upload shows old data,High,Several customers complain
+Search times out,HIGH,Several customers complain
+File upload loses the selection,Normal,Seen since the last release
+File upload shows an error,High,
+Help center is slow,normal,Reported by the support team
+Mobile app sends duplicates,HIGH,Reproduced on staging
+Search crashes on save,Urgent,Reproduced on staging
+Report builder ignores the filter,normal,Seen since the last release
+User settings does not load,normal,Only for admin accounts
+Report builder ignores the filter,Normal,Reproduced on staging
+File upload does not load,Urgent,Happens on Firefox only
+User settings does not load,normal,Reported by the support team
+Mobile app does not load,normal,Happens on Firefox only
+Search loses the selection,Low,Reported by the support team
+Calendar sync sends duplicates,normal,Seen since the last release
+Password reset is slow,Normal,
+Report builder is slow,normal,Reproduced on staging
+Notifications does not load,Normal,Several customers complain
+Order history is slow,Normal,Several customers complain
+Password reset times out,Urgent,Happens on Firefox only
+Password reset loses the selection,HIGH,Several customers complain
+Notifications sends duplicates,Urgent,Reported by the support team
+Login page times out,High,Happens on Firefox only
+Notifications crashes on save,HIGH,Happens on Firefox only
+Customer list shows old data,Low,Several customers complain
+Mobile app crashes on save,Urgent,Only for admin accounts
+Payment form sends duplicates,Normal,Reported by the support team
+Login page does not load,HIGH,Several customers complain
+Calendar sync shows an error,Urgent,Reproduced on staging
+Dashboard is slow,normal,
+Order history ignores the filter,HIGH,Reproduced on staging
+Customer list loses the selection,normal,Several customers complain
+Report builder displays wrong totals,High,Several customers complain
+Payment form shows an error,High,
+Login page ignores the filter,HIGH,Happens on Firefox only
+Calendar sync loses the selection,High,Seen since the last release
+Search loses the selection,Urgent,Reproduced on staging
+Help center loses the selection,High,Reproduced on staging
+Search ignores the filter,HIGH,Reproduced on staging
+Order history is slow,Low,Only for admin accounts
+Dashboard does not load,Low,
+Invoice export is slow,High,Only for admin accounts
+Report builder shows an error,normal,Only for admin accounts
+User settings is slow,Low,
+Invoice export displays wrong totals,HIGH,Only for admin accounts
+Payment form shows an error,Urgent,Seen since the last release
+Password reset loses the selection,Normal,Seen since the last release
+File upload times out,normal,
+Search shows an error,HIGH,Seen since the last release
+Login page shows old data,Low,Only for admin accounts
+Report builder shows an error,High,Reported by the support team
+Invoice PDF is blank,Normal,"Happens for invoices with discounts, credits or both"
+File upload sends duplicates,Low,Only for admin accounts
+Report builder sends duplicates,Normal,Reported by the support team
+Report builder shows an error,High,Only for admin accounts
+File upload loses the selection,normal,Happens on Firefox only
+Calendar sync crashes on save,Low,Seen since the last release
+Customer list does not load,Normal,Reproduced on staging
+Calendar sync shows old data,High,Reproduced on staging
+Notifications sends duplicates,Normal,Happens on Firefox only
+Invoice export shows old data,Normal,Happens on Firefox only
+Payment form does not load,HIGH,Seen since the last release
+Order history displays wrong totals,High,Several customers complain
+Customer list ignores the filter,Normal,Seen since the last release
+Customer list is slow,Urgent,Happens on Firefox only
+Invoice export sends duplicates,Urgent,Reported by the support team
+Invoice export shows an error,HIGH,Reproduced on staging
+User settings displays wrong totals,normal,Several customers complain
+User settings crashes on save,Low,
+Notifications is slow,HIGH,Only for admin accounts
+Report builder is slow,Normal,Several customers complain
+Calendar sync displays wrong totals,Urgent,Reported by the support team
+Invoice export loses the selection,Normal,Seen since the last release
+Customer list sends duplicates,normal,Happens on Firefox only
+Payment form displays wrong totals,High,Happens on Firefox only
+Help center sends duplicates,Urgent,Happens on Firefox only
+Order history ignores the filter,normal,Seen since the last release
+Customer list crashes on save,Urgent,Happens on Firefox only
+Order history ignores the filter,High,Reproduced on staging
+Login page sends duplicates,HIGH,Seen since the last release
+Customer list times out,normal,Reported by the support team
+Invoice export is slow,Low,Seen since the last release
+Dashboard displays wrong totals,Low,Several customers complain
+Help center loses the selection,Urgent,
+Mobile app is slow,normal,Several customers complain
+Password reset sends duplicates,normal,Happens on Firefox only
+User settings loses the selection,Low,Seen since the last release
+Search times out,Low,Happens on Firefox only
+Payment form ignores the filter,normal,Seen since the last release
+Notifications does not load,Low,Happens on Firefox only
+Payment form times out,High,Only for admin accounts
+Dashboard is slow,normal,Reported by the support team
+Mobile app crashes on save,High,Reported by the support team
+Customer list is slow,Urgent,Several customers complain
+User settings times out,Low,
+Calendar sync crashes on save,High,Several customers complain
+Calendar sync displays wrong totals,Urgent,Seen since the last release
+Login page displays wrong totals,Urgent,Reported by the support team
+File upload displays wrong totals,Urgent,Reported by the support team
+File upload ignores the filter,Urgent,Happens on Firefox only
+Calendar sync does not load,Normal,Several customers complain
+Mobile app does not load,Low,Only for admin accounts
+Customer list loses the selection,Normal,
+Dashboard times out,Urgent,Seen since the last release
+Login page sends duplicates,normal,Only for admin accounts
+Password reset is slow,normal,Reported by the support team
+User settings ignores the filter,Normal,Reported by the support team
+Login page shows old data,HIGH,Reproduced on staging
+Mobile app shows an error,Urgent,Reported by the support team
+"Export fails with ""Access denied"", even for admins",High,"Seen on the CSV, XLSX and PDF exports"
+Dashboard loses the selection,Low,Several customers complain
+Login page displays wrong totals,Urgent,Reported by the support team
+User settings ignores the filter,Low,Reported by the support team
+Password reset ignores the filter,normal,Happens on Firefox only
+Calendar sync is slow,Low,Seen since the last release
+Search shows old data,Urgent,Several customers complain
+Dashboard shows old data,Normal,Reported by the support team
+Help center crashes on save,Low,Reported by the support team
+Notifications times out,HIGH,Reported by the support team
+Payment form displays wrong totals,HIGH,Reported by the support team
+User settings shows old data,High,Several customers complain
+Report builder sends duplicates,normal,Reproduced on staging
+Calendar sync times out,Urgent,Reported by the support team
+Help center does not load,Urgent,Several customers complain
+Help center displays wrong totals,HIGH,Reported by the support team
+Search does not load,normal,Reported by the support team
+Order history does not load,normal,Happens on Firefox only
+Search times out,HIGH,Reported by the support team
+User settings displays wrong totals,Urgent,Reported by the support team
+Order history ignores the filter,HIGH,Only for admin accounts
+Dashboard does not load,Low,Several customers complain
+Customer list displays wrong totals,Low,Only for admin accounts
+Dashboard does not load,High,Reported by the support team
+Invoice export ignores the filter,High,Several customers complain
+Order history shows old data,Low,Happens on Firefox only
+Calendar sync times out,HIGH,Reported by the support team
+User settings times out,Urgent,Only for admin accounts
+Order history is slow,Urgent,Reported by the support team
+Customer list ignores the filter,High,Reported by the support team
+Order history ignores the filter,HIGH,Seen since the last release
+Mobile app shows an error,High,Seen since the last release
+Search does not load,normal,Only for admin accounts
+Mobile app does not load,Low,Reported by the support team
+Notifications shows old data,Low,Reported by the support team
+Invoice export is slow,Normal,
+Mobile app ignores the filter,High,Reproduced on staging
+Login page displays wrong totals,HIGH,Several customers complain
+Search crashes on save,Normal,Happens on Firefox only
+Mobile app is slow,Normal,Reproduced on staging
+File upload times out,Urgent,Reported by the support team

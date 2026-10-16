@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP-05 · Déboguer une appli existante</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/enonce.css">
+</head>
+<body data-tp="tp-05" data-solution="depart/Tickets.slnx">
+<div class="page">
+
+  <aside class="side" aria-label="Sommaire du TP">
+    <a class="home" href="../index.html">← Parcours .NET</a>
+    <div class="panel" id="progress"></div>
+    <div class="panel compare-picker"></div>
+    <nav class="panel" id="toc" aria-label="Exercices"></nav>
+    <div id="side-actions"></div>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">TP-05 · vendredi 23 octobre, matin · bonus · environ 3 h</div>
+      <h1>S'orienter et déboguer dans une appli existante</h1>
+      <p>L'application de tickets a vécu sans vous : quelqu'un y a ajouté un import depuis l'ancien outil, des statistiques et un cache. Elle compile, ses pages s'affichent, et pourtant des utilisateurs se plaignent. Ce matin, on prend les outils qui servent tous les jours pour corriger des anomalies : le débogueur, la stack trace, les logs, puis Aspire pour voir une requête traverser toute l'application. Un détour par .NET 11, et on finit par trois anomalies à corriger comme de vrais tickets.</p>
+      <p class="muted">Cochez « Terminé » à la fin de chaque exercice ; le chrono est facultatif. Tout reste dans ce navigateur.</p>
+      <p>Les exemples de code montrent le C#, et à côté l'équivalent dans l'écosystème de votre choix :</p>
+      <div class="compare-picker"></div>
+    </header>
+
+    <div class="panel">
+      <h2>Avant de commencer</h2>
+      <ol>
+        <li><code>depart/</code> reprend la solution du TP-04, plus ce qu'un collègue y a ajouté :
+          <ul>
+            <li><code>POST /tickets/import</code> (administrateurs) et <code>GET /tickets/stats</code> dans l'API ;</li>
+            <li><code>Data/CachedTicketRepository.cs</code>, un cache devant le dépôt EF Core ;</li>
+            <li><code>samples/legacy-tickets.csv</code>, l'export de l'ancien outil ;</li>
+            <li><code>src/Tickets.ServiceDefaults</code> (complet) et <code>src/Tickets.AppHost</code> (à écrire), pour Aspire ;</li>
+            <li><code>ANOMALIES.md</code>, à remplir à l'exercice 6.</li>
+          </ul></li>
+        <li>Un seul projet de tests, <code>tests/Tickets.Tests</code>, avec SQL Server comme au TP-02. Au départ, 22 tests sur 26 échouent.
+          <pre><code class="language-bash">dotnet test --solution depart/Tickets.slnx</code></pre></li>
+        <li>Il faut un IDE avec débogueur : Rider, Visual Studio, ou VS Code avec C# Dev Kit. Pour l'exercice 5, installez aussi le SDK .NET 11 (<a href="https://dotnet.microsoft.com/download/dotnet/11.0" target="_blank" rel="noopener">version RC</a> à ce jour) : il s'installe à côté du SDK .NET 10 sans le remplacer.</li>
+        <li>Aspire n'a pas besoin de Docker ici : il lance l'API et le front comme de simples processus.</li>
+      </ol>
+      <p><strong>Cinq minutes pour s'orienter.</strong> Avant de toucher au code, suivez le chemin d'une requête : <code>TicketEndpoints.SummaryAsync</code> reçoit un <code>ITicketRepository</code>… mais lequel ? Utilisez « aller à la définition », « aller à l'implémentation » et « trouver les usages » de l'IDE plutôt que la recherche de texte.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Action</th><th>Rider</th><th>Visual Studio</th><th>VS Code</th></tr></thead>
+        <tbody>
+          <tr><td>Aller à la définition</td><td><kbd>Ctrl</kbd>+<kbd>B</kbd></td><td><kbd>F12</kbd></td><td><kbd>F12</kbd></td></tr>
+          <tr><td>Aller à l'implémentation</td><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>B</kbd></td><td><kbd>Ctrl</kbd>+<kbd>F12</kbd></td><td><kbd>Ctrl</kbd>+<kbd>F12</kbd></td></tr>
+          <tr><td>Trouver les usages</td><td><kbd>Alt</kbd>+<kbd>F7</kbd></td><td><kbd>Shift</kbd>+<kbd>F12</kbd></td><td><kbd>Shift</kbd>+<kbd>F12</kbd></td></tr>
+        </tbody>
+      </table></div>
+      <p>Quelle classe reçoit vraiment les appels des endpoints ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p><code>CachedTicketRepository</code>. Dans <code>Program.cs</code>, <code>ITicketRepository</code> est enregistré avec une fabrique qui enveloppe <code>EfTicketRepository</code> dans le cache : un <em>décorateur</em>. « Aller à l'implémentation » propose les deux classes ; seul <code>Program.cs</code> dit laquelle est injectée.</p></details>
+    </div>
+
+    <!-- ============================================================ 1 -->
+    <section class="exercise" id="ex1" data-minutes="30" data-tests="Tickets.Tests.Exercise01">
+      <h2>Le débogueur : points d'arrêt conditionnels et Hot Reload</h2>
+      <p>L'ancien outil a exporté 240 tickets ; l'import n'en crée que 237. Aucune erreur, aucun log : trois tickets disparaissent. Le parseur est dans <code>src/Tickets.Api/Import/TicketCsvParser.cs</code>.</p>
+      <ol>
+        <li>Lancez le test <code>TheSample_GivesOneTicketPerLine</code> : il attend 240 tickets et en reçoit 237.</li>
+        <li>Lancez ce même test <strong>en débogage</strong> depuis l'IDE (Rider : icône dans la marge, puis <em>Debug</em> ; Visual Studio : clic droit dans l'explorateur de tests, <em>Debug</em> ; VS Code : <em>Debug Test</em> au-dessus de la méthode).</li>
+        <li>Posez un point d'arrêt sur la ligne <code>if (fields.Length == FieldCount)</code>. Il s'arrête à chaque ligne du fichier : 240 fois. Rendez-le <strong>conditionnel</strong> (clic droit sur le point d'arrêt) avec la condition <code>fields.Length != FieldCount</code>.</li>
+        <li>Au premier arrêt, regardez les variables locales : <code>lineNumber</code>, <code>line</code>, <code>fields</code>. Ajoutez un espion (<em>watch</em>) sur <code>fields.Length</code>. Notez le numéro de la ligne dans <code>tests/Tickets.Tests/Answers.cs</code> (<code>FirstSkippedLine</code>).</li>
+        <li>Sans vous arrêter, listez toutes les lignes perdues avec un <strong>point de trace</strong> (Visual Studio : <em>Actions</em> ; Rider : <em>Log evaluated expression</em> ; VS Code : <em>Logpoint</em>) qui écrit <code>{lineNumber}: {fields.Length}</code> dans la sortie de débogage.</li>
+        <li>Corrigez le parseur : un champ entre guillemets peut contenir des virgules, et <code>""</code> dans un champ entre guillemets vaut un guillemet (RFC 4180). Une ligne qui reste mal formée doit arrêter l'import avec une <code>FormatException</code> qui donne son numéro (« Line 3: … ») : perdre des données en silence est pire qu'une erreur.</li>
+        <li><strong>Hot Reload</strong> : lancez <code>dotnet watch --project depart/src/Tickets.Api</code>, ouvrez <code>http://localhost:5080/</code>, changez le texte renvoyé par <code>app.MapGet("/", …)</code> dans <code>Program.cs</code> et enregistrez. La page affiche le nouveau texte sans redémarrage. Certaines modifications, dites <em>rude edits</em>, ne peuvent pas s'appliquer à chaud : <code>dotnet watch</code> propose alors de redémarrer.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la condition ne s'arrête jamais</summary><p>La condition est une expression C# évaluée dans le contexte de la ligne : les variables doivent déjà exister à cet endroit. Placez le point d'arrêt sur le <code>if</code>, après <code>var fields = …</code>, pas sur la ligne qui déclare <code>fields</code>.</p></details>
+        <details class="hint"><summary>découper en respectant les guillemets</summary><p>Parcourez la ligne caractère par caractère avec un booléen <code>inQuotes</code>. Hors guillemets, une virgule termine le champ. Dans les guillemets, <code>""</code> ajoute un guillemet et <code>"</code> seul referme. Un <code>StringBuilder</code> accumule le champ en cours.</p></details>
+        <details class="hint"><summary>le découpage complet</summary><pre><code class="language-csharp">public static IReadOnlyList&lt;string&gt; SplitFields(string line)
+{
+    var fields = new List&lt;string&gt;();
+    var current = new StringBuilder();
+    var inQuotes = false;
+
+    for (var i = 0; i &lt; line.Length; i++)
+    {
+        var c = line[i];
+        if (inQuotes)
+        {
+            if (c == '"' &amp;&amp; i + 1 &lt; line.Length &amp;&amp; line[i + 1] == '"')
+            {
+                current.Append('"');
+                i++;
+            }
+            else if (c == '"') inQuotes = false;
+            else current.Append(c);
+        }
+        else if (c == '"') inQuotes = true;
+        else if (c == ',')
+        {
+            fields.Add(current.ToString());
+            current.Clear();
+        }
+        else current.Append(c);
+    }
+
+    fields.Add(current.ToString());
+    return fields;
+}</code></pre></details>
+      </div>
+      <p>Dans un vrai projet, on ne réécrirait pas un lecteur CSV : la bibliothèque standard n'en a pas (à part <code>TextFieldParser</code>, hérité de Visual Basic), et on prend <a href="https://www.nuget.org/packages/CsvHelper" target="_blank" rel="noopener">CsvHelper</a> ou <a href="https://www.nuget.org/packages/Sep" target="_blank" rel="noopener">Sep</a> sur NuGet.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Le débogueur d'IntelliJ fonctionne de la même façon : points d'arrêt conditionnels, <em>Evaluate expression</em>, et Rider vient du même éditeur. Hot Reload ≈ HotSwap de la JVM, ou le redémarrage rapide de Spring DevTools.</p>
+        <p data-lang="rust">Avec CodeLLDB ou rust-analyzer, on pose aussi des points d'arrêt conditionnels, mais beaucoup de développeurs Rust déboguent avec <code>dbg!</code>. Il n'y a pas de Hot Reload : on recompile.</p>
+        <p data-lang="python">≈ <code>breakpoint()</code> et pdb (<code>b fichier:ligne, condition</code>), ou le débogueur de VS Code et PyCharm. Python recharge à chaud avec <code>uvicorn --reload</code>, qui redémarre en fait le processus.</p>
+        <p data-lang="javascript">≈ les points d'arrêt conditionnels et les <em>logpoints</em> des DevTools de Chrome, ou l'instruction <code>debugger;</code>. Hot Reload ≈ le HMR de Vite, ou <code>node --watch</code> qui redémarre.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">// Pas de lecteur CSV dans la bibliothèque standard :
+// on découpe à la main, ou on prend CsvHelper / Sep.
+foreach (var line in File.ReadLines("legacy-tickets.csv").Skip(1))
+{
+    var fields = TicketCsvParser.SplitFields(line);
+    Console.WriteLine($"{fields[0]} ({fields[1]})");
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">// Apache Commons CSV
+try (var reader = Files.newBufferedReader(Path.of("legacy-tickets.csv"));
+     var parser = CSVFormat.DEFAULT.builder()
+         .setHeader().setSkipHeaderRecord(true).build()
+         .parse(reader)) {
+    for (CSVRecord record : parser) {
+        System.out.println(record.get("title") + " (" + record.get("priority") + ")");
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// crate csv : la première ligne est l'en-tête par défaut
+let mut reader = csv::Reader::from_path("legacy-tickets.csv")?;
+for record in reader.records() {
+    let record = record?;
+    println!("{} ({})", &amp;record[0], &amp;record[1]);
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">import csv
+
+with open("legacy-tickets.csv", newline="") as file:
+    for row in csv.DictReader(file):
+        print(f"{row['title']} ({row['priority']})")</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">import { readFileSync } from "node:fs";
+import { parse } from "csv-parse/sync";
+
+const rows = parse(readFileSync("legacy-tickets.csv"), { columns: true });
+for (const row of rows) console.log(`${row.title} (${row.priority})`);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="exercise" id="ex2" data-minutes="15" data-tests="Tickets.Tests.Exercise02">
+      <h2>Lire une exception et sa stack trace</h2>
+      <p>La page des statistiques ne s'affiche plus : <code>GET /tickets/stats</code> répond 500.</p>
+      <ol>
+        <li>Lancez l'API (<code>dotnet run --project depart/src/Tickets.Api</code>) et ouvrez <code>http://localhost:5080/tickets/stats</code>. Le client reçoit un <code>ProblemDetails</code> sans détail : c'est voulu, une stack trace ne doit pas sortir du serveur.</li>
+        <li>Le détail est dans la console de l'API, loggé par <code>ExceptionHandlerMiddleware</code> :
+          <pre><code class="language-plaintext">fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      System.InvalidOperationException: The LINQ expression 'DbSet&lt;Ticket&gt;()
+          .Sum(t =&gt; t.CommentCount)' could not be translated. Additional information: Translation of member
+          'CommentCount' on entity type 'Ticket' failed. This commonly occurs when the specified member is unmapped.
+          Either rewrite the query in a form that can be translated, or switch to client evaluation explicitly
+          by inserting a call to 'AsEnumerable', 'AsAsyncEnumerable', 'ToList', or 'ToListAsync'. […]
+         at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
+         at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
+         […]
+         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SumAsync[TSource](IQueryable`1 source, …)
+         at Tickets.Api.Data.EfTicketRepository.GetStatsAsync(CancellationToken cancellationToken) in …/Data/EfTicketRepository.cs:line 45
+         at Tickets.Api.Endpoints.TicketEndpoints.StatsAsync(ITicketRepository repository, …) in …/Endpoints/TicketEndpoints.cs:line 63
+         at Microsoft.AspNetCore.Http.RequestDelegateFactory.ExecuteTaskResult[T](Task`1 task, HttpContext httpContext)
+         at Microsoft.AspNetCore.Diagnostics.StatusCodePagesMiddleware.Invoke(HttpContext context)
+         […]</code></pre></li>
+        <li>Lisez-la dans l'ordre : le <strong>type</strong> et le <strong>message</strong> d'abord, puis les frames, de la plus profonde (où l'exception est levée) à la plus haute (qui a appelé). Repérez la première frame de <em>notre</em> code : c'est là qu'on agit. Notez-la dans <code>Answers.cs</code> (<code>StatsFailingMethod</code>, sous la forme <code>Classe.Méthode</code>).</li>
+        <li>Répondez aux questions, puis corrigez <code>GetStatsAsync</code> pour que le test <code>Stats_CountTheTicketsAndTheComments</code> passe.</li>
+      </ol>
+      <p>Pourquoi ce code compile-t-il, alors qu'il échoue à chaque appel ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Une requête EF Core est un <code>IQueryable</code> : le lambda <code>t =&gt; t.CommentCount</code> n'est pas compilé en code mais en <em>arbre d'expression</em>, qu'EF Core traduit en SQL au moment de l'exécution. Le compilateur C# vérifie les types, pas la traduisibilité. <code>CommentCount</code> est une propriété calculée en C#, sans colonne : EF ne sait pas l'écrire en SQL.</p></details>
+      <p>Le message propose d'ajouter <code>AsEnumerable()</code> avant <code>Sum</code>. Bonne idée ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Non. Le calcul passerait côté C# après avoir chargé tous les tickets, et <code>Comments</code> ne serait pas chargé (pas d'<code>Include</code>) : la somme vaudrait 0, sans erreur. Le bon correctif reste en SQL : <code>await db.Comments.CountAsync(cancellationToken)</code>.</p></details>
+      <p>Pourquoi les frames d'EF Core n'ont-elles pas de numéro de ligne ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Les numéros de ligne viennent des fichiers de symboles (<code>.pdb</code>) produits par notre compilation en Debug. Pour les packages, il faut les symboles publiés et Source Link : Rider et Visual Studio savent alors entrer dans le code d'EF Core en débogage.</p></details>
+      <p>Deux formes reviennent souvent dans une stack trace .NET : <code>---&gt;</code> introduit une <em>InnerException</em> (l'erreur d'origine, enveloppée dans une autre), et <code>--- End of stack trace from previous location ---</code> marque un <code>await</code> où l'exception a été relancée. Lisez toujours jusqu'à l'exception la plus intérieure.</p>
+      <div class="hints">
+        <details class="hint"><summary>la première frame de notre code</summary><p>Les frames <code>Microsoft.*</code> et <code>System.*</code> sont celles du framework. La première frame <code>Tickets.*</code> en partant du haut, avec un fichier et une ligne, est <code>EfTicketRepository.GetStatsAsync</code>.</p></details>
+        <details class="hint"><summary>le correctif</summary><pre><code class="language-csharp">var comments = await db.Comments.CountAsync(cancellationToken);</code></pre></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Même ordre qu'en Java : la frame la plus profonde en haut. <code>---&gt;</code> correspond à <code>Caused by:</code>, mais .NET affiche l'exception intérieure avant l'extérieure. Hibernate échoue aussi à l'exécution sur une requête JPQL invalide.</p>
+        <p data-lang="rust">Une <code>panic!</code> affiche sa backtrace avec <code>RUST_BACKTRACE=1</code>. Une <code>Result::Err</code> n'en a pas, sauf avec <code>anyhow</code> ou <code>std::backtrace</code>. En .NET, toute exception porte sa stack trace.</p>
+        <p data-lang="python">Attention, l'ordre est inversé : le traceback Python finit par l'appel le plus récent (<em>most recent call last</em>), .NET commence par lui. <code>---&gt;</code> ≈ <em>The above exception was the direct cause…</em></p>
+        <p data-lang="javascript">≈ <code>err.stack</code>, du plus profond au plus haut, comme en .NET. V8 garde les frames <code>at async</code> au-delà des <code>await</code>, comme le fait .NET. <code>---&gt;</code> ≈ <code>err.cause</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">try { await repository.GetStatsAsync(ct); }
+catch (Exception exception)
+{
+    // L'exception en premier argument : le log garde le type,
+    // le message, la stack trace et les InnerException.
+    logger.LogError(exception, "Stats failed");
+    throw;   // relance sans perdre la stack trace (pas "throw exception;")
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">try { repository.getStats(); }
+catch (Exception e) {
+    // SLF4J : l'exception en dernier argument donne la stack trace
+    log.error("Stats failed", e);
+    throw e;
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// anyhow : with_context ajoute une couche, comme une InnerException
+let stats = repository.get_stats().await
+    .with_context(|| "stats failed")?;
+
+// {:?} affiche la chaîne des causes, et la backtrace
+// si RUST_BACKTRACE=1</code></pre>
+          <pre data-lang="python"><code class="language-python">try:
+    stats = repository.get_stats()
+except Exception:
+    # logger.exception ajoute le traceback au message
+    logger.exception("Stats failed")
+    raise</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">try {
+  await repository.getStats();
+} catch (err) {
+  // cause chaîne les erreurs, comme InnerException
+  throw new Error("Stats failed", { cause: err });
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="exercise" id="ex3" data-minutes="15" data-tests="Tickets.Tests.Exercise03">
+      <h2>Régler les logs : niveaux par catégorie et logs structurés</h2>
+      <p>Deux plaintes de l'exploitation : en production, les logs sont noyés sous le SQL ; et quand on cherche « le ticket 42 a-t-il été fermé ? », il faut chercher du texte.</p>
+      <ol>
+        <li>Ouvrez <code>appsettings.json</code> de l'API. Chaque clé de <code>Logging:LogLevel</code> est une <strong>catégorie</strong> : le nom complet de la classe qui logge (<code>ILogger&lt;T&gt;</code>). Une clé vaut pour toutes les catégories qui commencent par elle, et la plus précise l'emporte.</li>
+        <li>Le SQL d'EF Core est loggé par la catégorie <code>Microsoft.EntityFrameworkCore.Database.Command</code>. Ne le gardez qu'en développement : <code>"Microsoft.EntityFrameworkCore": "Warning"</code> dans <code>appsettings.json</code>, et la catégorie des commandes en <code>Information</code> dans <code>appsettings.Development.json</code>.</li>
+        <li>La configuration s'empile, comme au TP-02 : une variable d'environnement l'emporte sur les fichiers. Essayez <code>Logging__LogLevel__Default=Debug dotnet run --project depart/src/Tickets.Api</code> (sous PowerShell : <code>$env:Logging__LogLevel__Default="Debug"</code> d'abord).</li>
+        <li>Dans <code>EfTicketRepository.CloseAsync</code>, le log de fermeture est une chaîne interpolée. Remplacez-le par un message généré <code>TicketClosed</code> dans <code>Data/TicketLog.cs</code>, sur le modèle de <code>TicketsImported</code> : <code>"Ticket {TicketId} closed after {OpenHours} hours"</code>, identifiant d'événement 1001.</li>
+      </ol>
+      <p>Les deux lignes affichent le même texte. Qu'est-ce qui change ?</p>
+      <pre><code class="language-csharp">logger.LogInformation($"Ticket {ticket.Id} closed after {openHours} hours");
+logger.TicketClosed(ticket.Id, openHours);</code></pre>
+      <details class="answer"><summary>Voir la réponse</summary><p>La chaîne interpolée est construite avant l'appel : le log ne reçoit que du texte, même quand le niveau est désactivé. Le message à <em>modèle</em> garde <code>TicketId</code> et <code>OpenHours</code> comme des champs : Aspire, Seq ou Elastic peuvent filtrer sur <code>TicketId = 42</code>. <code>[LoggerMessage]</code> génère en plus, à la compilation, un code qui ne fait rien quand le niveau est désactivé. C'est aussi ce que signale l'analyseur CA2254.</p></details>
+      <div class="hints">
+        <details class="hint"><summary>quel fichier pour quel environnement</summary><p><code>appsettings.json</code> est lu partout ; <code>appsettings.Development.json</code> s'ajoute par-dessus quand <code>ASPNETCORE_ENVIRONMENT</code> vaut <code>Development</code>, comme dans le profil de lancement. Les tests vérifient les deux environnements.</p></details>
+        <details class="hint"><summary>le message généré</summary><pre><code class="language-csharp">[LoggerMessage(EventId = 1001, Level = LogLevel.Information, Message = "Ticket {TicketId} closed after {OpenHours} hours")]
+public static partial void TicketClosed(this ILogger logger, int ticketId, double openHours);</code></pre></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Les catégories ≈ les noms de loggers de Logback (<code>logging.level.org.hibernate.SQL=debug</code> dans Spring Boot). Les accolades de SLF4J sont positionnelles ; pour des champs nommés, SLF4J 2 a une API fluide.</p>
+        <p data-lang="rust">≈ <code>tracing</code> et le filtre <code>RUST_LOG=tickets=info,sqlx=warn</code>. Les champs nommés de <code>tracing</code> sont exactement des logs structurés.</p>
+        <p data-lang="python">Les catégories ≈ la hiérarchie de <code>logging.getLogger("a.b")</code>. Le formatage avec <code>%s</code> est différé comme ici ; pour des champs, <code>extra=</code> ou structlog.</p>
+        <p data-lang="javascript">≈ pino ou winston : un objet de champs plus un message. Les niveaux par catégorie ≈ des loggers enfants avec leur propre niveau.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">[LoggerMessage(Level = LogLevel.Information,
+    Message = "Ticket {TicketId} closed after {OpenHours} hours")]
+public static partial void TicketClosed(this ILogger logger, int ticketId, double openHours);
+
+logger.TicketClosed(ticket.Id, openHours);</code></pre>
+          <pre data-lang="java"><code class="language-java">// SLF4J 2 : des champs nommés avec l'API fluide
+log.atInfo()
+   .addKeyValue("ticketId", ticket.getId())
+   .addKeyValue("openHours", openHours)
+   .log("Ticket closed");</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// tracing : les champs sont nommés dans la macro
+tracing::info!(ticket_id = ticket.id, open_hours, "ticket closed");</code></pre>
+          <pre data-lang="python"><code class="language-python"># structlog : des paires clé-valeur
+log.info("ticket_closed", ticket_id=ticket.id, open_hours=open_hours)</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// pino : un objet de champs, puis le message
+logger.info({ ticketId: ticket.id, openHours }, "ticket closed");</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="exercise" id="ex4" data-minutes="40" data-tests="Tickets.Tests.Exercise04">
+      <h2>Suivre une requête avec Aspire</h2>
+      <p>Lancer l'API puis le front dans deux terminaux, chercher les logs dans deux consoles : Aspire remplace tout cela par un programme C# qui décrit l'application, la lance, et montre logs, traces et métriques dans un tableau de bord.</p>
+      <ol>
+        <li>Lisez <code>src/Tickets.ServiceDefaults/Extensions.cs</code>, fourni (il vient du modèle <code>aspire-servicedefaults</code>). Qu'ajoute <code>AddServiceDefaults()</code> à un service ?</li>
+        <li>Dans le <code>Program.cs</code> de l'API <strong>et</strong> du front, appelez <code>builder.AddServiceDefaults()</code> et <code>app.MapDefaultEndpoints()</code>. L'API répond alors sur <code>/health</code> et <code>/alive</code>.</li>
+        <li>Écrivez <code>src/Tickets.AppHost/AppHost.cs</code> : une ressource <code>api</code> pour <code>Projects.Tickets_Api</code>, une ressource <code>web</code> pour <code>Projects.Tickets_Web</code> qui reçoit l'adresse de l'API dans la variable <code>TicketsApi__BaseUrl</code> et attend que l'API soit prête (<code>WaitFor</code>).</li>
+        <li>Lancez <code>dotnet run --project depart/src/Tickets.AppHost</code>. La console affiche l'URL de connexion au tableau de bord (avec un jeton) : ouvrez-la. Les ressources <code>api</code> et <code>web</code> passent à <em>Running</em> ; leurs consoles sont dans l'onglet <em>Console</em>.</li>
+        <li><strong>Suivez une requête</strong> : ouvrez le front, puis la page des tickets. Dans <em>Traces</em>, trouvez la trace <code>web: GET /tickets</code> : un span du front, l'appel HTTP vers l'API, la requête de l'API et sa commande SQL. Quelle étape prend le plus de temps ?</li>
+        <li>Ajoutez un span à vous dans <code>EfTicketRepository.ImportAsync</code> : une activité <code>ImportTickets</code> de <code>TicketsTelemetry.Source</code>, avec l'étiquette <code>tickets.count</code>. Importez le fichier d'exemple avec un jeton administrateur, et retrouvez le span et ses commandes SQL dans la trace de <code>POST /tickets/import</code> :
+          <pre><code class="language-bash">cd depart/src/Tickets.Api
+TOKEN=$(dotnet user-jwts create --name admin --role admin --output token)
+curl -X POST http://localhost:5080/tickets/import -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: text/csv" --data-binary @../../samples/legacy-tickets.csv</code></pre></li>
+        <li>Fermez un ticket (<code>curl -X POST http://localhost:5080/tickets/1/close -H "Authorization: Bearer $TOKEN"</code>), puis dans <em>Structured logs</em>, filtrez sur le champ <code>TicketId</code> de l'exercice 3.</li>
+      </ol>
+      <p>Comment le front sait-il qu'il doit envoyer ses traces au tableau de bord ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Aspire lance chaque projet avec des variables d'environnement, dont <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> : l'adresse où le tableau de bord reçoit la télémétrie au format OTLP. <code>AddOpenTelemetryExporters</code> n'active l'export que si cette variable existe. Hors Aspire, la même application l'enverrait à n'importe quel collecteur OpenTelemetry (Jaeger, Grafana, Azure Monitor…).</p></details>
+      <div class="hints">
+        <details class="hint"><summary>le modèle d'application</summary><pre><code class="language-csharp">var builder = DistributedApplication.CreateBuilder(args);
+
+var api = builder.AddProject&lt;Projects.Tickets_Api&gt;("api");
+
+builder.AddProject&lt;Projects.Tickets_Web&gt;("web")
+    .WithEnvironment("TicketsApi__BaseUrl", api.GetEndpoint("http"))
+    .WaitFor(api);
+
+builder.Build().Run();</code></pre></details>
+        <details class="hint"><summary>le span</summary><pre><code class="language-csharp">using var activity = TicketsTelemetry.Source.StartActivity("ImportTickets");
+activity?.SetTag("tickets.count", tickets.Count);</code></pre><p>Le <code>?.</code> compte : <code>StartActivity</code> renvoie <code>null</code> quand personne n'écoute la source. Le span se termine à la fin du <code>using</code>.</p></details>
+        <details class="hint"><summary>le tableau de bord ne s'ouvre pas</summary><p>Utilisez l'URL complète de la console, avec <code>?t=…</code>. L'avertissement sur le certificat de développement vient du profil http ; <code>dotnet dev-certs https --trust</code> le fait disparaître. Si l'API ne démarre pas, son onglet <em>Console</em> montre pourquoi (souvent la chaîne de connexion).</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Aspire ≈ un docker-compose écrit en Java plus Jaeger et Grafana, ou les <em>dev services</em> de Quarkus. <code>Activity</code> ≈ le <code>Span</code> d'OpenTelemetry ; .NET a gardé son propre type, compatible.</p>
+        <p data-lang="rust">≈ <code>tracing</code> avec <code>tracing-opentelemetry</code> et un collecteur lancé à côté. Un span <code>tracing</code> se traduit en span OpenTelemetry.</p>
+        <p data-lang="python">≈ <code>opentelemetry-instrument</code>, qui instrumente l'appli sans code, avec un Jaeger lancé dans Docker. Pas d'équivalent intégré qui orchestre aussi les services.</p>
+        <p data-lang="javascript">≈ <code>@opentelemetry/sdk-node</code> et ses <em>auto-instrumentations</em>, plus un docker-compose. Aspire sait d'ailleurs lancer une appli Node.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public static readonly ActivitySource Source = new("Tickets.Api");
+
+using var activity = Source.StartActivity("ImportTickets");
+activity?.SetTag("tickets.count", tickets.Count);
+await db.SaveChangesAsync(ct);   // spans SQL enfants</code></pre>
+          <pre data-lang="java"><code class="language-java">Tracer tracer = openTelemetry.getTracer("tickets-api");
+
+Span span = tracer.spanBuilder("ImportTickets")
+    .setAttribute("tickets.count", tickets.size())
+    .startSpan();
+try (Scope scope = span.makeCurrent()) {
+    repository.saveAll(tickets);
+} finally {
+    span.end();
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">use tracing::Instrument;
+
+// Dans du code async, on attache le span au futur avec instrument()
+save_all(&amp;pool, &amp;tickets)
+    .instrument(tracing::info_span!("ImportTickets", tickets.count = tickets.len()))
+    .await?;</code></pre>
+          <pre data-lang="python"><code class="language-python">tracer = trace.get_tracer("tickets-api")
+
+with tracer.start_as_current_span("ImportTickets") as span:
+    span.set_attribute("tickets.count", len(tickets))
+    session.add_all(tickets)
+    session.commit()</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const tracer = trace.getTracer("tickets-api");
+
+await tracer.startActiveSpan("ImportTickets", async span =&gt; {
+  span.setAttribute("tickets.count", tickets.length);
+  await saveAll(tickets);
+  span.end();
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="exercise" id="ex5" data-minutes="20" data-tests="Tickets.Preview.Tests.Exercise05" data-test-command="cd net11 &amp;&amp; dotnet test --solution depart/Preview.slnx">
+      <h2>Aperçu de .NET 11 : les unions de C# 15</h2>
+      <p>.NET 11 sort en novembre 2026 ; ce n'est pas une version LTS, nos applis restent sur .NET 10. Mais C# 15 apporte une nouveauté attendue depuis longtemps : les <strong>unions</strong>, l'équivalent des enums de Rust ou des unions discriminées de TypeScript. On l'essaie dans un petit projet à part, <code>net11/</code>.</p>
+      <ol>
+        <li>Installez le SDK .NET 11 et vérifiez avec <code>dotnet --list-sdks</code> que les deux versions sont là. Dans <code>net11/</code>, <code>dotnet --version</code> donne la version 11 : son <code>global.json</code> la choisit. Ailleurs dans le dépôt, c'est toujours .NET 10.</li>
+        <li>Ouvrez <code>net11/depart/src/Tickets.Preview/TicketBoard.cs</code>. Fermer un ticket a trois issues : <code>Closed</code>, <code>NotFound</code>, <code>AlreadyClosed</code>. L'union <code>CloseResult</code> n'en contient que deux, et <code>Close</code> lève une exception pour la troisième.</li>
+        <li>Lancez les tests (commande ci-dessus) : <code>ClosingTwice_GivesAlreadyClosed</code> échoue.</li>
+        <li>Ajoutez <code>AlreadyClosed</code> à l'union et compilez. Le compilateur refuse : les deux <code>switch</code> ne traitent pas le nouveau cas (CS8509, transformée en erreur dans ce projet). Complétez-les, renvoyez <code>AlreadyClosed</code> dans <code>Close</code> : les tests passent.</li>
+      </ol>
+      <p>Dans l'API, <code>CloseAsync</code> renvoie <code>(TicketChange Result, Ticket? Ticket)</code>. Qu'apporte l'union par rapport à ce tuple ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Avec le tuple, rien n'empêche de lire <code>Ticket</code> quand le résultat est <code>NotFound</code> : il vaut <code>null</code>, et le <code>!</code> du code d'appel le cache. Avec l'union, chaque cas porte exactement ses données (<code>NotFound</code> n'a qu'un identifiant), et le compilateur vérifie que chaque <code>switch</code> traite tous les cas. Ajouter un cas montre tous les endroits à mettre à jour.</p></details>
+      <p>Les autres nouveautés de C# 15 : des arguments dans les expressions de collection (<code>[with(StringComparer.OrdinalIgnoreCase), …]</code>), les hiérarchies fermées (<code>closed</code>, ≈ <code>sealed</code> de Java), les indexeurs d'extension, <code>break</code> et <code>continue</code> avec étiquette, et un nouveau modèle de sécurité mémoire pour <code>unsafe</code>. Côté runtime, l'async natif (<em>Runtime Async</em>) remplace les machines à états générées par le compilateur : la pile d'appels que montre le débogueur dans du code async ne contient plus que vos méthodes. Pour suivre :</p>
+      <ul>
+        <li><a href="https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-15" target="_blank" rel="noopener">What's new in C# 15</a> et <a href="https://learn.microsoft.com/dotnet/core/whats-new/dotnet-11/overview" target="_blank" rel="noopener">What's new in .NET 11</a> sur Microsoft Learn ;</li>
+        <li>le <a href="https://devblogs.microsoft.com/dotnet/" target="_blank" rel="noopener">blog .NET</a>, avec un article par préversion ;</li>
+        <li>les propositions du langage sur <a href="https://github.com/dotnet/csharplang" target="_blank" rel="noopener">dotnet/csharplang</a> ;</li>
+        <li>la .NET Conf, en novembre, qui lance chaque version.</li>
+      </ul>
+      <div class="hints">
+        <details class="hint"><summary>l'union et le switch</summary><pre><code class="language-csharp">public union CloseResult(Closed, NotFound, AlreadyClosed);
+
+public static int ToStatusCode(this CloseResult result) =&gt; result switch
+{
+    Closed =&gt; 200,
+    NotFound =&gt; 404,
+    AlreadyClosed =&gt; 409,
+};</code></pre></details>
+        <details class="hint"><summary>la date dans Describe</summary><p>Un motif positionnel déconstruit le record, et un motif de propriété regarde à l'intérieur : <code>AlreadyClosed({ ClosedAt: { } closedAt } ticket) =&gt; $"Ticket {ticket.Id} was already closed on {closedAt:yyyy-MM-dd}."</code>. Gardez un cas <code>AlreadyClosed(var ticket)</code> pour un ticket sans date.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ une <code>sealed interface</code> avec des records (Java 17), et le <code>switch</code> exhaustif de Java 21. En C#, les cas n'ont pas à implémenter une interface commune : n'importe quels types peuvent former une union.</p>
+        <p data-lang="rust">C'est l'<code>enum</code> de Rust et son <code>match</code> exhaustif. Différence : en C#, les cas sont des types qui existent par eux-mêmes (<code>Closed</code> est un record), pas des variantes déclarées dans l'union.</p>
+        <p data-lang="python">≈ <code>Closed | NotFound | AlreadyClosed</code> et <code>match</code>. Python ne vérifie l'exhaustivité qu'avec mypy ou pyright et <code>assert_never</code> ; ici, c'est le compilateur.</p>
+        <p data-lang="javascript">≈ une union discriminée de TypeScript. Pas besoin de champ <code>kind</code> : le <code>switch</code> C# teste le type du cas.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public sealed record Closed(Ticket Ticket);
+public sealed record NotFound(int Id);
+public sealed record AlreadyClosed(Ticket Ticket);
+
+public union CloseResult(Closed, NotFound, AlreadyClosed);
+
+int StatusCode(CloseResult result) =&gt; result switch
+{
+    Closed =&gt; 200,
+    NotFound =&gt; 404,
+    AlreadyClosed =&gt; 409,
+};</code></pre>
+          <pre data-lang="java"><code class="language-java">sealed interface CloseResult permits Closed, NotFound, AlreadyClosed {}
+record Closed(Ticket ticket) implements CloseResult {}
+record NotFound(int id) implements CloseResult {}
+record AlreadyClosed(Ticket ticket) implements CloseResult {}
+
+int statusCode(CloseResult result) {
+    return switch (result) {
+        case Closed c -&gt; 200;
+        case NotFound n -&gt; 404;
+        case AlreadyClosed a -&gt; 409;
+    };
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">enum CloseResult {
+    Closed(Ticket),
+    NotFound(u32),
+    AlreadyClosed(Ticket),
+}
+
+fn status_code(result: &amp;CloseResult) -&gt; u16 {
+    match result {
+        CloseResult::Closed(_) =&gt; 200,
+        CloseResult::NotFound(_) =&gt; 404,
+        CloseResult::AlreadyClosed(_) =&gt; 409,
+    }
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">from dataclasses import dataclass
+from typing import assert_never
+
+@dataclass
+class Closed:
+    ticket: Ticket
+
+@dataclass
+class NotFound:
+    id: int
+
+@dataclass
+class AlreadyClosed:
+    ticket: Ticket
+
+type CloseResult = Closed | NotFound | AlreadyClosed  # Python 3.12
+
+def status_code(result: CloseResult) -&gt; int:
+    match result:
+        case Closed():
+            return 200
+        case NotFound():
+            return 404
+        case AlreadyClosed():
+            return 409
+        case _:
+            assert_never(result)   # vérifié par mypy / pyright</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// TypeScript : une union discriminée par "kind"
+type CloseResult =
+  | { kind: "closed"; ticket: Ticket }
+  | { kind: "notFound"; id: number }
+  | { kind: "alreadyClosed"; ticket: Ticket };
+
+function statusCode(result: CloseResult): number {
+  switch (result.kind) {
+    case "closed": return 200;
+    case "notFound": return 404;
+    case "alreadyClosed": return 409;
+  }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="exercise" id="ex6" data-minutes="60" data-tests="Tickets.Tests.Exercise06">
+      <h2>Trois anomalies à corriger</h2>
+      <p>Trois tickets sont arrivés cette semaine. Pour chacun : reproduisez, trouvez la cause avec les outils du matin, corrigez, et écrivez la cause en une phrase dans <code>depart/ANOMALIES.md</code>. Chaque anomalie a sa classe de tests dans <code>Exercise06Tests.cs</code>.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Le ticket</th><th>Test</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>« Je modifie un ticket, le site me dit OK, mais rien ne change. »</td><td><code>Anomaly1Tests</code></td></tr>
+          <tr><td>2</td><td>« Le résumé des tickets ne montre pas le ticket que je viens de créer. Il apparaît un peu plus tard. »</td><td><code>Anomaly2Tests</code></td></tr>
+          <tr><td>3</td><td>« Sur la base neuve de la recette, la page des statistiques plante. Chez moi, ça marche. »</td><td><code>Anomaly3Tests</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>Une méthode qui marche sur toutes les anomalies :</p>
+      <ol>
+        <li><strong>Reproduire</strong> : le test échoue-t-il ? Sinon, reproduisez à la main (Scalar sur <code>/scalar</code>, ou le front) jusqu'à voir le symptôme.</li>
+        <li><strong>Observer</strong> sans rien changer : les logs SQL (exercice 3), une trace dans Aspire (exercice 4), un point d'arrêt (exercice 1), la stack trace s'il y a une exception (exercice 2).</li>
+        <li><strong>Formuler la cause</strong> en une phrase avant de corriger. Si vous n'y arrivez pas, vous n'avez pas encore trouvé.</li>
+        <li><strong>Corriger au plus près de la cause</strong>, puis relancer tous les tests : une correction ne doit rien casser ailleurs.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>piste pour l'anomalie 1</summary><p>Lancez le test avec les logs SQL activés et regardez ce que l'API envoie après le <code>PUT</code> : un <code>SELECT</code>… et ensuite ? Relisez la différence entre requête suivie et non suivie (TP-02).</p></details>
+        <details class="hint"><summary>piste pour l'anomalie 2</summary><p>Appelez deux fois <code>GET /tickets/summary</code> : le second appel envoie-t-il du SQL ? Le cache est dans <code>CachedTicketRepository</code>. Mettez un point d'arrêt dans <code>Invalidate</code> et un autre dans <code>GetSummariesAsync</code>, et comparez ce qu'ils manipulent.</p></details>
+        <details class="hint"><summary>piste pour l'anomalie 3</summary><p>« Chez moi ça marche » : qu'a votre base que la base neuve n'a pas ? Les tests de <code>Anomaly3Tests</code> appellent directement <code>TicketStatistics.Compute</code> ; lisez le message de l'exception.</p></details>
+        <details class="hint"><summary>les trois causes</summary><ol>
+          <li><code>UpdateAsync</code> charge le ticket avec <code>AsNoTracking()</code> : le contexte ne le suit pas, <code>SaveChangesAsync</code> ne voit aucune modification et n'envoie pas d'<code>UPDATE</code>. Retirez <code>AsNoTracking()</code>.</li>
+          <li>Le cache est lu avec la clé <code>"tickets:summaries"</code> et vidé avec <code>"tickets:summary"</code> : il n'est jamais vidé et expire au bout d'une minute. Une seule constante pour la clé.</li>
+          <li><code>Average</code> lève une exception sur une séquence vide, et une base neuve n'a aucun ticket fermé. Renvoyez <code>null</code> quand il n'y a rien à moyenner.</li>
+        </ol></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">L'anomalie 1 existe en JPA : une entité <em>détachée</em> modifiée n'est pas enregistrée sans <code>merge</code>. <code>AsNoTracking</code> ≈ une entité lue hors du contexte de persistance.</p>
+        <p data-lang="rust">Avec sqlx ou Diesel, pas de suivi des modifications : on écrit l'<code>UPDATE</code>. L'anomalie 1 ne peut pas exister ; en échange, chaque mise à jour s'écrit à la main.</p>
+        <p data-lang="python">SQLAlchemy suit les objets de sa session comme EF Core : un objet détaché (<code>session.expunge</code>) n'est plus enregistré au <code>commit</code>.</p>
+        <p data-lang="javascript">Prisma ne suit rien : <code>update</code> envoie l'<code>UPDATE</code> tout de suite. L'anomalie 1 vient du modèle <em>unit of work</em> d'EF Core.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">// Suivi des modifications : on modifie l'objet, SaveChanges écrit l'UPDATE
+var ticket = await db.Tickets.FirstAsync(t =&gt; t.Id == id, ct);
+ticket.Title = title;
+await db.SaveChangesAsync(ct);</code></pre>
+          <pre data-lang="java"><code class="language-java">// JPA : l'entité est suivie dans la transaction
+@Transactional
+public void rename(long id, String title) {
+    Ticket ticket = entityManager.find(Ticket.class, id);
+    ticket.setTitle(title);   // UPDATE au commit
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// sqlx (PostgreSQL) : pas de suivi, on écrit l'UPDATE
+sqlx::query("UPDATE tickets SET title = $1 WHERE id = $2")
+    .bind(&amp;title)
+    .bind(id)
+    .execute(&amp;pool)
+    .await?;</code></pre>
+          <pre data-lang="python"><code class="language-python"># SQLAlchemy : la session suit l'objet
+ticket = session.get(Ticket, ticket_id)
+ticket.title = title
+session.commit()   # UPDATE ici</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// Prisma : pas de suivi, l'UPDATE part tout de suite
+await prisma.ticket.update({ where: { id }, data: { title } });</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li>Faites lancer SQL Server par Aspire, dans un conteneur : <code>builder.AddSqlServer("sql").AddDatabase("Tickets")</code>, puis <code>.WithReference(…)</code> sur l'API (Docker ou Podman requis).</li>
+        <li>Suivez l'API en direct avec <code>dotnet-counters</code> : <code>dotnet tool install --global dotnet-counters</code>, puis <code>dotnet-counters monitor -n Tickets.Api</code> pendant un import.</li>
+        <li>Demandez au débogueur de s'arrêter dès qu'une exception est levée, même interceptée (<em>Exception Settings</em> dans Visual Studio, <em>Exception breakpoints</em> dans Rider et VS Code), et relancez l'exercice 2.</li>
+        <li>Remplacez le tuple <code>(TicketChange, Ticket?)</code> de l'API par une hiérarchie <code>closed</code> de C# 15… le jour où nos applis passeront à .NET 11.</li>
+      </ul>
+    </div>
+
+    <section class="panel" id="summary">
+      <h2>Valider le TP et faire le bilan</h2>
+      <pre><code class="language-bash">dotnet build depart/Tickets.slnx                                # 0 avertissement
+dotnet test --solution depart/Tickets.slnx                      # tous au vert (SQL Server requis)
+cd net11 &amp;&amp; dotnet test --solution depart/Preview.slnx          # l'aperçu de C# 15, avec le SDK .NET 11</code></pre>
+      <p>Comparez avec <code>solution/</code> et avec votre <code>ANOMALIES.md</code> : les causes sont commentées là où elles étaient. C'est la fin du parcours ; la suite se passe sur nos applis, avec les bonnes pratiques 3B Studio.</p>
+      <div data-report></div>
+      <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/enonce.js"></script>
+</body>
+</html>

@@ -51,7 +51,7 @@
     { code: "TP-02", key: "tp-02", exercises: 8, href: "tp-02-web-ef-core/enonce.html", when: "Mardi 20 octobre, matin", title: "Serveur web et Entity Framework Core", text: "ASP.NET Core, injection de dépendances, configuration, Minimal APIs, EF Core sur SQL Server." },
     { code: "TP-03", key: "tp-03", exercises: 7, href: "tp-03-blazor-composants/enonce.html", when: "Mercredi 21 octobre, matin", title: "Blazor : composants, modes de rendu et formulaires", text: "Composants Razor, cycle de vie, modes de rendu comparés, EditForm, QuickGrid." },
     { code: "TP-04", key: "tp-04", exercises: 7, href: "tp-04-blazor-auth-etat/enonce.html", when: "Jeudi 22 octobre, matin", title: "Blazor : authentification, état et composants réutilisables", text: "JWT et policies, AuthorizeView, état partagé, bibliothèque de composants, bUnit." },
-    { code: "TP-05", key: "tp-05", exercises: 6, href: "", when: "Vendredi 23 octobre, matin · bonus", title: "S'orienter et déboguer dans une appli existante", text: "Débogueur, stack traces, logs, Aspire, aperçu de .NET 11, trois anomalies à corriger." },
+    { code: "TP-05", key: "tp-05", exercises: 6, href: "tp-05-bonus-debogage/enonce.html", when: "Vendredi 23 octobre, matin · bonus", title: "S'orienter et déboguer dans une appli existante", text: "Débogueur, stack traces, logs, Aspire, aperçu de .NET 11, trois anomalies à corriger." },
     { code: "3B", key: "3b", exercises: 0, href: "", when: "Dans un second temps", title: "Bonnes pratiques 3B Studio", text: "Nos conventions, notre architecture, notre façon de livrer et nos composants Blazor." },
   ];
   const setup = [
@@ -60,8 +60,8 @@
     "Git, et ce dépôt cloné",
     "SQL Server installé en local, et SSMS (TP-02)",
     "L'outil EF Core : dotnet tool install --global dotnet-ef (TP-02)",
-    "Docker ou Podman, pour Aspire (TP-05)",
-    "Le SDK .NET 11, pour la fin du TP-05",
+    "Facultatif : Docker ou Podman, pour aller plus loin avec Aspire (TP-05)",
+    "Le SDK .NET 11 (RC à ce jour), pour l'exercice 5 du TP-05",
   ];
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch (e) { return null; } };
   const esc = value => String(value).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

@@ -1,44 +1,18 @@
-# TP-05 · S'orienter et déboguer dans une appli existante
+# TP-05 · S'orienter et déboguer dans une appli existante (bonus)
 
-> Demi-journée · vendredi 23 octobre, matin (bonus) · **énoncé à rédiger**
+L'énoncé est interactif : ouvrez **[`enonce.html`](enonce.html)** dans un navigateur.
 
-Les outils pour diagnostiquer vite, directement utiles pour la correction d'anomalies, et un coup d'œil à ce qu'apporte .NET 11.
+- `depart/` : l'application de tickets du TP-04, enrichie par « un collègue » (import CSV, statistiques, cache) et qui cache des anomalies, plus les projets Aspire (`depart/Tickets.slnx`).
+- `net11/` : l'aperçu de C# 15 (exercice 5), avec son propre `global.json` qui choisit le SDK .NET 11.
+- `solution/` et `net11/solution/` : la correction commentée.
+- `NOTES-FORMATEUR.md` : les notes pour animer la séance.
 
-## Avant de commencer
+Lancer l'application avec Aspire : `dotnet run --project depart/src/Tickets.AppHost`, puis ouvrir l'URL du tableau de bord affichée dans la console.
 
-- Ouvrir `depart/Tickets.slnx` dans votre IDE.
-- Point de départ : `dotnet new aspire-starter`.
-- Le dossier `depart/` contient une application qui compile mais qui cache trois anomalies.
-
-## Exercices
-
-Environ 3 h 00 de manipulation.
-
-| # | Exercice | Durée |
-|---|---|---|
-| 1 | Débogueur : points d'arrêt conditionnels, espions, Hot Reload | 30 min |
-| 2 | Lire une exception et une stack trace .NET, async comprise | 15 min |
-| 3 | Régler les niveaux de log par catégorie dans appsettings.json | 15 min |
-| 4 | Lancer une solution avec Aspire et suivre une requête dans le tableau de bord (traces, logs) | 40 min |
-| 5 | Aperçu de .NET 11 et C# 15 : union types, et où suivre les nouveautés | 20 min |
-| 6 | Corriger 3 anomalies semées dans une appli d'exemple, dont une liée à EF Core (N+1 ou suivi de modifications) | 60 min |
-
-*Le détail de chaque exercice (consigne, indices) sera ajouté ici.*
-
-## Valider son travail
+Valider le TP, depuis ce dossier :
 
 ```bash
-dotnet test --solution depart/Tickets.slnx
+dotnet build depart/Tickets.slnx                            # 0 avertissement
+dotnet test --solution depart/Tickets.slnx                  # exercices 1 à 4 et 6 (SQL Server requis)
+cd net11 && dotnet test --solution depart/Preview.slnx      # exercice 5 (SDK .NET 11)
 ```
-
-Quand tous les tests passent au vert, l'exercice est terminé. Comparez ensuite votre code avec `solution/` : il y a souvent plusieurs bonnes réponses, la correction en commente une.
-
-**Livrable :** Trois anomalies corrigées, chacune avec sa cause expliquée en une phrase.
-
-## Pont depuis Java, Rust et JavaScript
-
-Aspire ≈ un docker-compose piloté en C#, avec un tableau de bord de traces intégré.
-
-## Notions abordées
-
-débogueur, Hot Reload, stack traces, logging structuré, Aspire, OpenTelemetry, dotnet-counters, union types (C# 15), logs SQL d'EF Core.

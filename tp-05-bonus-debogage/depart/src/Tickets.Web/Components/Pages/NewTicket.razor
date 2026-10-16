@@ -1,0 +1,66 @@
+@page "/tickets/new"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@inject ITicketsClient Client
+@inject NavigationManager Navigation
+
+@* TP-03, exercise 05 (TP-03): a form bound to a model, validated with its DataAnnotations.
+   TP-04, exercise 03: [Authorize] reserves the page to logged-in users. *@
+
+<PageTitle>New ticket</PageTitle>
+
+<h1>New ticket</h1>
+
+<EditForm Model="_ticket" OnValidSubmit="SaveAsync" FormName="new-ticket" class="form">
+    <DataAnnotationsValidator />
+
+    <label for="title">Title</label>
+    <InputText id="title" @bind-Value="_ticket.Title" />
+    <ValidationMessage For="() => _ticket.Title" />
+
+    <label for="description">Description</label>
+    <InputTextArea id="description" @bind-Value="_ticket.Description" rows="4" />
+    <ValidationMessage For="() => _ticket.Description" />
+
+    <label for="priority">Priority</label>
+    <InputSelect id="priority" @bind-Value="_ticket.Priority">
+        @foreach (var priority in Enum.GetValues<TicketPriority>())
+        {
+            <option value="@priority">@priority</option>
+        }
+    </InputSelect>
+
+    <div>
+        <button type="submit" disabled="@_saving">@(_saving ? "Creating…" : "Create")</button>
+    </div>
+</EditForm>
+
+@if (_error is not null)
+{
+    <p class="error">@_error</p>
+}
+
+@code {
+    private readonly NewTicketForm _ticket = new();
+    private bool _saving;
+    private string? _error;
+
+    // OnValidSubmit only runs when every validation rule passes.
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        try
+        {
+            await Client.CreateTicketAsync(_ticket);
+            Navigation.NavigateTo("tickets");
+        }
+        catch (HttpRequestException exception)
+        {
+            _error = $"The ticket could not be created: {exception.Message}";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

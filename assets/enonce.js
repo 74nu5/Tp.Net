@@ -6,6 +6,7 @@
     <nav id="toc"></nav>, <div id="progress"></div>, <div id="side-actions"></div>   side panel slots
     <section class="exercise" id="ex2" data-minutes="15" data-tests="Katas.Tests.Exercise02">
       <h2>Title</h2> ...                                                              one card per exercise
+      [data-test-project="depart/tests/…"] or [data-test-command="cd x &amp;&amp; dotnet test …"]       other project, or whole command
     <div class="hints"><details class="hint">...</details>...</div>                   hints revealed in order
     <div class="compare"><pre data-lang="csharp">…</pre><pre data-lang="java">…</pre>…</div>       C# + chosen language side by side
     <p data-lang="rust">…</p>                                                         shown only when Rust is chosen
@@ -99,7 +100,8 @@
       tests.className = "tests";
       // An exercise can name its own test project (data-test-project on the section), e.g. API tests in a front-end lab.
       const target = ex.dataset.testProject ? `--project ${ex.dataset.testProject}` : testTarget;
-      const command = `dotnet test ${target} --filter-namespace "${ex.dataset.tests}"`;
+      // data-test-command replaces the whole command, e.g. when it must run from a sub-folder with its own global.json.
+      const command = ex.dataset.testCommand || `dotnet test ${target} --filter-namespace "${ex.dataset.tests}"`;
       tests.innerHTML = `<span class="lbl">Valider cet exercice, depuis le dossier du TP</span><pre><code class="language-bash"></code></pre>`;
       tests.querySelector("code").textContent = command;
       head.after(tests);

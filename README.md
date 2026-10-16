@@ -18,11 +18,11 @@ Les bonnes pratiques 3B Studio viendront dans un second temps : voir [`3b-studio
 
 ## Préparer son poste
 
-- SDK .NET 10 (10.0.100 ou plus récent) ; le SDK .NET 11 pour la fin du TP-05
+- SDK .NET 10 (10.0.100 ou plus récent) ; le SDK .NET 11 (RC à ce jour) pour l'exercice 5 du TP-05
 - Un IDE : Rider, Visual Studio 2026, ou VS Code avec C# Dev Kit
 - SQL Server installé en local, et SSMS
 - L'outil EF Core : `dotnet tool install --global dotnet-ef`
-- Docker ou Podman, pour Aspire (TP-05)
+- Facultatif : Docker ou Podman, pour aller plus loin avec Aspire (TP-05)
 - Git
 
 ## Comment travailler

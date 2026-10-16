@@ -1,0 +1,76 @@
+@page "/tickets"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+
+@* TP-03, exercise 03 (TP-03): load data when the component starts, and show every state: loading, error, empty, data.
+   TP-04, exercise 04: a cascading "Compact" value and a shared favorites counter.
+   TP-04, exercise 05: [PersistentState] avoids loading the tickets twice. *@
+
+<PageTitle>Tickets</PageTitle>
+
+<h1>Tickets</h1>
+
+@if (_error is not null)
+{
+    <p class="error">The tickets could not be loaded: @_error</p>
+}
+else if (Tickets is null)
+{
+    <p class="loading">Loading…</p>
+}
+else if (Tickets.Count == 0)
+{
+    <p class="empty">No ticket yet. <a href="tickets/new">Create the first one</a>.</p>
+}
+else
+{
+    @if (_selected is not null)
+    {
+        <p class="selected">Selected: <strong>@_selected.Title</strong></p>
+    }
+
+    <div class="toolbar">
+        <label><input type="checkbox" @bind="_compact" /> Compact</label>
+        <FavoritesCounter />
+    </div>
+
+    @* Every TicketCard below receives Compact, without passing it card by card. *@
+    <CascadingValue Name="Compact" Value="_compact">
+        <div class="cards">
+            @foreach (var ticket in Tickets)
+            {
+                @* @key helps Blazor match each card to its ticket when the list changes. *@
+                <TicketCard @key="ticket.Id" Ticket="ticket" OnSelected="Select">
+                    <small class="muted">#@ticket.Id · @ticket.Status</small>
+                </TicketCard>
+            }
+        </div>
+    </CascadingValue>
+}
+
+@code {
+    private string? _error;
+    private TicketDto? _selected;
+    private bool _compact;
+
+    // TP-04, exercise 05: during prerendering, the value is serialized into the page; when the interactive
+    // circuit starts, the property is restored from it before OnInitializedAsync runs. Must be public.
+    [PersistentState]
+    public IReadOnlyList<TicketDto>? Tickets { get; set; }
+
+    // Runs on the server to produce the HTML, then again when the interactive circuit starts.
+    // The second time, Tickets is already restored: no second call to the API.
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Tickets ??= await Client.GetTicketsAsync();
+        }
+        catch (HttpRequestException exception)
+        {
+            _error = exception.Message;
+        }
+    }
+
+    private void Select(TicketDto ticket) => _selected = ticket;
+}

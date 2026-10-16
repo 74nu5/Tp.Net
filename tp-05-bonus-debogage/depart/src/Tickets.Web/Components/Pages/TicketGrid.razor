@@ -1,0 +1,38 @@
+@page "/tickets/grid"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+
+@* TP-03, exercise 06: QuickGrid sorts and pages an IQueryable for us. *@
+
+<PageTitle>Ticket grid</PageTitle>
+
+<h1>Ticket grid</h1>
+
+@if (_tickets is null)
+{
+    <p class="loading">Loading…</p>
+}
+else
+{
+    <QuickGrid Items="_tickets" Pagination="_pagination" Class="grid">
+        <PropertyColumn Property="t => t.Id" Title="#" Sortable="true" />
+        <PropertyColumn Property="t => t.Title" Sortable="true" IsDefaultSortColumn="true" />
+        <TemplateColumn Title="Priority" SortBy="_byPriority">
+            <PriorityBadge Priority="context.Priority" />
+        </TemplateColumn>
+        <PropertyColumn Property="t => t.Status" Sortable="true" />
+        <PropertyColumn Property="t => t.CreatedAt" Title="Created" Format="yyyy-MM-dd HH:mm" Sortable="true" />
+    </QuickGrid>
+    <Paginator State="_pagination" />
+}
+
+@code {
+    private IQueryable<TicketDto>? _tickets;
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 5 };
+
+    // A TemplateColumn has no property to sort on: we say how.
+    private readonly GridSort<TicketDto> _byPriority = GridSort<TicketDto>.ByDescending(t => t.Priority);
+
+    protected override async Task OnInitializedAsync() =>
+        _tickets = (await Client.GetTicketsAsync()).AsQueryable();
+}
