@@ -1,45 +1,17 @@
 # TP-04 · Blazor : authentification, état et composants réutilisables
 
-> Demi-journée · jeudi 22 octobre, matin · **énoncé à rédiger**
+L'énoncé est interactif : ouvrez **[`enonce.html`](enonce.html)** dans un navigateur.
 
-Sécuriser l'application de bout en bout et découvrir comment on structure du Blazor qui dure.
+- `depart/` : la solution du TP-03 (API et front Blazor), plus une page de connexion fournie et quelques squelettes à compléter (`depart/Tickets.slnx`).
+- `solution/` : la correction commentée.
+- `NOTES-FORMATEUR.md` : les notes pour animer la séance.
 
-## Avant de commencer
+Lancer l'application : l'API (`dotnet run --project depart/src/Tickets.Api`, port 5080) puis le front (`dotnet run --project depart/src/Tickets.Web`, port 5090). Comptes de démonstration : `alice` / `demo` et `admin` / `demo`.
 
-- Ouvrir `depart/Tickets.slnx` dans votre IDE.
-- Point de départ : `Solution Tickets des demi-journées précédentes`.
-- Le dossier `depart/` reprend la solution du TP-03. Si vous n'avez pas terminé le TP-03, partez de là sans scrupule.
-
-## Exercices
-
-Environ 2 h 50 de manipulation.
-
-| # | Exercice | Durée |
-|---|---|---|
-| 1 | Authentification vs autorisation : schémas, ClaimsPrincipal, policies | 15 min |
-| 2 | Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE | 30 min |
-| 3 | Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] | 40 min |
-| 4 | Partager l'état entre composants : cascading value et service scoped | 20 min |
-| 5 | Éviter le double chargement au prérendu avec [PersistentState] | 15 min |
-| 6 | Extraire un composant dans une Razor Class Library | 20 min |
-| 7 | Tester ce composant avec bUnit | 30 min |
-
-*Le détail de chaque exercice (consigne, indices) sera ajouté ici.*
-
-## Valider son travail
+Valider le TP, depuis ce dossier :
 
 ```bash
-dotnet test --solution depart/Tickets.slnx
+dotnet build depart/Tickets.slnx                          # 0 avertissement
+dotnet test --project depart/tests/Tickets.Api.Tests      # exercices 1 et 2 (SQL Server requis)
+dotnet test --project depart/tests/Tickets.Web.Tests      # exercices 3 à 7
 ```
-
-Quand tous les tests passent au vert, l'exercice est terminé. Comparez ensuite votre code avec `solution/` : il y a souvent plusieurs bonnes réponses, la correction en commente une.
-
-**Livrable :** L'application tickets authentifiée, avec un composant partagé testé.
-
-## Pont depuis Java, Rust et JavaScript
-
-≈ Spring Security en plus explicite. Un state container ≈ un store Redux ou Pinia. Une Razor Class Library ≈ une librairie de composants npm distribuée en package NuGet.
-
-## Notions abordées
-
-authentication schemes, JWT Bearer, OpenID Connect (aperçu), policies, AuthenticationStateProvider, AuthorizeView, state container, [PersistentState], Razor Class Library, bUnit.

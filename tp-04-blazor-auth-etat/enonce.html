@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP-04 · Blazor, sécurité et état</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/enonce.css">
+</head>
+<body data-tp="tp-04" data-solution="depart/Tickets.slnx" data-test-project="depart/tests/Tickets.Web.Tests">
+<div class="page">
+
+  <aside class="side" aria-label="Sommaire du TP">
+    <a class="home" href="../index.html">← Parcours .NET</a>
+    <div class="panel" id="progress"></div>
+    <div class="panel compare-picker"></div>
+    <nav class="panel" id="toc" aria-label="Exercices"></nav>
+    <div id="side-actions"></div>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">TP-04 · jeudi 22 octobre, matin · environ 3 h</div>
+      <h1>Blazor : authentification, état et composants réutilisables</h1>
+      <p>Dernière demi-journée sur l'application de tickets. On la sécurise de bout en bout : l'API exige un jeton, le front connaît son utilisateur. On partage ensuite de l'état entre composants, on supprime le double chargement constaté hier, et on extrait un composant dans une bibliothèque réutilisable, testée avec bUnit.</p>
+      <p class="muted">Cochez « Terminé » à la fin de chaque exercice ; le chrono est facultatif. Tout reste dans ce navigateur.</p>
+      <p>Les exemples de code montrent le C#, et à côté l'équivalent dans l'écosystème de votre choix :</p>
+      <div class="compare-picker"></div>
+    </header>
+
+    <div class="panel">
+      <h2>Avant de commencer</h2>
+      <ol>
+        <li><code>depart/</code> contient la solution du TP-03, plus quelques éléments fournis : la page de connexion (<code>Components/Pages/Account/Login.razor</code>), les comptes de démonstration (<code>Security/DemoUsers.cs</code>) et des squelettes à compléter.</li>
+        <li>Lancez l'API et le front comme hier : <code>dotnet run --project depart/src/Tickets.Api</code> puis <code>dotnet run --project depart/src/Tickets.Web</code>.</li>
+        <li>Les tests sont répartis dans <strong>deux projets</strong> : ceux des exercices 1 et 2 sont dans <code>tests/Tickets.Api.Tests</code> (SQL Server requis, comme au TP-02), ceux des exercices 3 à 7 dans <code>tests/Tickets.Web.Tests</code>. Chaque exercice donne sa commande.
+          <pre><code class="language-bash">dotnet test --project depart/tests/Tickets.Api.Tests
+dotnet test --project depart/tests/Tickets.Web.Tests</code></pre>
+          Au départ, 9 tests de l'API et 18 tests du front échouent. Les tests du TP-02 restent dans le projet de l'API et doivent rester verts : ils appellent l'API en administrateur.</li>
+      </ol>
+      <p><strong>Vocabulaire</strong> : l'<em>authentification</em> établit qui est l'utilisateur ; l'<em>autorisation</em> décide ce qu'il a le droit de faire. En .NET, un utilisateur est un <code>ClaimsPrincipal</code> : un ensemble de <em>claims</em> (nom, rôles, e-mail…) émis par un <em>schéma</em> d'authentification (jeton JWT, cookie…).</p>
+    </div>
+
+    <!-- ============================================================ 1 -->
+    <section class="exercise" id="ex1" data-minutes="15" data-tests="Tickets.Api.Tests.Authentication" data-test-project="depart/tests/Tickets.Api.Tests">
+      <h2>Authentifier les appels à l'API avec un JWT</h2>
+      <ol>
+        <li>Ajoutez le package au projet de l'API : <code>dotnet add depart/src/Tickets.Api package Microsoft.AspNetCore.Authentication.JwtBearer</code>. La version vient du fichier central.</li>
+        <li>Dans <code>Program.cs</code>, enregistrez l'authentification par jeton : <code>AddAuthentication().AddJwtBearer()</code>. Sans argument, elle lit la section <code>Authentication:Schemes:Bearer</code> de la configuration.</li>
+        <li>Ajoutez une route <code>GET /me</code>, réservée aux utilisateurs authentifiés, qui renvoie <code>name</code>, <code>roles</code> et <code>isAdmin</code> à partir du <code>ClaimsPrincipal</code>.</li>
+        <li>Créez deux jetons de développement, depuis <code>depart/src/Tickets.Api</code> :
+          <pre><code class="language-bash">dotnet user-jwts create --name alice
+dotnet user-jwts create --name admin --role admin</code></pre>
+          L'outil range la clé de signature dans user-secrets et complète <code>appsettings.Development.json</code>. Regardez ce qu'il a écrit.</li>
+        <li>Appelez <code>/me</code> sans jeton (401), puis avec : <code>curl -H "Authorization: Bearer &lt;jeton&gt;" http://localhost:5080/me</code>. Collez le jeton sur <a href="https://jwt.io" target="_blank" rel="noopener">jwt.io</a> pour voir les claims.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la route</summary><pre><code class="language-csharp">app.MapGet("/me", (ClaimsPrincipal user) =&gt; new
+{
+    Name = user.Identity?.Name,
+    Roles = user.FindAll(ClaimTypes.Role).Select(claim =&gt; claim.Value).ToArray(),
+    IsAdmin = user.IsInRole("admin"),
+}).RequireAuthorization();</code></pre></details>
+        <details class="hint"><summary>401 ou 404 ?</summary><p>Un 404 sur <code>/me</code> signifie que la route n'existe pas encore. Un 200 sans jeton, qu'il manque <code>.RequireAuthorization()</code>. Un 401 avec un jeton valide, que l'audience ou l'émetteur ne correspondent pas : vérifiez <code>appsettings.Development.json</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ Spring Security en <em>resource server</em> : <code>oauth2ResourceServer().jwt()</code>. <code>ClaimsPrincipal</code> ≈ l'objet <code>Authentication</code>, et le <code>Jwt</code> injecté.</p>
+        <p data-lang="rust">Avec Axum, on écrit souvent un extracteur qui décode le jeton avec la crate <code>jsonwebtoken</code>. Ici, le schéma JWT est fourni et configuré par la configuration.</p>
+        <p data-lang="python">≈ <code>HTTPBearer</code> de FastAPI et PyJWT dans une dépendance. ASP.NET Core le fait dans un middleware, avant la route.</p>
+        <p data-lang="javascript">≈ <code>express-jwt</code> : un middleware qui valide le jeton et remplit <code>req.auth</code>, ici <code>HttpContext.User</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">builder.Services.AddAuthentication().AddJwtBearer();   // lit "Authentication:Schemes:Bearer"
+
+app.MapGet("/me", (ClaimsPrincipal user) =&gt; user.Identity?.Name)
+   .RequireAuthorization();</code></pre>
+          <pre data-lang="java"><code class="language-java">@Bean
+SecurityFilterChain api(HttpSecurity http) throws Exception {
+    return http
+        .authorizeHttpRequests(auth -&gt; auth.anyRequest().authenticated())
+        .oauth2ResourceServer(oauth -&gt; oauth.jwt(Customizer.withDefaults()))
+        .build();
+}
+
+@GetMapping("/me")
+String me(@AuthenticationPrincipal Jwt jwt) {
+    return jwt.getSubject();
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">struct User { name: String }
+
+impl&lt;S: Send + Sync&gt; FromRequestParts&lt;S&gt; for User {
+    type Rejection = StatusCode;
+
+    async fn from_request_parts(parts: &amp;mut Parts, _: &amp;S) -&gt; Result&lt;Self, Self::Rejection&gt; {
+        let token = parts.headers.get(AUTHORIZATION)
+            .and_then(|value| value.to_str().ok()?.strip_prefix("Bearer "))
+            .ok_or(StatusCode::UNAUTHORIZED)?;
+        let claims = decode::&lt;Claims&gt;(token, &amp;KEY, &amp;Validation::default())
+            .map_err(|_| StatusCode::UNAUTHORIZED)?
+            .claims;
+        Ok(User { name: claims.sub })
+    }
+}
+
+async fn me(user: User) -&gt; String { user.name }</code></pre>
+          <pre data-lang="python"><code class="language-python">bearer = HTTPBearer()
+
+def current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer)) -&gt; str:
+    try:
+        claims = jwt.decode(credentials.credentials, KEY, algorithms=["HS256"], audience="tickets-api")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401)
+    return claims["sub"]
+
+@app.get("/me")
+def me(user: str = Depends(current_user)):
+    return {"name": user}</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">import { expressjwt } from "express-jwt";
+
+app.use("/me", expressjwt({ secret: KEY, algorithms: ["HS256"], audience: "tickets-api" }));
+app.get("/me", (req, res) =&gt; res.json({ name: req.auth.sub }));</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="exercise" id="ex2" data-minutes="30" data-tests="Tickets.Api.Tests.Authorization" data-test-project="depart/tests/Tickets.Api.Tests">
+      <h2>Autoriser : routes protégées et policy</h2>
+      <p>Les règles de l'API deviennent :</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Routes</th><th>Qui ?</th><th>Sinon</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET /tickets…</code></td><td>tout le monde</td><td>—</td></tr>
+          <tr><td><code>POST</code>, <code>PUT</code>, commentaires, clôture</td><td>un utilisateur authentifié</td><td>401</td></tr>
+          <tr><td><code>DELETE /tickets/{id}</code></td><td>un administrateur (rôle <code>admin</code>)</td><td>401 sans jeton, 403 avec un jeton sans le rôle</td></tr>
+        </tbody>
+      </table></div>
+      <ol>
+        <li>Déclarez une <strong>policy</strong> nommée <code>admin</code> qui exige le rôle <code>admin</code>.</li>
+        <li>Dans <code>Endpoints/TicketEndpoints.cs</code>, appliquez les règles. Un sous-groupe de routes peut porter l'exigence pour toutes les écritures d'un coup.</li>
+        <li>Essayez avec les deux jetons d'alice et de l'admin : alice crée un ticket, mais ne peut pas le supprimer.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la policy</summary><pre><code class="language-csharp">builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("admin", policy =&gt; policy.RequireRole("admin"));</code></pre></details>
+        <details class="hint"><summary>les routes</summary><pre><code class="language-csharp">var writes = tickets.MapGroup("").RequireAuthorization();
+writes.MapPost("/", CreateAsync);
+…
+tickets.MapDelete("/{id:int}", DeleteAsync).RequireAuthorization("admin");</code></pre></details>
+        <details class="hint"><summary>401 ou 403 ?</summary><p><strong>401 Unauthorized</strong> : on ne sait pas qui vous êtes (pas de jeton, ou jeton invalide). <strong>403 Forbidden</strong> : on sait qui vous êtes, et vous n'avez pas le droit. ASP.NET Core choisit tout seul selon le cas.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ <code>authorizeHttpRequests</code> et <code>hasRole</code>, ou <code>@PreAuthorize</code> sur la méthode. Une policy nommée permet de réutiliser une règle sans la répéter.</p>
+        <p data-lang="rust">≈ un middleware <code>route_layer</code> qui vérifie le rôle, posé sur un sous-routeur.</p>
+        <p data-lang="python">≈ une dépendance <code>require_admin</code> posée sur la route avec <code>dependencies=[…]</code>.</p>
+        <p data-lang="javascript">≈ un middleware Express <code>requireRole("admin")</code> intercalé avant le gestionnaire.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("admin", policy =&gt; policy.RequireRole("admin"));
+
+products.MapPost("/", CreateAsync).RequireAuthorization();
+products.MapDelete("/{id:int}", DeleteAsync).RequireAuthorization("admin");</code></pre>
+          <pre data-lang="java"><code class="language-java">http.authorizeHttpRequests(auth -&gt; auth
+    .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+    .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("ADMIN")
+    .anyRequest().authenticated());
+
+// ou sur la méthode : @PreAuthorize("hasRole('ADMIN')")</code></pre>
+          <pre data-lang="rust"><code class="language-rust">let admin = Router::new()
+    .route("/products/{id}", delete(delete_product))
+    .route_layer(middleware::from_fn(require_admin));
+
+async fn require_admin(user: User, request: Request, next: Next) -&gt; Result&lt;Response, StatusCode&gt; {
+    if !user.roles.iter().any(|role| role == "admin") {
+        return Err(StatusCode::FORBIDDEN);
+    }
+    Ok(next.run(request).await)
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">def require_admin(user: User = Depends(current_user)) -&gt; User:
+    if "admin" not in user.roles:
+        raise HTTPException(status_code=403)
+    return user
+
+@app.delete("/products/{id}", dependencies=[Depends(require_admin)])
+def delete_product(id: int):
+    ...</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const requireRole = role =&gt; (req, res, next) =&gt;
+  req.auth?.roles?.includes(role) ? next() : res.sendStatus(403);
+
+app.delete("/products/:id", checkJwt, requireRole("admin"), deleteProduct);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="exercise" id="ex3" data-minutes="40" data-tests="Tickets.Web.Tests.Exercise03">
+      <h2>Un front qui connaît son utilisateur</h2>
+      <p>Le front utilise une autre méthode d'authentification : un <strong>cookie</strong>, écrit par la page de connexion fournie. Ses deux comptes de démonstration sont <code>alice</code> et <code>admin</code>, mot de passe <code>demo</code>. Dans une vraie appli, la connexion passerait par OpenID Connect vers notre fournisseur d'identité, et aucun mot de passe ne transiterait par notre code.</p>
+      <ol>
+        <li><strong>Les services</strong> : dans <code>Tickets.Web/Program.cs</code>, enregistrez l'authentification par cookie (page de connexion <code>/account/login</code>), l'autorisation, et <code>AddCascadingAuthenticationState()</code> qui fournit l'utilisateur à tous les composants.</li>
+        <li><strong>Le menu</strong> : dans <code>NavMenu.razor</code>, avec <code>&lt;AuthorizeView&gt;</code>, affichez « Hello, alice », la mention <em>administrator</em> pour le rôle admin, et un formulaire de déconnexion (<code>POST account/logout</code>, déjà prévu). Un visiteur anonyme ne voit qu'un lien <em>Log in</em> vers <code>account/login</code>. Le lien <em>New ticket</em> n'apparaît que connecté.</li>
+        <li><strong>La page protégée</strong> : réservez <code>NewTicket.razor</code> aux utilisateurs connectés avec <code>@attribute [Authorize]</code>. Dans <code>Routes.razor</code>, remplacez <code>RouteView</code> par <code>AuthorizeRouteView</code>.</li>
+        <li><strong>Le jeton vers l'API</strong> : depuis l'exercice 2, l'API refuse les créations anonymes. Complétez <code>Security/ApiTokenHandler.cs</code>, branchez-le sur le client HTTP typé, puis donnez au front un jeton de service :
+          <pre><code class="language-bash">dotnet user-jwts create --project depart/src/Tickets.Api --name tickets-web --output token
+dotnet user-secrets set "TicketsApi:Token" "&lt;jeton&gt;" --project depart/src/Tickets.Web</code></pre></li>
+        <li>Essayez : <code>/tickets/new</code> renvoie vers la connexion, puis y revient une fois connecté ; la création fonctionne ; la déconnexion vous rend anonyme.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>les services</summary><pre><code class="language-csharp">builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =&gt; options.LoginPath = "/account/login");
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();</code></pre></details>
+        <details class="hint"><summary>AuthorizeView</summary><pre><code class="language-xml">&lt;AuthorizeView&gt;
+    &lt;Authorized&gt;
+        &lt;span&gt;Hello, @context.User.Identity?.Name&lt;/span&gt;
+        &lt;AuthorizeView Roles="admin" Context="adminContext"&gt;administrator&lt;/AuthorizeView&gt;
+        &lt;form method="post" action="account/logout"&gt;
+            &lt;AntiforgeryToken /&gt;
+            &lt;button type="submit"&gt;Log out&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/Authorized&gt;
+    &lt;NotAuthorized&gt;&lt;NavLink href="account/login"&gt;Log in&lt;/NavLink&gt;&lt;/NotAuthorized&gt;
+&lt;/AuthorizeView&gt;</code></pre><p>Deux <code>AuthorizeView</code> imbriqués ont chacun un paramètre <code>context</code> : renommez celui de l'intérieur avec <code>Context="…"</code>.</p></details>
+        <details class="hint"><summary>le gestionnaire de jeton</summary><pre><code class="language-csharp">if (_configuration["TicketsApi:Token"] is { Length: &gt; 0 } token)
+{
+    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+}
+
+// Program.cs
+builder.Services.AddTransient&lt;ApiTokenHandler&gt;();
+builder.Services.AddHttpClient&lt;ITicketsClient, TicketsClient&gt;(…).AddHttpMessageHandler&lt;ApiTokenHandler&gt;();</code></pre></details>
+      </div>
+      <p>Lisez aussi <code>Login.razor</code> : la connexion est une page en <strong>Static SSR</strong>, car écrire un cookie exige une vraie requête HTTP. Et elle ne redirige que vers une adresse locale, pour éviter les redirections ouvertes.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ <code>formLogin()</code> de Spring Security et les attributs <code>sec:authorize</code> de Thymeleaf. <code>DelegatingHandler</code> ≈ un <code>ClientHttpRequestInterceptor</code> de <code>RestTemplate</code>.</p>
+        <p data-lang="rust">Le front connaît l'utilisateur via une ressource serveur, et l'affichage conditionnel passe par <code>&lt;Show&gt;</code>.</p>
+        <p data-lang="python">≈ Flask-Login : <code>current_user</code> dans les templates, et <code>@login_required</code> sur les vues.</p>
+        <p data-lang="javascript">≈ NextAuth/Auth.js : <code>useSession()</code> côté composant, et un middleware pour protéger les pages.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">&lt;AuthorizeView&gt;
+    &lt;Authorized&gt;Hello, @context.User.Identity?.Name&lt;/Authorized&gt;
+    &lt;NotAuthorized&gt;&lt;a href="account/login"&gt;Log in&lt;/a&gt;&lt;/NotAuthorized&gt;
+&lt;/AuthorizeView&gt;
+
+@* en tête d'une page réservée *@
+@attribute [Authorize]</code></pre>
+          <pre data-lang="java"><code class="language-xml">&lt;!-- Thymeleaf + thymeleaf-extras-springsecurity --&gt;
+&lt;div sec:authorize="isAuthenticated()"&gt;
+  Hello, &lt;span sec:authentication="name"&gt;&lt;/span&gt;
+&lt;/div&gt;
+&lt;div sec:authorize="!isAuthenticated()"&gt;
+  &lt;a th:href="@{/login}"&gt;Log in&lt;/a&gt;
+&lt;/div&gt;</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6 : l'utilisateur vient d'une ressource serveur
+view! {
+    &lt;Show
+        when=move || user.get().flatten().is_some()
+        fallback=|| view! { &lt;a href="/login"&gt;"Log in"&lt;/a&gt; }
+    &gt;
+        "Hello, " {move || user.get().flatten().map(|u| u.name)}
+    &lt;/Show&gt;
+}</code></pre>
+          <pre data-lang="python"><code class="language-xml">{# Flask-Login #}
+{% if current_user.is_authenticated %}
+  Hello, {{ current_user.name }}
+{% else %}
+  &lt;a href="{{ url_for('login') }}"&gt;Log in&lt;/a&gt;
+{% endif %}</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// NextAuth / Auth.js
+const { data: session } = useSession();
+
+return session
+  ? &lt;span&gt;Hello, {session.user.name}&lt;/span&gt;
+  : &lt;a href="/api/auth/signin"&gt;Log in&lt;/a&gt;;</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="exercise" id="ex4" data-minutes="20" data-tests="Tickets.Web.Tests.Exercise04">
+      <h2>Partager de l'état entre composants</h2>
+      <p>Deux façons de faire circuler une information sans la passer de parent en enfant :</p>
+      <ul>
+        <li>un <strong>service scoped</strong> : une instance par circuit, donc par utilisateur et par onglet en mode Server, que tous les composants peuvent injecter ;</li>
+        <li>une <strong>valeur en cascade</strong> : un ancêtre la fournit avec <code>&lt;CascadingValue&gt;</code>, et tous ses descendants la reçoivent.</li>
+      </ul>
+      <ol>
+        <li>Complétez <code>Tickets.Web.Client/State/FavoritesState.cs</code> (les identifiants des tickets favoris, et l'événement <code>Changed</code>), et enregistrez-le en <em>scoped</em> dans les deux <code>Program.cs</code>.</li>
+        <li>Dans <code>TicketCard</code>, ajoutez un bouton de classe <code>favorite</code> qui bascule le ticket dans les favoris et affiche ★ ou ☆.</li>
+        <li>Écrivez <code>FavoritesCounter.razor</code> (le <code>TODO</code> le décrit) et placez-le au-dessus de la liste dans <code>TicketList</code>. Il doit se mettre à jour quand on clique sur une carte, donc dans un autre composant.</li>
+        <li>Ajoutez à <code>TicketList</code> une case à cocher <em>Compact</em>, et transmettez sa valeur à toutes les cartes avec <code>&lt;CascadingValue Name="Compact" Value="_compact"&gt;</code>. Une carte compacte n'affiche pas la description.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>le service</summary><pre><code class="language-csharp">private readonly HashSet&lt;int&gt; _ticketIds = [];
+
+public void Toggle(int ticketId)
+{
+    if (!_ticketIds.Remove(ticketId)) { _ticketIds.Add(ticketId); }
+    Changed?.Invoke();
+}</code></pre></details>
+        <details class="hint"><summary>se mettre à jour</summary><p>Dans le compteur : <code>@implements IDisposable</code>, puis <code>Favorites.Changed += OnChanged</code> dans <code>OnInitialized</code>, avec <code>private void OnChanged() =&gt; InvokeAsync(StateHasChanged);</code>, et <code>-=</code> dans <code>Dispose</code>. Sans désabonnement, le service garderait une référence vers un composant mort.</p></details>
+        <details class="hint"><summary>recevoir la cascade</summary><p>Dans <code>TicketCard</code> : <code>[CascadingParameter(Name = "Compact")] public bool Compact { get; set; }</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Avec Vaadin, un bean <code>@UIScope</code> partagé par les vues d'un onglet joue le rôle du service scoped ; les écouteurs remplacent l'événement <code>Changed</code>.</p>
+        <p data-lang="rust">≈ <code>provide_context</code> et <code>expect_context</code> de Leptos avec un signal : la réactivité est automatique, alors qu'en Blazor on s'abonne à un événement.</p>
+        <p data-lang="python">Côté serveur, l'état par utilisateur vit dans la session ; chaque requête relit et réécrit le fragment HTML concerné.</p>
+        <p data-lang="javascript">Le service scoped ≈ un store Zustand ou un contexte React ; <code>CascadingValue</code> ≈ <code>Context.Provider</code>, sans le ré-affichage automatique des abonnés.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public sealed class CartState
+{
+    private readonly List&lt;string&gt; _items = [];
+    public event Action? Changed;
+    public int Count =&gt; _items.Count;
+
+    public void Add(string item)
+    {
+        _items.Add(item);
+        Changed?.Invoke();
+    }
+}
+
+builder.Services.AddScoped&lt;CartState&gt;();</code></pre>
+          <pre data-lang="java"><code class="language-java">@SpringComponent
+@UIScope   // une instance par onglet, comme scoped en Blazor Server
+public class CartState {
+    private final List&lt;String&gt; items = new ArrayList&lt;&gt;();
+    private final List&lt;Runnable&gt; listeners = new ArrayList&lt;&gt;();
+
+    public void add(String item) {
+        items.add(item);
+        listeners.forEach(Runnable::run);
+    }
+
+    public void onChange(Runnable listener) { listeners.add(listener); }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6 : un signal partagé par le contexte
+provide_context(create_rw_signal(Vec::&lt;String&gt;::new()));
+
+// dans n'importe quel descendant
+let cart = expect_context::&lt;RwSignal&lt;Vec&lt;String&gt;&gt;&gt;();
+cart.update(|items| items.push("Mouse".to_string()));   // les lecteurs se mettent à jour</code></pre>
+          <pre data-lang="python"><code class="language-python"># Starlette SessionMiddleware : l'état de l'utilisateur vit dans la session
+@app.post("/cart")
+def add(request: Request, item: str = Form()):
+    cart = request.session.get("cart", [])
+    request.session["cart"] = [*cart, item]
+    return HTMLResponse(f"&lt;span id='cart-count'&gt;{len(cart) + 1}&lt;/span&gt;")</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// Zustand : un store partagé, les composants qui le lisent se ré-affichent
+const useCart = create(set =&gt; ({
+  items: [],
+  add: item =&gt; set(state =&gt; ({ items: [...state.items, item] })),
+}));
+
+const count = useCart(state =&gt; state.items.length);</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="exercise" id="ex5" data-minutes="15" data-tests="Tickets.Web.Tests.Exercise05">
+      <h2>Un seul chargement malgré le prérendu</h2>
+      <p>Hier, <code>/tickets</code> appelait l'API deux fois : au prérendu, puis au démarrage du circuit interactif. .NET 10 propose <code>[PersistentState]</code> : la valeur calculée au prérendu est enregistrée dans la page, puis restaurée avant <code>OnInitializedAsync</code>.</p>
+      <ol>
+        <li>Dans <code>TicketList.razor</code>, transformez le champ des tickets en propriété <strong>publique</strong> marquée <code>[PersistentState]</code>.</li>
+        <li>Dans <code>OnInitializedAsync</code>, ne chargez que si la propriété est encore vide.</li>
+        <li>Rechargez <code>/tickets</code> et comptez les <code>GET /tickets</code> dans la console de l'API : un seul par affichage.</li>
+        <li>Affichez le source de la page : un commentaire <code>&lt;!--Blazor-Server-Component-State:…--&gt;</code> transporte l'état, chiffré. Le test le déchiffre pour y chercher vos tickets.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>la propriété</summary><pre><code class="language-csharp">[PersistentState]
+public IReadOnlyList&lt;TicketDto&gt;? Tickets { get; set; }
+
+protected override async Task OnInitializedAsync()
+{
+    Tickets ??= await Client.GetTicketsAsync();
+}</code></pre></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Avec Thymeleaf, rien de tel n'existe puisqu'il n'y a qu'un rendu ; quand du JavaScript prend le relais, on embarque soi-même les données dans la page.</p>
+        <p data-lang="rust">Leptos le fait pour toute <code>Resource</code> : les données chargées au rendu serveur sont sérialisées et réutilisées à l'hydratation.</p>
+        <p data-lang="python">Même principe qu'en Java : on embarque les données en JSON dans le template, avec le filtre <code>tojson</code>.</p>
+        <p data-lang="javascript">≈ l'hydratation de Next.js : les props calculées côté serveur voyagent dans la page (<code>__NEXT_DATA__</code>) et ne sont pas rechargées.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">[PersistentState]
+public IReadOnlyList&lt;Product&gt;? Products { get; set; }
+
+protected override async Task OnInitializedAsync() =&gt;
+    Products ??= await Client.GetProductsAsync();   // sauté si l'état a été restauré</code></pre>
+          <pre data-lang="java"><code class="language-xml">&lt;!-- Thymeleaf : on embarque les données pour le JavaScript --&gt;
+&lt;script th:inline="javascript"&gt;
+  const products = /*[[${products}]]*/ [];
+&lt;/script&gt;</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6 : une Resource chargée au rendu serveur est sérialisée dans la page,
+// puis réutilisée à l'hydratation sans second appel.
+let products = create_resource(|| (), |_| async move { get_products().await });</code></pre>
+          <pre data-lang="python"><code class="language-xml">&lt;!-- Jinja2 : les données voyagent en JSON dans la page --&gt;
+&lt;script&gt;
+  const products = {{ products | tojson }};
+&lt;/script&gt;</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// Next.js (pages router) : les props sont sérialisées dans __NEXT_DATA__
+export async function getServerSideProps() {
+  return { props: { products: await getProducts() } };
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="exercise" id="ex6" data-minutes="20" data-tests="Tickets.Web.Tests.Exercise06">
+      <h2>Extraire un composant dans une bibliothèque</h2>
+      <p>Une <strong>Razor Class Library</strong> (RCL) regroupe des composants, leurs styles et leurs fichiers statiques, réutilisables dans plusieurs applis et distribuables en package NuGet. On y place un composant <code>Badge</code> générique, sans rien qui concerne les tickets ; <code>PriorityBadge</code> devient une simple adaptation.</p>
+      <ol>
+        <li>Créez la bibliothèque, depuis <code>depart/</code> :
+          <pre><code class="language-bash">dotnet new razorclasslib -n Tickets.Components -o src/Tickets.Components
+dotnet sln Tickets.slnx add src/Tickets.Components
+dotnet add src/Tickets.Web.Client reference src/Tickets.Components</code></pre></li>
+        <li>Supprimez les fichiers d'exemple (<code>Component1.*</code>, <code>ExampleJsInterop.cs</code>, <code>wwwroot/</code>), et <strong>retirez l'attribut <code>Version</code></strong> du <code>PackageReference</code> dans le <code>.csproj</code> : la gestion centralisée des versions l'interdit (erreur NU1008).</li>
+        <li>Créez <code>Badge.razor</code> dans l'espace de noms <code>Tickets.Components</code> : un paramètre <code>Variant</code> (par défaut <code>neutral</code>) et un <code>ChildContent</code>, rendus en <code>&lt;span class="badge badge-@Variant"&gt;</code>. Déplacez la règle <code>.badge</code> d'<code>app.css</code> vers <code>Badge.razor.css</code>.</li>
+        <li>Ajoutez <code>@using Tickets.Components</code> aux <code>_Imports.razor</code> du client et du serveur, et réécrivez <code>PriorityBadge</code> en une ligne avec <code>&lt;Badge&gt;</code>.</li>
+        <li>Les styles de la bibliothèque sont servis sous <code>_content/Tickets.Components/</code> : vérifiez-le dans l'onglet Réseau.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>Badge</summary><pre><code class="language-xml">&lt;span class="badge badge-@Variant"&gt;@ChildContent&lt;/span&gt;
+
+@code {
+    [Parameter] public string Variant { get; set; } = "neutral";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}</code></pre></details>
+        <details class="hint"><summary>PriorityBadge</summary><pre><code class="language-xml">&lt;Badge Variant="@Priority.ToString().ToLowerInvariant()"&gt;@Priority&lt;/Badge&gt;</code></pre><p>Le HTML produit est identique à avant ; seul l'attribut <code>b-xxxx</code> du CSS isolé de <code>Badge</code> apparaît. C'est ce que vérifie un test.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ un module Maven de composants (Vaadin) ou de fragments Thymeleaf, packagé en jar avec ses ressources statiques.</p>
+        <p data-lang="rust">≈ un crate de bibliothèque dans le workspace, dont dépend l'application.</p>
+        <p data-lang="python">≈ un paquet Python qui embarque ses templates et ses fichiers statiques, chargés avec un <code>PackageLoader</code>.</p>
+        <p data-lang="javascript">≈ un paquet de composants dans un workspace npm, avec React en <code>peerDependency</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-bash">dotnet new razorclasslib -n Shop.Components -o src/Shop.Components
+dotnet sln add src/Shop.Components
+dotnet add src/Shop.Web reference src/Shop.Components
+# les fichiers statiques sont servis sous _content/Shop.Components/</code></pre>
+          <pre data-lang="java"><code class="language-xml">&lt;!-- pom parent --&gt;
+&lt;modules&gt;
+  &lt;module&gt;shop-components&lt;/module&gt;
+  &lt;module&gt;shop-web&lt;/module&gt;
+&lt;/modules&gt;</code></pre>
+          <pre data-lang="rust"><code class="language-bash">cargo new --lib shop-components
+# Cargo.toml de l'application :
+# shop-components = { path = "../shop-components" }</code></pre>
+          <pre data-lang="python"><code class="language-python"># un paquet partagé qui embarque ses templates
+templates = Jinja2Templates(env=Environment(loader=ChoiceLoader([
+    FileSystemLoader("templates"),
+    PackageLoader("shop_components", "templates"),
+])))</code></pre>
+          <pre data-lang="javascript"><code class="language-json">{
+  "name": "@shop/components",
+  "main": "index.js",
+  "peerDependencies": { "react": "^19.0.0" }
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 7 -->
+    <section class="exercise" id="ex7" data-minutes="30" data-tests="Tickets.Web.Tests.Exercise07">
+      <h2>Tester son composant avec bUnit</h2>
+      <p>Dans <code>tests/Tickets.Web.Tests/MyComponentTests.cs</code>, écrivez <strong>au moins trois tests</strong> du composant <code>Badge</code>. La classe hérite de <code>BunitContext</code>, qui fournit <code>Render</code>, les sélecteurs CSS et un faux runtime JavaScript. Quelques idées :</p>
+      <ul>
+        <li>le contenu passé entre les balises est affiché ;</li>
+        <li>la variante devient une classe CSS (un <code>[Theory]</code> avec plusieurs variantes) ;</li>
+        <li>sans variante, le badge est <code>neutral</code> ;</li>
+        <li>un contenu HTML (<code>&lt;strong&gt;</code>) est rendu tel quel.</li>
+      </ul>
+      <pre><code class="language-csharp">var badge = Render&lt;Badge&gt;(parameters =&gt; parameters
+    .Add(b =&gt; b.Variant, "warning")
+    .AddChildContent("Careful"));
+
+Assert.Contains("badge-warning", badge.Find("span").ClassList);</code></pre>
+      <p>Regardez aussi comment les autres tests du projet simulent un utilisateur connecté (<code>AddAuthorization().SetAuthorized("alice")</code>) ou un état partagé.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Les composants Vaadin sont de simples objets Java : on les teste en JUnit sans navigateur, ou avec Karibu-Testing pour la navigation.</p>
+        <p data-lang="rust">Avec Leptos, on rend le composant en chaîne côté serveur et on inspecte le HTML.</p>
+        <p data-lang="python">On rend la macro Jinja2 et on inspecte la chaîne produite.</p>
+        <p data-lang="javascript">≈ React Testing Library : on affiche le composant en mémoire, puis on interroge le DOM.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">public class BadgeTests : BunitContext
+{
+    [Fact]
+    public void RendersItsContent()
+    {
+        var badge = Render&lt;Badge&gt;(p =&gt; p.AddChildContent("Beta"));
+
+        Assert.Equal("Beta", badge.Find("span").TextContent);
+    }
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">@Test
+void rendersItsContent() {
+    var badge = new Badge("Beta");
+    assertEquals("Beta", badge.getText());
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[test]
+fn renders_its_content() {
+    let html = leptos::ssr::render_to_string(|| view! { &lt;Badge&gt;"Beta"&lt;/Badge&gt; });
+    assert!(html.contains("Beta"));
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">def test_badge_renders_its_content():
+    html = env.from_string('{% from "ui.html" import badge %}{{ badge("Beta") }}').render()
+    assert "Beta" in html</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">test("renders its content", () =&gt; {
+  render(&lt;Badge&gt;Beta&lt;/Badge&gt;);
+  expect(screen.getByText("Beta")).toBeInTheDocument();
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li>Remplacez la connexion de démonstration par OpenID Connect : <code>AddOpenIdConnect</code> vers un Keycloak lancé en conteneur, puis transmettez le jeton de l'utilisateur à l'API au lieu du jeton de service.</li>
+        <li>Masquez le bouton de suppression pour les non-administrateurs avec <code>&lt;AuthorizeView Roles="admin"&gt;</code>, et ajoutez la suppression au client d'API.</li>
+        <li>Publiez <code>Tickets.Components</code> en package NuGet local (<code>dotnet pack</code>) et consommez-le depuis un autre projet.</li>
+      </ul>
+    </div>
+
+    <section class="panel" id="summary">
+      <h2>Valider le TP et faire le bilan</h2>
+      <pre><code class="language-bash">dotnet build depart/Tickets.slnx                          # 0 avertissement
+dotnet test --project depart/tests/Tickets.Api.Tests      # API : sécurité et tests du TP-02
+dotnet test --project depart/tests/Tickets.Web.Tests      # front : tous au vert</code></pre>
+      <p>C'est la fin de l'application de tickets. Comparez avec <code>solution/</code>. Demain, le bonus vous plonge dans une application existante à déboguer.</p>
+      <div data-report></div>
+      <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/enonce.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+    padding: 1.2rem .8rem;
+    background: var(--sunken);
+    border-right: 1px solid var(--line);
+}
+
+.brand {
+    font-weight: 700;
+    font-size: 1.15rem;
+    padding: .3rem .6rem .9rem;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.nav ::deep a:not(.brand) {
+    padding: .45rem .6rem;
+    border-radius: 7px;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.nav ::deep a.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+@media (max-width: 720px) {
+    .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+    }
+}

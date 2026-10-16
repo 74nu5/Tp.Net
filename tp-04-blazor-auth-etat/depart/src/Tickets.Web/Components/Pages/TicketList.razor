@@ -1,0 +1,61 @@
+@page "/tickets"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+
+@* Exercise 03: load data when the component starts, and show every state: loading, error, empty, data. *@
+
+<PageTitle>Tickets</PageTitle>
+
+<h1>Tickets</h1>
+
+@if (_error is not null)
+{
+    <p class="error">The tickets could not be loaded: @_error</p>
+}
+else if (_tickets is null)
+{
+    <p class="loading">Loading…</p>
+}
+else if (_tickets.Count == 0)
+{
+    <p class="empty">No ticket yet. <a href="tickets/new">Create the first one</a>.</p>
+}
+else
+{
+    @if (_selected is not null)
+    {
+        <p class="selected">Selected: <strong>@_selected.Title</strong></p>
+    }
+
+    <div class="cards">
+        @foreach (var ticket in _tickets)
+        {
+            @* @key helps Blazor match each card to its ticket when the list changes. *@
+            <TicketCard @key="ticket.Id" Ticket="ticket" OnSelected="Select">
+                <small class="muted">#@ticket.Id · @ticket.Status</small>
+            </TicketCard>
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<TicketDto>? _tickets;
+    private string? _error;
+    private TicketDto? _selected;
+
+    // Runs once when the component starts. With prerendering it runs twice: on the server to produce the HTML,
+    // then again when the interactive circuit starts. Watch the API logs; TP-04 removes the second call.
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _tickets = await Client.GetTicketsAsync();
+        }
+        catch (HttpRequestException exception)
+        {
+            _error = exception.Message;
+        }
+    }
+
+    private void Select(TicketDto ticket) => _selected = ticket;
+}

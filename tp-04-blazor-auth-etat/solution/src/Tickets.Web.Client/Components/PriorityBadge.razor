@@ -1,0 +1,10 @@
+@* Exercise 02 (TP-03), then exercise 06 (TP-04): the generic part now comes from the Tickets.Components library.
+   PriorityBadge only knows how to turn a ticket priority into a badge. *@
+
+<Badge Variant="@Priority.ToString().ToLowerInvariant()">@Priority</Badge>
+
+@code {
+    /// <summary>The priority to display.</summary>
+    [Parameter]
+    public TicketPriority Priority { get; set; }
+}

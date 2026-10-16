@@ -1,0 +1,31 @@
+/* Scoped CSS: Blazor rewrites these selectors with a unique attribute, so they only apply to TicketCard. */
+.ticket-card {
+    display: grid;
+    gap: .5rem;
+    padding: 1rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+}
+
+.ticket-card header {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+}
+
+.ticket-card h3 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.ticket-card p {
+    margin: 0;
+    color: var(--muted);
+}
+
+.ticket-card footer {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}

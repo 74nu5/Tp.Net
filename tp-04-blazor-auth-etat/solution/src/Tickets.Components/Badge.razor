@@ -1,0 +1,13 @@
+@* A generic pill: the content comes from the parent, the variant becomes a CSS class (badge-<variant>).
+   It knows nothing about tickets, so it can live in a shared library. *@
+
+<span class="badge badge-@Variant">@ChildContent</span>
+
+@code {
+    /// <summary>Free text turned into the CSS class badge-&lt;variant&gt;, e.g. "high" or "warning".</summary>
+    [Parameter]
+    public string Variant { get; set; } = "neutral";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

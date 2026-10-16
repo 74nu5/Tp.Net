@@ -97,7 +97,9 @@
     if (ex.dataset.tests) {
       const tests = document.createElement("div");
       tests.className = "tests";
-      const command = `dotnet test ${testTarget} --filter-namespace "${ex.dataset.tests}"`;
+      // An exercise can name its own test project (data-test-project on the section), e.g. API tests in a front-end lab.
+      const target = ex.dataset.testProject ? `--project ${ex.dataset.testProject}` : testTarget;
+      const command = `dotnet test ${target} --filter-namespace "${ex.dataset.tests}"`;
       tests.innerHTML = `<span class="lbl">Valider cet exercice, depuis le dossier du TP</span><pre><code class="language-bash"></code></pre>`;
       tests.querySelector("code").textContent = command;
       head.after(tests);

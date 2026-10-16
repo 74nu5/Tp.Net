@@ -1,0 +1,22 @@
+@* Exercise 04: shows where and how this component runs. Provided: you only change its render mode. *@
+
+<section class="probe">
+    <h2>@Label</h2>
+    <dl>
+        <dt>Renderer</dt>
+        <dd data-renderer>@RendererInfo.Name</dd>
+        <dt>Interactive</dt>
+        <dd data-interactive>@(RendererInfo.IsInteractive ? "yes" : "no")</dd>
+        <dt>Assigned render mode</dt>
+        <dd>@(AssignedRenderMode?.GetType().Name ?? "none (static)")</dd>
+    </dl>
+    <button type="button" @onclick="() => _clicks++">Clicked @_clicks time(s)</button>
+    <p class="muted">The button only works when the component is interactive.</p>
+</section>
+
+@code {
+    private int _clicks;
+
+    [Parameter]
+    public string Label { get; set; } = "Render mode";
+}

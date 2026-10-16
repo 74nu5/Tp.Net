@@ -1,0 +1,77 @@
+/* Shared styles of Tickets.Web. Component-specific styles live next to each component (*.razor.css). */
+:root {
+    --bg: #f6f5f9;
+    --surface: #ffffff;
+    --sunken: #efedf4;
+    --ink: #1c1a24;
+    --muted: #625e70;
+    --line: #e2dfe9;
+    --accent: #512bd4;
+    --accent-soft: #ece7fb;
+    --danger: #b42318;
+    --low: #4b6b4f;
+    --normal: #1f5fd6;
+    --high: #b42318;
+    color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #131118;
+        --surface: #1c1a23;
+        --sunken: #17151d;
+        --ink: #ecebf2;
+        --muted: #a29eb1;
+        --line: #2f2c3a;
+        --accent: #a08bf5;
+        --accent-soft: #2a2343;
+        --danger: #ff8a7a;
+        --low: #8fc49a;
+        --normal: #7fb0ff;
+        --high: #ff8a7a;
+        color-scheme: dark;
+    }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 "Segoe UI", system-ui, sans-serif; }
+h1 { margin: 0; font-size: 1.8rem; }
+a { color: var(--accent); }
+.muted { color: var(--muted); }
+.error { color: var(--danger); }
+
+button {
+    font: inherit;
+    padding: .4rem .9rem;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+}
+button[type="submit"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .6; cursor: default; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+
+.badge { font-size: .75rem; font-weight: 600; padding: .15rem .55rem; border-radius: 99px; border: 1px solid currentColor; }
+.badge-low { color: var(--low); }
+.badge-normal { color: var(--normal); }
+.badge-high { color: var(--high); }
+
+.form { display: grid; gap: .4rem; max-width: 34rem; }
+.form label { font-weight: 600; margin-top: .6rem; }
+.form input, .form textarea, .form select { font: inherit; padding: .45rem .6rem; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); }
+.validation-message { color: var(--danger); font-size: .9rem; }
+.invalid { border-color: var(--danger) !important; }
+
+.grid { width: 100%; border-collapse: collapse; background: var(--surface); }
+.grid th, .grid td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--line); }
+
+.probe { padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); max-width: 34rem; }
+.probe dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem 1rem; }
+.probe dt { color: var(--muted); }
+.probe dd { margin: 0; font-weight: 600; }
+
+.toolbar { display: flex; gap: 1.2rem; align-items: center; }
+.favorites-count { font-weight: 600; color: var(--accent); }

@@ -1,0 +1,16 @@
+@* TP-04, exercise 04: displays the shared state, and re-renders when another component changes it. *@
+@implements IDisposable
+@inject FavoritesState Favorites
+
+<span class="favorites-count" title="Favorite tickets">★ @Favorites.Count</span>
+
+@code {
+    protected override void OnInitialized() => Favorites.Changed += OnFavoritesChanged;
+
+    // The event can come from another component: InvokeAsync brings the re-render back on this component's
+    // synchronization context, and StateHasChanged asks for it.
+    private void OnFavoritesChanged() => InvokeAsync(StateHasChanged);
+
+    // Without this, the service (which lives longer) would keep a reference to a dead component.
+    public void Dispose() => Favorites.Changed -= OnFavoritesChanged;
+}

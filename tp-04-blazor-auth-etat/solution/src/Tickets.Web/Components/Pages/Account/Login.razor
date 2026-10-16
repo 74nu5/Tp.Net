@@ -1,0 +1,83 @@
+@page "/account/login"
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Tickets.Web.Security
+@inject NavigationManager Navigation
+
+@* Provided. A static server-side rendered form: the login must run on the server, during an HTTP request,
+   to write the authentication cookie. No @rendermode here. *@
+
+<PageTitle>Log in</PageTitle>
+
+<h1>Log in</h1>
+<p class="muted">Demo accounts: <strong>alice</strong> (user) and <strong>admin</strong> (administrator), password <strong>demo</strong>.</p>
+
+<EditForm Model="Input" OnValidSubmit="LogInAsync" FormName="login" class="form">
+    <DataAnnotationsValidator />
+
+    <label for="username">User name</label>
+    <InputText id="username" @bind-Value="Input.UserName" autocomplete="username" />
+    <ValidationMessage For="() => Input.UserName" />
+
+    <label for="password">Password</label>
+    <InputText id="password" type="password" @bind-Value="Input.Password" autocomplete="current-password" />
+    <ValidationMessage For="() => Input.Password" />
+
+    <div>
+        <button type="submit">Log in</button>
+    </div>
+</EditForm>
+
+@if (_failed)
+{
+    <p class="error">Unknown user or wrong password.</p>
+}
+
+@code {
+    private bool _failed;
+
+    // In static rendering, the HttpContext of the current request is available as a cascading parameter.
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    // Filled from the posted form fields (Input.UserName, Input.Password).
+    [SupplyParameterFromForm]
+    private LoginInput Input { get; set; } = default!;
+
+    // Filled from ?ReturnUrl=… , added by the cookie middleware when it redirects to this page.
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    // No initializer on a form-bound property (the form post could replace it with null): create it here.
+    protected override void OnInitialized() => Input ??= new();
+
+    private async Task LogInAsync()
+    {
+        var user = DemoUsers.Find(Input.UserName, Input.Password);
+        if (user is null)
+        {
+            _failed = true;
+            return;
+        }
+
+        // The identity of the user: a set of claims, here a name and roles.
+        Claim[] claims = [new(ClaimTypes.Name, user.Name), .. user.Roles.Select(role => new Claim(ClaimTypes.Role, role))];
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+        // Only local addresses: never redirect to a URL chosen by a third party (open redirect).
+        var target = Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative) && ReturnUrl!.StartsWith('/') ? ReturnUrl : "/";
+        Navigation.NavigateTo(target, forceLoad: true);
+    }
+
+    private sealed class LoginInput
+    {
+        [Required]
+        public string UserName { get; set; } = "";
+
+        [Required]
+        public string Password { get; set; } = "";
+    }
+}
