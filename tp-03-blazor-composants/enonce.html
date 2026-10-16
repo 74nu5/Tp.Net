@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TP-03 · Blazor, composants</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="../assets/enonce.css">
+</head>
+<body data-tp="tp-03" data-solution="depart/Tickets.slnx" data-test-project="depart/tests/Tickets.Web.Tests">
+<div class="page">
+
+  <aside class="side" aria-label="Sommaire du TP">
+    <a class="home" href="../index.html">← Parcours .NET</a>
+    <div class="panel" id="progress"></div>
+    <div class="panel compare-picker"></div>
+    <nav class="panel" id="toc" aria-label="Exercices"></nav>
+    <div id="side-actions"></div>
+  </aside>
+
+  <main>
+    <header class="intro">
+      <div class="eyebrow">TP-03 · mercredi 21 octobre, matin · environ 3 h</div>
+      <h1>Blazor : composants, modes de rendu et formulaires</h1>
+      <p>Blazor écrit des interfaces web en C# avec des composants, comme React ou Vue, et c'est l'outil de la plupart de nos applis. Ce matin, vous construisez le front de l'API de tickets d'hier : composants, chargement de données, modes de rendu, formulaire validé, grille triée et un peu de JavaScript.</p>
+      <p class="muted">Cochez « Terminé » à la fin de chaque exercice ; le chrono est facultatif. Tout reste dans ce navigateur.</p>
+      <p>Les exemples de code montrent Blazor, et à côté l'équivalent dans l'écosystème de votre choix :</p>
+      <div class="compare-picker"></div>
+    </header>
+
+    <div class="panel">
+      <h2>Avant de commencer</h2>
+      <ol>
+        <li><code>depart/</code> contient la solution du TP-02 (l'API) et deux nouveaux projets : <code>Tickets.Web</code>, l'application Blazor, et <code>Tickets.Web.Client</code>, les composants qui peuvent aussi s'exécuter dans le navigateur.</li>
+        <li>Lancez <strong>l'API</strong> dans un premier terminal : <code>dotnet run --project depart/src/Tickets.Api</code>. Elle réutilise la chaîne de connexion enregistrée hier avec user-secrets.</li>
+        <li>Lancez <strong>le front</strong> dans un second terminal : <code>dotnet run --project depart/src/Tickets.Web</code>, puis ouvrez <code>http://localhost:5090</code>. Dans Rider ou Visual Studio, vous pouvez aussi démarrer les deux projets ensemble.</li>
+        <li>Lancez les tests du front, depuis <code>tp-03-blazor-composants/</code> :
+          <pre><code class="language-bash">dotnet test --project depart/tests/Tickets.Web.Tests</code></pre>
+          24 tests sur 25 échouent : c'est le travail de la matinée. Les tests de l'API d'hier sont aussi dans la solution et doivent rester verts.</li>
+        <li>Les tests des composants utilisent <strong>bUnit</strong> : il affiche un composant en mémoire, sans navigateur, avec une fausse API (<code>Support/FakeTicketsClient.cs</code>). Vous n'avez donc pas besoin de lancer l'API pour les faire passer.</li>
+      </ol>
+      <pre><code class="language-plaintext">depart/src/
+├─ Tickets.Api/                 l'API du TP-02, inchangée
+├─ Tickets.Web/                 l'application Blazor, rendue sur le serveur
+│  ├─ Program.cs                services, modes de rendu, client HTTP de l'API
+│  └─ Components/
+│     ├─ App.razor, Routes.razor, _Imports.razor
+│     ├─ Layout/                MainLayout et NavMenu (ex. 1)
+│     └─ Pages/                 les pages (ex. 1, 3, 4, 5, 6)
+└─ Tickets.Web.Client/          ce qui peut aussi tourner dans le navigateur
+   ├─ Api/                      ITicketsClient et les modèles (ex. 5)
+   └─ Components/               PriorityBadge, TicketCard (ex. 2 et 7), RenderModeProbe (ex. 4)</code></pre>
+      <p><strong>Un piège de nommage</strong> : un composant devient une classe C#. Une page nommée <code>Tickets.razor</code> crée la classe <code>Tickets</code>, qui masque l'espace de noms <code>Tickets.Web</code> et provoque des erreurs déroutantes. D'où <code>TicketList.razor</code>, et <code>NewTicketForm</code> pour le modèle de la page <code>NewTicket</code>.</p>
+    </div>
+
+    <!-- ============================================================ 1 -->
+    <section class="exercise" id="ex1" data-minutes="15" data-tests="Tickets.Web.Tests.Exercise01">
+      <h2>Anatomie d'une Blazor Web App</h2>
+      <p>Parcourez les fichiers dans cet ordre :</p>
+      <ol>
+        <li><code>Program.cs</code> : <code>AddRazorComponents()</code> et les deux modes interactifs, puis <code>MapRazorComponents&lt;App&gt;()</code>. <code>AddAdditionalAssemblies</code> ajoute les pages du projet client.</li>
+        <li><code>Components/App.razor</code> : la page HTML complète. <code>&lt;Routes /&gt;</code> affiche la page demandée, et <code>blazor.web.js</code> rend la page interactive quand il le faut.</li>
+        <li><code>Components/Routes.razor</code> : le routeur, qui associe une adresse à un composant portant <code>@page</code>, et le layout par défaut.</li>
+        <li><code>Components/Layout/MainLayout.razor</code> et <code>NavMenu.razor</code> : le cadre commun, et <code>@Body</code> à l'endroit où la page s'insère.</li>
+        <li><code>Components/_Imports.razor</code> : les <code>@using</code> communs à tous les composants du dossier.</li>
+      </ol>
+      <p>Ajoutez une page <code>Components/Pages/About.razor</code> à l'adresse <code>/about</code>, avec un <code>&lt;PageTitle&gt;</code>, un <code>&lt;h1&gt;About&lt;/h1&gt;</code> et l'heure du serveur. Ajoutez le lien dans <code>NavMenu.razor</code>.</p>
+      <h3>Question</h3>
+      <p>L'heure change quand vous rechargez la page. Cette page est-elle interactive ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Non. Sans mode de rendu, une page est rendue <strong>statiquement sur le serveur</strong> (Static SSR) : du HTML calculé à chaque requête, sans connexion persistante ni événement. Un bouton <code>@onclick</code> n'y ferait rien. L'exercice 4 compare les modes.</p></details>
+      <div class="hints">
+        <details class="hint"><summary>la page</summary><pre><code class="language-xml">@page "/about"
+
+&lt;PageTitle&gt;About&lt;/PageTitle&gt;
+&lt;h1&gt;About&lt;/h1&gt;
+&lt;p&gt;Rendered on @DateTime.Now.ToString("HH:mm:ss").&lt;/p&gt;</code></pre></details>
+        <details class="hint"><summary>le lien</summary><p><code>&lt;NavLink href="about"&gt;About&lt;/NavLink&gt;</code> : sans barre oblique au début, l'adresse est relative à <code>&lt;base href="/"&gt;</code>. <code>NavLink</code> ajoute la classe <code>active</code> sur la page courante.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ un contrôleur Spring MVC qui renvoie une vue Thymeleaf, sauf qu'ici la route est déclarée dans la vue elle-même avec <code>@page</code>.</p>
+        <p data-lang="rust">≈ une route Leptos associée à un composant <code>#[component]</code>.</p>
+        <p data-lang="python">≈ une route FastAPI ou Flask qui rend un template Jinja2, en un seul fichier.</p>
+        <p data-lang="javascript">≈ le routage par fichiers de Next.js : un fichier, une page. <code>@page</code> joue le rôle de l'emplacement du fichier.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">@* Components/Pages/About.razor *@
+@page "/about"
+
+&lt;h1&gt;About&lt;/h1&gt;</code></pre>
+          <pre data-lang="java"><code class="language-java">@Controller
+class AboutController {
+    @GetMapping("/about")
+    String about() {
+        return "about";   // templates/about.html (Thymeleaf)
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6
+#[component]
+fn About() -&gt; impl IntoView {
+    view! { &lt;h1&gt;"About"&lt;/h1&gt; }
+}
+
+// dans le routeur : &lt;Route path="/about" view=About/&gt;</code></pre>
+          <pre data-lang="python"><code class="language-python">@app.get("/about", response_class=HTMLResponse)
+def about(request: Request):
+    return templates.TemplateResponse(request, "about.html")</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// Next.js : app/about/page.jsx
+export default function About() {
+  return &lt;h1&gt;About&lt;/h1&gt;;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 2 -->
+    <section class="exercise" id="ex2" data-minutes="30" data-tests="Tickets.Web.Tests.Exercise02">
+      <h2>Composants, paramètres et événements</h2>
+      <p>Un composant <code>.razor</code> mélange du HTML et du C#. Il reçoit des <strong>paramètres</strong> de son parent, et lui renvoie des <strong>événements</strong>. Dans <code>Tickets.Web.Client/Components/</code>, suivez les <code>TODO</code> :</p>
+      <ol>
+        <li><strong><code>PriorityBadge</code></strong> : un paramètre <code>Priority</code>, affiché dans un <code>&lt;span class="badge badge-high"&gt;</code> dont la classe suit la priorité.</li>
+        <li><strong><code>TicketCard</code></strong> : un paramètre <code>Ticket</code> obligatoire, un événement <code>OnSelected</code> déclenché par un bouton <em>Select</em>, et un <code>ChildContent</code> affiché dans le pied de la carte. La carte réutilise <code>PriorityBadge</code>.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>un paramètre</summary><pre><code class="language-csharp">@code {
+    [Parameter, EditorRequired]
+    public TicketDto Ticket { get; set; } = default!;
+}</code></pre><p><code>EditorRequired</code> fait signaler par l'IDE un parent qui oublie le paramètre.</p></details>
+        <details class="hint"><summary>un événement vers le parent</summary><p>Un paramètre <code>EventCallback&lt;TicketDto&gt; OnSelected</code>, et dans le bouton : <code>@onclick="() =&gt; OnSelected.InvokeAsync(Ticket)"</code>. Le parent est ré-affiché automatiquement après son gestionnaire.</p></details>
+        <details class="hint"><summary>du contenu libre</summary><p>Un paramètre nommé exactement <code>ChildContent</code>, de type <code>RenderFragment?</code>, reçoit ce que le parent écrit entre les balises : <code>&lt;TicketCard Ticket="t"&gt;ici&lt;/TicketCard&gt;</code>. On l'affiche avec <code>@ChildContent</code>.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Le plus proche en Java est Vaadin : des composants avec un état côté serveur. <code>[Parameter]</code> ≈ un argument de constructeur, <code>EventCallback</code> ≈ un listener.</p>
+        <p data-lang="rust">Très proche d'un composant Leptos ou Yew : propriétés typées, <code>Callback</code> pour les événements, <code>Children</code> pour le contenu.</p>
+        <p data-lang="python">Côté Python, le plus proche est une macro Jinja2 avec <code>caller()</code> pour le contenu ; l'interactivité passe par le serveur, avec HTMX par exemple.</p>
+        <p data-lang="javascript">Comme React : <code>[Parameter]</code> ≈ les props, <code>EventCallback</code> ≈ une fonction passée en prop, <code>ChildContent</code> ≈ <code>children</code>.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">@* Alert.razor *@
+&lt;div class="alert alert-@Level"&gt;
+    @ChildContent
+    &lt;button @onclick="() =&gt; OnClose.InvokeAsync()"&gt;×&lt;/button&gt;
+&lt;/div&gt;
+
+@code {
+    [Parameter] public string Level { get; set; } = "info";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+}
+
+@* Utilisation *@
+&lt;Alert Level="warning" OnClose="Hide"&gt;Disk almost full&lt;/Alert&gt;</code></pre>
+          <pre data-lang="java"><code class="language-java">// Vaadin
+public class Alert extends Div {
+    public Alert(String level, Component content, Runnable onClose) {
+        addClassNames("alert", "alert-" + level);
+        add(content, new Button("×", event -&gt; onClose.run()));
+    }
+}
+
+add(new Alert("warning", new Span("Disk almost full"), this::hide));</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6
+#[component]
+fn Alert(
+    #[prop(default = "info")] level: &amp;'static str,
+    on_close: Callback&lt;()&gt;,
+    children: Children,
+) -&gt; impl IntoView {
+    view! {
+        &lt;div class=format!("alert alert-{level}")&gt;
+            {children()}
+            &lt;button on:click=move |_| on_close.call(())&gt;"×"&lt;/button&gt;
+        &lt;/div&gt;
+    }
+}</code></pre>
+          <pre data-lang="python"><code class="language-xml">{# Jinja2 : une macro, et caller() pour le contenu #}
+{% macro alert(level="info") %}
+&lt;div class="alert alert-{{ level }}"&gt;
+  {{ caller() }}
+  &lt;button hx-post="/alerts/close" hx-target="closest .alert" hx-swap="outerHTML"&gt;×&lt;/button&gt;
+&lt;/div&gt;
+{% endmacro %}
+
+{% call alert("warning") %}Disk almost full{% endcall %}</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// React
+function Alert({ level = "info", onClose, children }) {
+  return (
+    &lt;div className={`alert alert-${level}`}&gt;
+      {children}
+      &lt;button onClick={onClose}&gt;×&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+
+&lt;Alert level="warning" onClose={hide}&gt;Disk almost full&lt;/Alert&gt;</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 3 -->
+    <section class="exercise" id="ex3" data-minutes="30" data-tests="Tickets.Web.Tests.Exercise03">
+      <h2>Charger des données : le cycle de vie</h2>
+      <p>Dans <code>Components/Pages/TicketList.razor</code>, chargez les tickets au démarrage du composant avec <code>ITicketsClient</code>, déjà injecté. Gérez les quatre états que décrit le <code>TODO</code> : chargement, erreur, liste vide, liste. Chaque ticket s'affiche avec votre <code>TicketCard</code> ; la carte sélectionnée s'affiche au-dessus de la liste.</p>
+      <p>Ouvrez ensuite <code>/tickets</code> avec l'API lancée, et regardez la console de l'API : combien d'appels à <code>GET /tickets</code> pour un seul affichage ?</p>
+      <div class="hints">
+        <details class="hint"><summary>au démarrage</summary><p>Redéfinissez <code>protected override async Task OnInitializedAsync()</code>. Blazor ré-affiche le composant quand la méthode se termine.</p></details>
+        <details class="hint"><summary>les états</summary><p>Trois champs suffisent : <code>IReadOnlyList&lt;TicketDto&gt;? _tickets</code> (null pendant le chargement), <code>string? _error</code> et <code>TicketDto? _selected</code>. Dans le balisage : <code>@if (_error is not null) { … } else if (_tickets is null) { … } else if …</code>.</p></details>
+        <details class="hint"><summary>la liste</summary><p><code>@foreach (var ticket in _tickets) { &lt;TicketCard @key="ticket.Id" Ticket="ticket" OnSelected="Select" /&gt; }</code>, avec <code>private void Select(TicketDto ticket) =&gt; _selected = ticket;</code>. <code>@key</code> aide Blazor à associer chaque carte à son ticket quand la liste change.</p></details>
+      </div>
+      <details class="answer"><summary>Pourquoi deux appels à l'API ?</summary><p>La page est <em>prérendue</em> : le serveur calcule une première fois le HTML pour l'afficher tout de suite, puis le composant redémarre quand la connexion interactive s'établit, et <code>OnInitializedAsync</code> s'exécute à nouveau. Demain, le TP-04 supprime ce second appel en conservant l'état du prérendu.</p></details>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Avec Vaadin, on charge dans le constructeur de la vue, côté serveur. <code>OnInitializedAsync</code> joue ce rôle, en asynchrone.</p>
+        <p data-lang="rust">≈ une <code>Resource</code> Leptos dans un <code>&lt;Suspense&gt;</code>. Ici on gère l'état « en cours » soi-même, avec un champ null.</p>
+        <p data-lang="python">Avec HTMX, le fragment se charge après la page via <code>hx-trigger="load"</code> ; Blazor fait l'équivalent dans le composant.</p>
+        <p data-lang="javascript">≈ <code>useEffect(…, [])</code> avec un <code>useState</code>. Pas de tableau de dépendances : <code>OnInitializedAsync</code> ne s'exécute qu'une fois par instance du composant.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">@inject IWeatherClient Weather
+
+@if (_forecast is null) { &lt;p&gt;Loading…&lt;/p&gt; }
+else { &lt;p&gt;@_forecast.Summary&lt;/p&gt; }
+
+@code {
+    private Forecast? _forecast;
+
+    protected override async Task OnInitializedAsync() =&gt;
+        _forecast = await Weather.GetAsync();
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">// Vaadin
+@Route("weather")
+public class WeatherView extends VerticalLayout {
+    public WeatherView(WeatherClient weather) {
+        add(new Paragraph(weather.get().summary()));   // appel côté serveur
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6
+#[component]
+fn WeatherPanel() -&gt; impl IntoView {
+    let forecast = create_resource(|| (), |_| async move { get_forecast().await });
+    view! {
+        &lt;Suspense fallback=|| view! { &lt;p&gt;"Loading…"&lt;/p&gt; }&gt;
+            {move || forecast.get().map(|f| view! { &lt;p&gt;{f.summary}&lt;/p&gt; })}
+        &lt;/Suspense&gt;
+    }
+}</code></pre>
+          <pre data-lang="python"><code class="language-xml">&lt;!-- HTMX : le serveur renvoie le fragment &lt;p&gt;Sunny&lt;/p&gt; --&gt;
+&lt;div hx-get="/weather" hx-trigger="load"&gt;Loading…&lt;/div&gt;</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">function WeatherPanel() {
+  const [forecast, setForecast] = useState(null);
+  useEffect(() =&gt; { getForecast().then(setForecast); }, []);
+  return forecast ? &lt;p&gt;{forecast.summary}&lt;/p&gt; : &lt;p&gt;Loading…&lt;/p&gt;;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 4 -->
+    <section class="exercise" id="ex4" data-minutes="40" data-tests="Tickets.Web.Tests.Exercise04">
+      <h2>Les modes de rendu</h2>
+      <p>C'est la notion la plus importante de Blazor. Un même composant peut s'afficher de quatre façons :</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Mode</th><th>Où tourne le code</th><th>Interactif</th><th>Bon choix pour</th></tr></thead>
+        <tbody>
+          <tr><td>Static SSR (par défaut)</td><td>serveur, une fois par requête</td><td>non</td><td>pages de contenu, formulaires simples</td></tr>
+          <tr><td><code>InteractiveServer</code></td><td>serveur ; le navigateur envoie les événements par SignalR</td><td>oui</td><td>applis métier, accès direct aux services et à la base</td></tr>
+          <tr><td><code>InteractiveWebAssembly</code></td><td>navigateur, .NET compilé en WebAssembly</td><td>oui</td><td>interfaces riches, hors connexion, charge serveur réduite</td></tr>
+          <tr><td><code>InteractiveAuto</code></td><td>serveur au premier affichage, puis navigateur</td><td>oui</td><td>démarrage rapide et WebAssembly ensuite</td></tr>
+        </tbody>
+      </table></div>
+      <p>Les pages de <code>Components/Pages/RenderModes/</code> affichent toutes le même composant <code>RenderModeProbe</code>, fourni. Donnez-lui le bon mode de rendu dans les pages <em>server</em>, <em>webassembly</em> et <em>auto</em>, puis, pour chaque page :</p>
+      <ol>
+        <li>lisez <em>Renderer</em> et <em>Interactive</em>, et cliquez sur le bouton ;</li>
+        <li>ouvrez les outils de développement, onglet Réseau : une connexion WebSocket <code>/_blazor</code> en mode Server, le téléchargement de fichiers <code>.wasm</code> en mode WebAssembly ;</li>
+        <li>affichez le source de la page (Ctrl+U) : le HTML est déjà là, c'est le prérendu, et un commentaire <code>&lt;!--Blazor:{"type":"server",…}--&gt;</code> indique à <code>blazor.web.js</code> quoi rendre interactif. Ce sont ces marqueurs que vérifient les tests.</li>
+      </ol>
+      <p>En mode Auto, la première visite passe par le serveur, le temps que le navigateur télécharge le runtime .NET ; les visites suivantes passent en WebAssembly.</p>
+      <div class="hints">
+        <details class="hint"><summary>la syntaxe</summary><p>Sur l'instance du composant : <code>&lt;RenderModeProbe Label="…" @rendermode="InteractiveServer" /&gt;</code>. Ou pour toute une page : la directive <code>@rendermode InteractiveServer</code> en tête de fichier, comme dans <code>TicketList.razor</code>.</p></details>
+        <details class="hint"><summary>pourquoi deux projets ?</summary><p>Un composant rendu en WebAssembly est téléchargé dans le navigateur : il doit vivre dans <code>Tickets.Web.Client</code>, et il n'a pas accès aux services du serveur (base de données, secrets). C'est pour cela que <code>RenderModeProbe</code> y est rangé.</p></details>
+      </div>
+      <h3>Question</h3>
+      <p>Pour un back-office interne qui lit et écrit en base, quel mode choisiriez-vous par défaut, et pourquoi ?</p>
+      <details class="answer"><summary>Voir la réponse</summary><p>Souvent <strong>InteractiveServer</strong> : le code accède directement aux services du serveur, rien n'est téléchargé, et le réseau d'entreprise supporte bien la connexion SignalR permanente. Ses limites : chaque utilisateur occupe de la mémoire sur le serveur, et une coupure réseau fige l'écran le temps de la reconnexion. WebAssembly devient intéressant pour de nombreux utilisateurs externes ou des écrans très interactifs.</p></details>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Interactive Server ≈ Vaadin : l'état vit sur le serveur, le navigateur envoie les événements par une connexion persistante. Static SSR ≈ Thymeleaf.</p>
+        <p data-lang="rust">Interactive WebAssembly ≈ Leptos ou Yew compilés en <code>.wasm</code>, avec hydratation après un rendu serveur.</p>
+        <p data-lang="python">Static SSR ≈ Jinja2. Interactive Server ressemble à HTMX poussé jusqu'au bout : chaque événement fait un aller-retour serveur, mais sur une connexion ouverte et sans écrire de fragment HTML.</p>
+        <p data-lang="javascript">≈ les composants serveur de Next.js (Static SSR) et <code>"use client"</code> (hydratés dans le navigateur, ≈ WebAssembly). Interactive Server n'a pas d'équivalent courant en JS.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">&lt;Counter /&gt;                                       @* HTML statique *@
+&lt;Counter @rendermode="InteractiveServer" /&gt;       @* événements via SignalR *@
+&lt;Counter @rendermode="InteractiveWebAssembly" /&gt;  @* .NET dans le navigateur *@
+&lt;Counter @rendermode="InteractiveAuto" /&gt;         @* Server, puis WebAssembly *@</code></pre>
+          <pre data-lang="java"><code class="language-java">// Vaadin : l'état reste sur le serveur, comme Interactive Server
+@Route("counter")
+public class CounterView extends VerticalLayout {
+    private int clicks;
+
+    public CounterView() {
+        var button = new Button("Clicked 0 time(s)");
+        button.addClickListener(e -&gt; button.setText("Clicked " + ++clicks + " time(s)"));
+        add(button);
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6 : rendu serveur, puis hydratation en WebAssembly
+#[component]
+fn Counter() -&gt; impl IntoView {
+    let (clicks, set_clicks) = create_signal(0);
+    view! {
+        &lt;button on:click=move |_| set_clicks.update(|n| *n += 1)&gt;
+            "Clicked " {clicks} " time(s)"
+        &lt;/button&gt;
+    }
+}</code></pre>
+          <pre data-lang="python"><code class="language-xml">&lt;!-- HTMX : HTML rendu par le serveur, chaque clic redemande un fragment --&gt;
+&lt;button hx-post="/counter/increment" hx-swap="outerHTML"&gt;
+  Clicked 0 time(s)
+&lt;/button&gt;</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// Next.js : composant serveur par défaut (≈ Static SSR) ;
+// "use client" l'hydrate dans le navigateur (≈ WebAssembly)
+"use client";
+export default function Counter() {
+  const [clicks, setClicks] = useState(0);
+  return &lt;button onClick={() =&gt; setClicks(clicks + 1)}&gt;Clicked {clicks} time(s)&lt;/button&gt;;
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 5 -->
+    <section class="exercise" id="ex5" data-minutes="30" data-tests="Tickets.Web.Tests.Exercise05">
+      <h2>Un formulaire validé avec EditForm</h2>
+      <ol>
+        <li>Dans <code>Tickets.Web.Client/Api/TicketModels.cs</code>, ajoutez à <code>NewTicketForm</code> les mêmes règles que l'API : titre obligatoire de 200 caractères au plus, description de 2 000 au plus, avec un message d'erreur lisible.</li>
+        <li>Dans <code>Components/Pages/NewTicket.razor</code>, construisez le formulaire décrit par le <code>TODO</code>. Les champs doivent avoir les identifiants <code>title</code>, <code>description</code> et <code>priority</code>.</li>
+        <li>À la soumission valide, créez le ticket puis revenez à la liste.</li>
+        <li>Essayez dans le navigateur : soumettez un titre vide, puis tapez un titre. Les messages apparaissent et disparaissent sans recharger la page ni appeler l'API.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>le squelette</summary><pre><code class="language-xml">&lt;EditForm Model="_ticket" OnValidSubmit="SaveAsync" FormName="new-ticket"&gt;
+    &lt;DataAnnotationsValidator /&gt;
+
+    &lt;label for="title"&gt;Title&lt;/label&gt;
+    &lt;InputText id="title" @bind-Value="_ticket.Title" /&gt;
+    &lt;ValidationMessage For="() =&gt; _ticket.Title" /&gt;
+    …
+    &lt;button type="submit"&gt;Create&lt;/button&gt;
+&lt;/EditForm&gt;</code></pre></details>
+        <details class="hint"><summary>la liste des priorités</summary><p><code>&lt;InputSelect id="priority" @bind-Value="_ticket.Priority"&gt;</code> avec une option par valeur : <code>@foreach (var p in Enum.GetValues&lt;TicketPriority&gt;()) { &lt;option value="@p"&gt;@p&lt;/option&gt; }</code>.</p></details>
+        <details class="hint"><summary>après l'envoi</summary><p><code>await Client.CreateTicketAsync(_ticket);</code> puis <code>Navigation.NavigateTo("tickets");</code>. <code>OnValidSubmit</code> ne s'exécute que si toutes les règles passent.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">Les mêmes annotations qu'avec Bean Validation (<code>@NotBlank</code>, <code>@Size</code>), mais vérifiées dans le composant, avant tout envoi.</p>
+        <p data-lang="rust">≈ la crate <code>validator</code> sur une struct, appelée à la soumission.</p>
+        <p data-lang="python">≈ un modèle Pydantic ; ici la validation s'affiche champ par champ dans le formulaire, sans réponse 422.</p>
+        <p data-lang="javascript">≈ React Hook Form avec un schéma zod : un modèle, des règles, des messages par champ.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">&lt;EditForm Model="_contact" OnValidSubmit="SendAsync"&gt;
+    &lt;DataAnnotationsValidator /&gt;
+    &lt;InputText id="email" @bind-Value="_contact.Email" /&gt;
+    &lt;ValidationMessage For="() =&gt; _contact.Email" /&gt;
+    &lt;button type="submit"&gt;Send&lt;/button&gt;
+&lt;/EditForm&gt;
+
+@code {
+    // public class ContactForm { [Required, EmailAddress] public string Email { get; set; } = ""; }
+    private readonly ContactForm _contact = new();
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">public record ContactForm(@NotBlank @Email String email) {}
+
+@PostMapping("/contact")
+String send(@Valid @ModelAttribute ContactForm form, BindingResult errors) {
+    return errors.hasErrors() ? "contact" : "redirect:/thanks";
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[derive(Deserialize, Validate)]
+struct ContactForm {
+    #[validate(email)]
+    email: String,
+}
+
+fn send(form: ContactForm) -&gt; Result&lt;(), ValidationErrors&gt; {
+    form.validate()?;
+    Ok(())
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">class ContactForm(BaseModel):
+    email: EmailStr
+
+@app.post("/contact")
+async def send(form: Annotated[ContactForm, Form()]):
+    ...   # réponse 422 automatique si l'email est invalide</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">const schema = z.object({ email: z.string().email() });
+
+function ContactForm() {
+  const { register, handleSubmit, formState: { errors } } =
+    useForm({ resolver: zodResolver(schema) });
+  return (
+    &lt;form onSubmit={handleSubmit(send)}&gt;
+      &lt;input id="email" {...register("email")} /&gt;
+      {errors.email &amp;&amp; &lt;span&gt;{errors.email.message}&lt;/span&gt;}
+      &lt;button type="submit"&gt;Send&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 6 -->
+    <section class="exercise" id="ex6" data-minutes="20" data-tests="Tickets.Web.Tests.Exercise06">
+      <h2>Une grille triée et paginée avec QuickGrid</h2>
+      <p><code>QuickGrid</code> est la grille officielle de Blazor : elle trie et pagine un <code>IQueryable</code>. Dans <code>Components/Pages/TicketGrid.razor</code>, suivez le <code>TODO</code> : colonnes <em>#</em>, <em>Title</em> (triée par défaut), <em>Priority</em> (avec votre <code>PriorityBadge</code>), <em>Status</em> et <em>Created</em>, toutes triables, 5 tickets par page.</p>
+      <div class="hints">
+        <details class="hint"><summary>les colonnes</summary><pre><code class="language-xml">&lt;QuickGrid Items="_tickets" Pagination="_pagination"&gt;
+    &lt;PropertyColumn Property="t =&gt; t.Title" Sortable="true" IsDefaultSortColumn="true" /&gt;
+    &lt;TemplateColumn Title="Priority" SortBy="_byPriority"&gt;
+        &lt;PriorityBadge Priority="context.Priority" /&gt;
+    &lt;/TemplateColumn&gt;
+    …
+&lt;/QuickGrid&gt;
+&lt;Paginator State="_pagination" /&gt;</code></pre></details>
+        <details class="hint"><summary>les champs</summary><p><code>IQueryable&lt;TicketDto&gt;? _tickets</code>, rempli avec <code>(await Client.GetTicketsAsync()).AsQueryable()</code> ; <code>PaginationState _pagination = new() { ItemsPerPage = 5 }</code> ; <code>GridSort&lt;TicketDto&gt; _byPriority = GridSort&lt;TicketDto&gt;.ByDescending(t =&gt; t.Priority)</code>.</p></details>
+      </div>
+      <p>Avec EF Core côté serveur, <code>Items</code> peut recevoir directement un <code>IQueryable</code> de la base : le tri et la pagination deviennent du SQL. Ici, la grille trie en mémoire les tickets reçus de l'API.</p>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ le <code>Grid</code> de Vaadin : colonnes déclarées par accesseur, tri intégré.</p>
+        <p data-lang="rust">Pas de grille standard en Rust côté front : on trie un <code>Vec</code> dans un signal et on dessine la table soi-même.</p>
+        <p data-lang="python">Côté serveur, on trie et on découpe la liste selon les paramètres d'URL, et le template affiche la page.</p>
+        <p data-lang="javascript">≈ TanStack Table : modèles de lignes triées et paginées, colonnes déclarées par clé.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-xml">&lt;QuickGrid Items="_people" Pagination="_pagination"&gt;
+    &lt;PropertyColumn Property="p =&gt; p.Name" Sortable="true" /&gt;
+    &lt;PropertyColumn Property="p =&gt; p.BirthDate" Format="yyyy-MM-dd" Sortable="true" /&gt;
+&lt;/QuickGrid&gt;
+&lt;Paginator State="_pagination" /&gt;
+
+@code {
+    private readonly PaginationState _pagination = new() { ItemsPerPage = 10 };
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">// Vaadin
+var grid = new Grid&lt;&gt;(Person.class, false);
+grid.addColumn(Person::name).setHeader("Name").setSortable(true);
+grid.addColumn(Person::birthDate).setHeader("Birth date").setSortable(true);
+grid.setItems(people);</code></pre>
+          <pre data-lang="rust"><code class="language-rust">// Leptos 0.6 : on trie soi-même
+let (people, set_people) = create_signal(load_people());
+let sort_by_name = move |_| set_people.update(|p| p.sort_by(|a, b| a.name.cmp(&amp;b.name)));
+
+view! {
+    &lt;table&gt;
+        &lt;thead&gt;&lt;tr&gt;&lt;th on:click=sort_by_name&gt;"Name"&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;
+        &lt;tbody&gt;
+            &lt;For each=move || people.get() key=|p| p.id let:person&gt;
+                &lt;tr&gt;&lt;td&gt;{person.name}&lt;/td&gt;&lt;/tr&gt;
+            &lt;/For&gt;
+        &lt;/tbody&gt;
+    &lt;/table&gt;
+}</code></pre>
+          <pre data-lang="python"><code class="language-python">@app.get("/people", response_class=HTMLResponse)
+def people(request: Request, page: int = 1, sort: str = "name"):
+    rows = sorted(load_people(), key=lambda p: getattr(p, sort))
+    return templates.TemplateResponse(request, "people.html", {
+        "rows": rows[(page - 1) * 10: page * 10],
+        "page": page,
+    })</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">// TanStack Table (React)
+const table = useReactTable({
+  data: people,
+  columns: [
+    { accessorKey: "name", header: "Name" },
+    { accessorKey: "birthDate", header: "Birth date" },
+  ],
+  getCoreRowModel: getCoreRowModel(),
+  getSortedRowModel: getSortedRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+});</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ 7 -->
+    <section class="exercise" id="ex7" data-minutes="15" data-tests="Tickets.Web.Tests.Exercise07">
+      <h2>CSS isolé et appel JavaScript</h2>
+      <ol>
+        <li><strong>CSS isolé</strong> : créez <code>TicketCard.razor.css</code> à côté de <code>TicketCard.razor</code>, avec au moins une règle sur <code>.ticket-card</code> (bordure, marge intérieure, arrondi…). Ouvrez <code>/tickets</code>, inspectez une carte : un attribut <code>b-xxxxxxxx</code> a été ajouté, et vos sélecteurs ne s'appliquent qu'à ce composant.</li>
+        <li><strong>JavaScript</strong> : créez <code>TicketCard.razor.js</code> à côté du composant, qui exporte une fonction <code>copyText(text)</code> copiant le texte dans le presse-papiers. Ajoutez à la carte un bouton <em>Copy title</em> de classe <code>copy</code>, qui importe le module et appelle <code>copyText</code> avec le titre.</li>
+      </ol>
+      <div class="hints">
+        <details class="hint"><summary>le module</summary><pre><code class="language-javascript">// TicketCard.razor.js
+export function copyText(text) {
+    return navigator.clipboard.writeText(text);
+}</code></pre></details>
+        <details class="hint"><summary>l'appel</summary><pre><code class="language-csharp">@inject IJSRuntime JS
+
+private IJSObjectReference? _module;
+
+private async Task CopyTitleAsync()
+{
+    _module ??= await JS.InvokeAsync&lt;IJSObjectReference&gt;("import", "./Components/TicketCard.razor.js");
+    await _module.InvokeVoidAsync("copyText", Ticket.Title);
+}</code></pre></details>
+        <details class="hint"><summary>le chemin, et le nettoyage</summary><p>Le module est servi au même chemin que le fichier <code>.razor</code>. Dans une Blazor Web App, les fichiers du projet client sont servis à la racine du site ; dans une bibliothèque de composants, ce serait <code>_content/&lt;bibliothèque&gt;/…</code>. Libérez le module en implémentant <code>IAsyncDisposable</code>, et ignorez <code>JSDisconnectedException</code> : en mode Server, le navigateur peut être déjà parti.</p></details>
+      </div>
+      <div class="bridge">
+        <span class="lbl">Comparaison</span>
+        <p data-lang="java">≈ <code>@CssImport</code> et <code>getElement().executeJs(…)</code> dans Vaadin.</p>
+        <p data-lang="rust">≈ <code>#[wasm_bindgen(module = "…")]</code> pour appeler une fonction JavaScript depuis du Rust compilé en WebAssembly.</p>
+        <p data-lang="python">Côté Python, le JavaScript reste dans le template : pas de pont nécessaire, mais pas de typage non plus.</p>
+        <p data-lang="javascript">Le CSS isolé ≈ les CSS Modules : des classes renommées pour ne s'appliquer qu'au composant. L'interop n'a pas d'équivalent : en JS, on appelle directement l'API du navigateur.</p>
+        <div class="compare">
+          <pre data-lang="csharp"><code class="language-csharp">// Toast.razor.css ne s'applique qu'à Toast.razor
+@inject IJSRuntime JS
+
+&lt;button class="beep" @onclick="BeepAsync"&gt;Beep&lt;/button&gt;
+
+@code {
+    private async Task BeepAsync()
+    {
+        var module = await JS.InvokeAsync&lt;IJSObjectReference&gt;("import", "./Components/Toast.razor.js");
+        await module.InvokeVoidAsync("beep");
+    }
+}</code></pre>
+          <pre data-lang="java"><code class="language-java">// Vaadin
+@CssImport("./styles/toast.css")
+public class Toast extends Div {
+    public void copy(String text) {
+        getElement().executeJs("return navigator.clipboard.writeText($0)", text);
+    }
+}</code></pre>
+          <pre data-lang="rust"><code class="language-rust">#[wasm_bindgen(module = "/js/clipboard.js")]
+extern "C" {
+    #[wasm_bindgen(js_name = copyText)]
+    fn copy_text(text: &amp;str);
+}
+
+copy_text(&amp;ticket.title);</code></pre>
+          <pre data-lang="python"><code class="language-xml">&lt;!-- Jinja2 : le JavaScript est écrit dans le template --&gt;
+&lt;button onclick='navigator.clipboard.writeText({{ ticket.title|tojson }})'&gt;
+  Copy title
+&lt;/button&gt;</code></pre>
+          <pre data-lang="javascript"><code class="language-javascript">import styles from "./TicketCard.module.css";   // CSS Modules
+
+export function TicketCard({ title }) {
+  return (
+    &lt;button className={styles.copy} onClick={() =&gt; navigator.clipboard.writeText(title)}&gt;
+      Copy title
+    &lt;/button&gt;
+  );
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <div class="panel">
+      <h2>Pour aller plus loin</h2>
+      <ul>
+        <li>Ajoutez <code>@attribute [StreamRendering]</code> à une page en Static SSR qui charge des données : le HTML part tout de suite avec le message de chargement, puis la suite arrive dans la même réponse.</li>
+        <li>Dans <code>NewTicket.razor</code>, ajoutez un aperçu du titre en direct avec <code>@bind-Value:after</code>.</li>
+        <li>Remplacez la liste de <code>TicketList</code> par <code>&lt;Virtualize&gt;</code> : seules les cartes visibles sont rendues, utile pour des milliers d'éléments.</li>
+      </ul>
+    </div>
+
+    <section class="panel" id="summary">
+      <h2>Valider le TP et faire le bilan</h2>
+      <pre><code class="language-bash">dotnet build depart/Tickets.slnx                          # 0 avertissement
+dotnet test --project depart/tests/Tickets.Web.Tests      # tous les tests du front au vert
+dotnet test --solution depart/Tickets.slnx                # et ceux de l'API, toujours verts</code></pre>
+      <p>C'est terminé. Comparez avec <code>solution/</code>. Demain, le <code>depart/</code> du TP-04 reprend cette solution.</p>
+      <div data-report></div>
+      <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="../assets/enonce.js"></script>
+</body>
+</html>

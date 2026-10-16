@@ -1,0 +1,9 @@
+@* Exercise 02: the smallest useful component, one parameter in, some markup out. *@
+
+<span class="badge badge-@Priority.ToString().ToLowerInvariant()">@Priority</span>
+
+@code {
+    /// <summary>The priority to display.</summary>
+    [Parameter]
+    public TicketPriority Priority { get; set; }
+}

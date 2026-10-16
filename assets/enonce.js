@@ -2,7 +2,7 @@
   Shared behaviour for the lab statements (tp-XX/enonce.html).
 
   Markup contract, written by hand in each statement:
-    <body data-tp="tp-01" data-solution="depart/Katas.slnx">
+    <body data-tp="tp-01" data-solution="depart/Katas.slnx" [data-test-project="depart/tests/…"]>
     <nav id="toc"></nav>, <div id="progress"></div>, <div id="side-actions"></div>   side panel slots
     <section class="exercise" id="ex2" data-minutes="15" data-tests="Katas.Tests.Exercise02">
       <h2>Title</h2> ...                                                              one card per exercise
@@ -20,6 +20,9 @@
   const body = document.body;
   const lab = body.dataset.tp || "tp";
   const solution = body.dataset.solution || "";
+  // When a solution holds several test projects, filtering by namespace across all of them fails with
+  // "Zero tests ran" on the others: data-test-project points the command to the lab's own test project.
+  const testTarget = body.dataset.testProject ? `--project ${body.dataset.testProject}` : `--solution ${solution}`;
   const storageKey = `tpnet:${lab}:v1`;
 
   const exercises = [...document.querySelectorAll("section.exercise")];
@@ -94,7 +97,7 @@
     if (ex.dataset.tests) {
       const tests = document.createElement("div");
       tests.className = "tests";
-      const command = `dotnet test --solution ${solution} --filter-namespace "${ex.dataset.tests}"`;
+      const command = `dotnet test ${testTarget} --filter-namespace "${ex.dataset.tests}"`;
       tests.innerHTML = `<span class="lbl">Valider cet exercice, depuis le dossier du TP</span><pre><code class="language-bash"></code></pre>`;
       tests.querySelector("code").textContent = command;
       head.after(tests);

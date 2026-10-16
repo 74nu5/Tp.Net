@@ -1,0 +1,16 @@
+@page "/tickets"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+
+@* Exercise 03: load data when the component starts, and show every state.
+   TODO:
+   - load the tickets with Client.GetTicketsAsync() when the component initializes;
+   - while loading: <p class="loading">Loading…</p>;
+   - if the API fails (HttpRequestException): <p class="error"> with the message;
+   - without ticket: <p class="empty"> with a link to tickets/new;
+   - otherwise: one TicketCard per ticket, inside <div class="cards">;
+   - when a card is selected: <p class="selected">Selected: <strong>title</strong></p>. *@
+
+<PageTitle>Tickets</PageTitle>
+
+<h1>Tickets</h1>

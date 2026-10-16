@@ -1,0 +1,14 @@
+@page "/tickets/grid"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+
+@* Exercise 06: QuickGrid sorts and pages an IQueryable for us.
+   TODO:
+   - load the tickets and turn them into an IQueryable with AsQueryable();
+   - a QuickGrid with the columns #, Title (sorted by default), Priority (a PriorityBadge), Status and Created;
+   - every column sortable; the Priority column sorts with a GridSort;
+   - 5 tickets per page, with a Paginator. *@
+
+<PageTitle>Ticket grid</PageTitle>
+
+<h1>Ticket grid</h1>

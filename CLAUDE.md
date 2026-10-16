@@ -17,7 +17,7 @@ This repository holds the .NET onboarding labs for 3B Studio apprentices: short,
 
 The shared script turns plain markup into the interactive page; see the header comment of `assets/enonce.js`.
 
-- `<body data-tp="tp-01" data-solution="depart/Katas.slnx">`; side panel slots `#progress`, `#toc`, `#side-actions`, and `.compare-picker` (also allowed in the intro).
+- `<body data-tp="tp-01" data-solution="depart/Katas.slnx">`, plus `data-test-project="depart/tests/<project>"` when the solution holds several test projects (otherwise the per-exercise filter fails with "Zero tests ran" on the others); side panel slots `#progress`, `#toc`, `#side-actions`, and `.compare-picker` (also allowed in the intro).
 - One `<section class="exercise" id="exN" data-minutes="20" data-tests="Katas.Tests.ExerciseNN">` per exercise, starting with an `<h2>`; the script adds the number, duration, timer, "done" checkbox and the filtered `dotnet test` command.
 - Hints: `<div class="hints">` of `<details class="hint"><summary>topic</summary>…</details>`, unlocked one after the other. Answers: `<details class="answer">`.
 - Comparisons: `<div class="bridge">` holding `<div class="compare">` with one `<pre data-lang="…">` per language: `csharp` (always shown), `java`, `rust`, `python`, `javascript`. Provide all five. Language-specific explanations use `<p data-lang="rust">…</p>`; table cells can carry `data-lang` too.

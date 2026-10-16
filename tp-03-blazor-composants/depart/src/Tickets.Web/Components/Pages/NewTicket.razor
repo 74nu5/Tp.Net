@@ -1,0 +1,15 @@
+@page "/tickets/new"
+@rendermode InteractiveServer
+@inject ITicketsClient Client
+@inject NavigationManager Navigation
+
+@* Exercise 05: a form bound to a model, validated with its DataAnnotations.
+   TODO:
+   - an EditForm on a NewTicketForm, with a DataAnnotationsValidator;
+   - an InputText id="title", an InputTextArea id="description", an InputSelect id="priority",
+     each with its <label for="…"> and its ValidationMessage;
+   - on a valid submit: Client.CreateTicketAsync, then navigate to "tickets". *@
+
+<PageTitle>New ticket</PageTitle>
+
+<h1>New ticket</h1>

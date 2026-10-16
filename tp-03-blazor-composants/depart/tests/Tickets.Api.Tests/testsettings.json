@@ -1,0 +1,5 @@
+{
+  "ConnectionStrings": {
+    "TicketsTests": "Server=localhost;Database=TicketsTests;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
