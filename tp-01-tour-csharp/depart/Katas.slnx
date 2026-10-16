@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Katas/Katas.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Katas.Tests/Katas.Tests.csproj" />
+  </Folder>
+</Solution>

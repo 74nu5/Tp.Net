@@ -1,0 +1,1144 @@
+<title>Parcours .NET alternant</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout : une colonne de travail (phases → modules → TP), barre de synthèse en tête, onglets Cursus / Calendrier / Réglages. */
+:root {
+  --bg: #f5f4f8;
+  --surface: #ffffff;
+  --sunken: #efedf4;
+  --ink: #1c1a24;
+  --muted: #6a6677;
+  --line: #e2dfe9;
+  --accent: #512bd4;
+  --accent-soft: #ece7fb;
+  --accent-ink: #ffffff;
+  --p2: #0b7a72;
+  --p2-soft: #e1f3f1;
+  --st-cadrer: #8a8697;
+  --st-redaction: #b26a00;
+  --st-relecture: #1f5fd6;
+  --st-pret: #137a3a;
+  --st-fait: #512bd4;
+  --warn: #b42318;
+  --warn-soft: #fdecea;
+  --hatch: #e7e4ee;
+  --shadow: 0 1px 2px rgb(28 26 36 / .06), 0 4px 14px rgb(28 26 36 / .05);
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131118; --surface: #1c1a23; --sunken: #17151d; --ink: #ecebf2; --muted: #a29eb1; --line: #2f2c3a;
+    --accent: #a08bf5; --accent-soft: #2a2343; --accent-ink: #15121f; --p2: #45bfb4; --p2-soft: #15302d;
+    --st-cadrer: #8f8a9e; --st-redaction: #e3a13a; --st-relecture: #6c9dfa; --st-pret: #4cc27a; --st-fait: #a08bf5;
+    --warn: #ff8a7a; --warn-soft: #3a1c1a; --hatch: #24212d; --shadow: 0 1px 2px rgb(0 0 0 / .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131118; --surface: #1c1a23; --sunken: #17151d; --ink: #ecebf2; --muted: #a29eb1; --line: #2f2c3a;
+  --accent: #a08bf5; --accent-soft: #2a2343; --accent-ink: #15121f; --p2: #45bfb4; --p2-soft: #15302d;
+  --st-cadrer: #8f8a9e; --st-redaction: #e3a13a; --st-relecture: #6c9dfa; --st-pret: #4cc27a; --st-fait: #a08bf5;
+  --warn: #ff8a7a; --warn-soft: #3a1c1a; --hatch: #24212d; --shadow: 0 1px 2px rgb(0 0 0 / .3);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(1.6rem, 3.2vw, 2.2rem); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 1.3rem; font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+.eyebrow { font: 600 .72rem/1 var(--f-mono); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--f-mono); }
+.muted { color: var(--muted); }
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; font-size: .88rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--ink); background: var(--sunken); }
+.btn.danger { color: var(--warn); }
+.btn.danger.solid { background: var(--warn); color: var(--surface); border-color: var(--warn); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; }
+.icon-btn { width: 30px; height: 30px; padding: 0; justify-content: center; }
+
+/* En-tête */
+header.top { display: grid; gap: 14px; }
+.title-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 20px; }
+.title-row > div { min-width: 0; }
+.plan-title { font: 700 clamp(1.6rem, 3.2vw, 2.2rem)/1.15 var(--f-display); border: 0; background: transparent; padding: 0; width: 100%; letter-spacing: -.01em; }
+.plan-title:hover:not([readonly]) { background: var(--sunken); }
+.mode { font: 500 .78rem/1 var(--f-mono); padding: 6px 10px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); white-space: nowrap; display: inline-flex; gap: 6px; align-items: center; }
+.mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--st-cadrer); }
+.mode.db::before { background: var(--st-pret); }
+.mode.ro::before { background: var(--st-redaction); }
+
+.summary { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); padding: 18px 20px; display: grid; gap: 16px; }
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px 24px; }
+.fig { display: grid; gap: 2px; min-width: 0; }
+.fig b { font: 700 1.45rem/1.2 var(--f-display); font-variant-numeric: tabular-nums; }
+.fig span { font-size: .82rem; color: var(--muted); }
+.fig.next b { font-size: 1.05rem; line-height: 1.3; }
+.bar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--sunken); }
+.bar i { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+
+/* Onglets */
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+nav.tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* Barre de filtres */
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 11px; font-size: .82rem; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--bg); }
+.chip small { font-family: var(--f-mono); font-size: .75rem; opacity: .75; }
+.search { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; min-width: 0; width: 220px; max-width: 100%; }
+
+/* Phases et modules */
+.phase { display: grid; gap: 14px; }
+.phase-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; padding-top: 6px; }
+.phase-head .meta { font-size: .85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.phase-tag { font: 600 .72rem/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 5px; background: var(--accent-soft); color: var(--accent); }
+.phase.p2 .phase-tag { background: var(--p2-soft); color: var(--p2); }
+.phase-intro { margin: -6px 0 0; color: var(--muted); max-width: 70ch; font-size: .92rem; }
+.module { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.module-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--line); background: var(--sunken); }
+.module-head .mtitle { flex: 1; min-width: 0; font: 600 1rem/1.3 var(--f-display); border: 1px solid transparent; background: transparent; border-radius: 6px; padding: 3px 6px; margin-left: -6px; }
+.module-head .mtitle:hover:not([readonly]) { border-color: var(--line); background: var(--surface); }
+.module-head .mdays { font: .8rem var(--f-mono); color: var(--muted); white-space: nowrap; }
+.module-foot { padding: 8px 12px; }
+
+/* Ligne TP */
+.tp { border-bottom: 1px solid var(--line); }
+.tp:last-of-type { border-bottom: 0; }
+.tp-row { display: grid; grid-template-columns: 58px minmax(0, 1fr) auto auto 28px; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; }
+.tp-row:hover { background: color-mix(in srgb, var(--sunken) 60%, transparent); }
+.tp-code { font: 600 .8rem var(--f-mono); color: var(--accent); }
+.p2 .tp-code { color: var(--p2); }
+.tp-main { min-width: 0; display: grid; gap: 1px; }
+.tp-title { font-weight: 600; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; }
+.tp-title:hover { text-decoration: underline; text-underline-offset: 3px; }
+.tp-sub { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.tp-sub .late { color: var(--warn); font-weight: 600; }
+.tp-days { font: .82rem var(--f-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.status { appearance: none; -webkit-appearance: none; border: 1px solid currentColor; border-radius: 99px; padding: 3px 26px 3px 10px; font-size: .8rem; font-weight: 600; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 9px center; cursor: pointer; }
+.status:disabled { cursor: default; }
+.s-cadrer { color: var(--st-cadrer); } .s-redaction { color: var(--st-redaction); } .s-relecture { color: var(--st-relecture); } .s-pret { color: var(--st-pret); } .s-fait { color: var(--st-fait); }
+.caret { width: 28px; height: 28px; border: 0; background: none; color: var(--muted); border-radius: 6px; display: grid; place-items: center; }
+.caret:hover { background: var(--sunken); color: var(--ink); }
+.caret svg { transition: transform .15s; }
+.tp.open .caret svg { transform: rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .caret svg { transition: none; } }
+
+/* Éditeur TP */
+.editor { padding: 4px 16px 18px 86px; display: grid; gap: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 18px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > label, .field > .lbl { font: 600 .7rem/1.2 var(--f-mono); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.field input, .field textarea, .field select { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 7px 9px; font-size: .9rem; }
+.field textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+.field input.code, .field textarea.code { font-family: var(--f-mono); font-size: .84rem; }
+.field .hint { font-size: .75rem; color: var(--muted); }
+.field.bridge textarea { background: var(--accent-soft); border-color: transparent; }
+.editor-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 12px; }
+.editor-actions > div { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.confirm { display: inline-flex; gap: 6px; align-items: center; font-size: .85rem; color: var(--warn); }
+
+/* Calendrier */
+.cal { display: grid; gap: 14px; }
+.week { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.week-head { display: flex; justify-content: space-between; gap: 10px; padding: 9px 14px; background: var(--sunken); border-bottom: 1px solid var(--line); font-size: .85rem; }
+.week-head b { font-family: var(--f-display); font-size: .95rem; }
+.days { display: grid; grid-template-columns: repeat(var(--n, 5), minmax(0, 1fr)); }
+.day { border-right: 1px solid var(--line); min-width: 0; display: grid; grid-template-rows: auto 1fr 1fr; }
+.day:last-child { border-right: 0; }
+.day-h { padding: 6px 10px; font: 600 .75rem var(--f-mono); color: var(--muted); border-bottom: 1px solid var(--line); text-transform: capitalize; }
+.day-h.today { color: var(--accent); }
+.half { padding: 6px 8px; min-height: 58px; border-bottom: 1px solid var(--line); display: grid; align-content: start; gap: 2px; }
+.half:last-child { border-bottom: 0; }
+.slot { border-left: 3px solid var(--c, var(--accent)); padding: 2px 0 2px 7px; font-size: .78rem; line-height: 1.3; min-width: 0; }
+.slot b { font: 600 .72rem var(--f-mono); color: var(--c); display: block; }
+.slot span { display: block; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.half.off, .day.off .half { background: repeating-linear-gradient(135deg, var(--hatch) 0 6px, transparent 6px 12px); }
+.off-label { font-size: .75rem; color: var(--muted); font-weight: 600; }
+.cal-empty { color: var(--muted); font-size: .8rem; }
+
+/* Réglages */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; display: grid; gap: 16px; }
+.panel p { margin: 0; }
+.weekdays { display: flex; flex-wrap: wrap; gap: 6px; }
+.weekdays label { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; font-size: .88rem; cursor: pointer; }
+.blocked { display: grid; gap: 8px; }
+.blocked-row { display: grid; grid-template-columns: 150px 150px minmax(0, 1fr) 30px; gap: 8px; align-items: center; }
+.blocked-row input { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 6px 8px; }
+.copybox { width: 100%; min-height: 180px; font: .8rem/1.45 var(--f-mono); border: 1px solid var(--line); background: var(--bg); border-radius: 7px; padding: 10px; }
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 9px 16px; border-radius: 8px; font-size: .88rem; box-shadow: var(--shadow); z-index: 20; max-width: calc(100% - 32px); }
+
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: var(--r); padding: 36px 24px; display: grid; gap: 12px; justify-items: start; }
+.empty p { margin: 0; max-width: 60ch; color: var(--muted); }
+.loading { color: var(--muted); padding: 40px 0; }
+
+@media (max-width: 720px) {
+  .tp-row { grid-template-columns: 48px minmax(0, 1fr) 28px; row-gap: 6px; }
+  .tp-row .tp-days { grid-column: 2; grid-row: 2; }
+  .tp-row .status { grid-column: 2; grid-row: 3; justify-self: start; }
+  .tp-row .caret { grid-column: 3; grid-row: 1; }
+  .editor { padding: 4px 14px 16px; }
+  .days { grid-template-columns: minmax(0, 1fr); }
+  .day { border-right: 0; border-bottom: 1px solid var(--line); grid-template-columns: 74px 1fr 1fr; grid-template-rows: auto; }
+  .day:last-child { border-bottom: 0; }
+  .day-h { border-bottom: 0; border-right: 1px solid var(--line); }
+  .half { border-bottom: 0; border-right: 1px solid var(--line); min-height: 44px; }
+  .half:last-child { border-right: 0; }
+  .blocked-row { grid-template-columns: 1fr 1fr 30px; }
+  .blocked-row input[data-b="label"] { grid-column: 1 / 3; grid-row: 2; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">3B Studio · Onboarding alternant · .NET 10 LTS &amp; .NET 11</div>
+    <div class="title-row">
+      <div style="flex:1 1 320px"><input class="plan-title" id="planTitle" aria-label="Nom du plan" value="Parcours .NET de l'alternant"></div>
+      <span class="mode" id="mode">Chargement…</span>
+    </div>
+  </header>
+  <section class="summary" id="summary" aria-label="Synthèse"></section>
+  <nav class="tabs" role="tablist" id="tabs">
+    <button role="tab" id="tab-cursus" data-tab="cursus" aria-selected="true">Cursus</button>
+    <button role="tab" id="tab-calendrier" data-tab="calendrier" aria-selected="false">Calendrier</button>
+    <button role="tab" id="tab-reglages" data-tab="reglages" aria-selected="false">Réglages &amp; export</button>
+  </nav>
+  <main id="app"><p class="loading">Chargement du plan…</p></main>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="application/json" id="seed">
+{
+  "config": {
+    "title": "Parcours .NET de l'alternant",
+    "startDate": "2026-10-19",
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "halves": [
+      0
+    ],
+    "phase2Start": "",
+    "blocked": []
+  },
+  "modules": [
+    {
+      "id": "m1",
+      "phase": "dotnet",
+      "order": 1,
+      "title": "Semaine d'arrivée : une demi-journée de TP par matinée"
+    },
+    {
+      "id": "m2",
+      "phase": "dotnet",
+      "order": 2,
+      "title": "Bonus, si le temps le permet"
+    },
+    {
+      "id": "m3",
+      "phase": "3b",
+      "order": 1,
+      "title": "À cadrer avec l'équipe"
+    }
+  ],
+  "tps": [
+    {
+      "id": "t01",
+      "moduleId": "m1",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Tour de .NET et C# express",
+      "summary": "L'écosystème, la CLI, les dépendances et l'essentiel du langage, en katas courts. Pas de théorie longue : on lit, on tape, on lance.",
+      "objectives": [
+        "Installer le SDK, dotnet new console, lire le .csproj, dotnet run, puis un script sans projet avec dotnet run hello.cs (15 min)",
+        "Ajouter un package NuGet, centraliser sa version dans Directory.Packages.props (15 min)",
+        "Modéliser un petit domaine avec record, class et struct ; activer la nullabilité et corriger les avertissements (30 min)",
+        "Pattern matching et switch expression sur ce domaine (20 min)",
+        "LINQ sur une liste de commandes : filtrer, grouper, agréger (40 min)",
+        "async/await : appeler 3 URL en parallèle avec HttpClient et Task.WhenAll, avec annulation (30 min)",
+        "Écrire 3 tests xUnit sur le code de la matinée (30 min)"
+      ],
+      "notions": [
+        "SDK et runtime",
+        "TFM net10.0",
+        "NuGet",
+        "Central Package Management",
+        "record / class / struct",
+        "nullable reference types",
+        "pattern matching",
+        "LINQ",
+        "Task et async/await",
+        "xUnit"
+      ],
+      "bridge": "dotnet ≈ cargo ou mvn, NuGet ≈ crates.io / Maven Central, LINQ ≈ Java Streams ou itérateurs Rust, Task ≈ Promise JS. Les nullable reference types sont une analyse à la compilation, moins stricte qu'Option<T>.",
+      "start": "dotnet new console -n Katas",
+      "deliverable": "Un dépôt « katas » avec un fichier par exercice et des tests au vert.",
+      "notes": ""
+    },
+    {
+      "id": "t02",
+      "moduleId": "m1",
+      "order": 2,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Serveur web et Entity Framework Core",
+      "summary": "Comment tourne une application web .NET (host, injection de dépendances, configuration, Minimal APIs), puis la persistance avec EF Core : la moitié de la séance y est consacrée.",
+      "objectives": [
+        "Lire le Program.cs d'un projet webapi et ajouter un middleware qui journalise chaque requête (15 min)",
+        "Enregistrer un service en Singleton, Scoped et Transient et observer la différence (15 min)",
+        "Lier une section d'appsettings.json à une classe d'options, la surcharger par variable d'environnement et user-secrets (15 min)",
+        "Écrire une Minimal API CRUD de tickets en mémoire, avec TypedResults, validation et OpenAPI (35 min)",
+        "EF Core : DbContext, entités Ticket et Commentaire (relation 1-n), provider SQL Server sur l'instance locale, chaîne de connexion dans user-secrets, première migration et dotnet ef database update ; vérifier le schéma dans SSMS (35 min)",
+        "EF Core : requêtes LINQ et SQL généré dans les logs ; Include, projection, AsNoTracking ; repérer et corriger un N+1 (30 min)",
+        "EF Core : écritures, suivi des modifications et SaveChanges, une migration qui ajoute une colonne (20 min)",
+        "Un test d'intégration de l'API avec WebApplicationFactory (15 min)"
+      ],
+      "notions": [
+        "Generic Host",
+        "Kestrel",
+        "middlewares",
+        "injection de dépendances",
+        "IConfiguration / IOptions",
+        "Minimal APIs",
+        "OpenAPI",
+        "DbContext",
+        "migrations",
+        "LINQ to Entities",
+        "Include et projections",
+        "change tracking",
+        "N+1",
+        "Microsoft.EntityFrameworkCore.SqlServer",
+        "chaîne de connexion"
+      ],
+      "bridge": "ASP.NET Core ≈ Spring Boot, tout se déclare dans Program.cs ; Minimal APIs ≈ Express ou Axum. EF Core ≈ JPA/Hibernate ; les migrations ≈ Flyway/Liquibase ou celles de diesel/sqlx ; LINQ to Entities ≈ Criteria API, typé à la compilation.",
+      "start": "dotnet new webapi -n Tickets.Api, puis dotnet tool install --global dotnet-ef et dotnet add package Microsoft.EntityFrameworkCore.SqlServer",
+      "deliverable": "Une API « tickets » persistée dans SQL Server par EF Core, avec deux migrations, réutilisée par les demi-journées Blazor.",
+      "notes": "SQL Server installé sur son poste : vérifier avant lundi l'instance (nom, authentification Windows ou SQL) et SSMS. En local, prévoir TrustServerCertificate=True dans la chaîne de connexion, sinon la connexion échoue sur le certificat auto-signé. Les tickets font écho aux anomalies qu'il traitera l'après-midi."
+    },
+    {
+      "id": "t03",
+      "moduleId": "m1",
+      "order": 3,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Blazor : composants, modes de rendu et formulaires",
+      "summary": "Le modèle de composants Razor et le choix du mode de rendu, puis un premier écran utile branché sur l'API.",
+      "objectives": [
+        "Créer une Blazor Web App et lire sa structure : App.razor, Routes, layouts (15 min)",
+        "Composant paramétré : [Parameter], EventCallback, RenderFragment (30 min)",
+        "Charger les tickets de l'API dans OnInitializedAsync (30 min)",
+        "Afficher la même page en Static SSR, Interactive Server et WebAssembly ; observer le réseau et SignalR dans les devtools (40 min)",
+        "Formulaire de création avec EditForm et validation DataAnnotations (30 min)",
+        "Liste paginée et triée avec QuickGrid (20 min)",
+        "CSS isolation et un appel JavaScript via IJSRuntime (15 min)"
+      ],
+      "notions": [
+        ".razor et @code",
+        "[Parameter]",
+        "EventCallback",
+        "RenderFragment",
+        "cycle de vie",
+        "Static SSR / Interactive Server / WebAssembly / Auto",
+        "prérendu",
+        "EditForm",
+        "QuickGrid",
+        "JS interop"
+      ],
+      "bridge": "Composants ≈ React ou Vue, en C#. Interactive Server garde l'état côté serveur via SignalR ; WebAssembly exécute .NET dans le navigateur (comme Rust compilé en wasm).",
+      "start": "dotnet new blazor --interactivity Auto -n Tickets.Web",
+      "deliverable": "Un front qui liste et crée des tickets via l'API, avec un mot sur le mode de rendu retenu et pourquoi.",
+      "notes": ""
+    },
+    {
+      "id": "t04",
+      "moduleId": "m1",
+      "order": 4,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Blazor : authentification, état et composants réutilisables",
+      "summary": "Sécuriser l'application de bout en bout et découvrir comment on structure du Blazor qui dure.",
+      "objectives": [
+        "Authentification vs autorisation : schémas, ClaimsPrincipal, policies (15 min)",
+        "Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE (30 min)",
+        "Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] (40 min)",
+        "Partager l'état entre composants : cascading value et service scoped (20 min)",
+        "Éviter le double chargement au prérendu avec [PersistentState] (15 min)",
+        "Extraire un composant dans une Razor Class Library (20 min)",
+        "Tester ce composant avec bUnit (30 min)"
+      ],
+      "notions": [
+        "authentication schemes",
+        "JWT Bearer",
+        "OpenID Connect (aperçu)",
+        "policies",
+        "AuthenticationStateProvider",
+        "AuthorizeView",
+        "state container",
+        "[PersistentState]",
+        "Razor Class Library",
+        "bUnit"
+      ],
+      "bridge": "≈ Spring Security en plus explicite. Un state container ≈ un store Redux ou Pinia. Une Razor Class Library ≈ une librairie de composants npm distribuée en package NuGet.",
+      "start": "Solution Tickets des demi-journées précédentes",
+      "deliverable": "L'application tickets authentifiée, avec un composant partagé testé.",
+      "notes": "Aligner l'exemple d'authentification sur le fournisseur d'identité de nos applis."
+    },
+    {
+      "id": "t05",
+      "moduleId": "m2",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "S'orienter et déboguer dans une appli existante",
+      "summary": "Les outils pour diagnostiquer vite, directement utiles pour la correction d'anomalies, et un coup d'œil à ce qu'apporte .NET 11.",
+      "objectives": [
+        "Débogueur : points d'arrêt conditionnels, espions, Hot Reload (30 min)",
+        "Lire une exception et une stack trace .NET, async comprise (15 min)",
+        "Régler les niveaux de log par catégorie dans appsettings.json (15 min)",
+        "Lancer une solution avec Aspire et suivre une requête dans le tableau de bord (traces, logs) (40 min)",
+        "Aperçu de .NET 11 et C# 15 : union types, et où suivre les nouveautés (20 min)",
+        "Corriger 3 anomalies semées dans une appli d'exemple, dont une liée à EF Core (N+1 ou suivi de modifications) (60 min)"
+      ],
+      "notions": [
+        "débogueur",
+        "Hot Reload",
+        "stack traces",
+        "logging structuré",
+        "Aspire",
+        "OpenTelemetry",
+        "dotnet-counters",
+        "union types (C# 15)",
+        "logs SQL d'EF Core"
+      ],
+      "bridge": "Aspire ≈ un docker-compose piloté en C#, avec un tableau de bord de traces intégré.",
+      "start": "dotnet new aspire-starter",
+      "deliverable": "Trois anomalies corrigées, chacune avec sa cause expliquée en une phrase.",
+      "notes": ".NET 11 sort en novembre 2026 : vérifier l'état des union types au moment de rédiger."
+    },
+    {
+      "id": "t06",
+      "moduleId": "m3",
+      "order": 1,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Nos conventions et notre architecture",
+      "summary": "Comment sont organisées nos solutions et quelles règles de code on applique.",
+      "objectives": [
+        "Naviguer dans une solution de référence",
+        "Appliquer notre .editorconfig et nos analyzers",
+        "Préparer une PR conforme à notre checklist de revue"
+      ],
+      "notions": [
+        "structure de solution",
+        "conventions de nommage",
+        ".editorconfig",
+        "analyzers"
+      ],
+      "bridge": "",
+      "start": "Projet de référence à choisir",
+      "deliverable": "",
+      "notes": "Dans un second temps, à cadrer avec l'équipe."
+    },
+    {
+      "id": "t07",
+      "moduleId": "m3",
+      "order": 2,
+      "days": 0.5,
+      "status": "cadrer",
+      "owner": "",
+      "title": "Notre façon de livrer et nos composants Blazor",
+      "summary": "Du ticket à la mise en production, et construire nos écrans avec notre bibliothèque de composants.",
+      "objectives": [
+        "Suivre notre modèle de branches, de PR et de CI/CD",
+        "Utiliser notre bibliothèque de composants Blazor et ses jetons de design"
+      ],
+      "notions": [
+        "Git",
+        "pull requests",
+        "pipelines",
+        "design system"
+      ],
+      "bridge": "",
+      "start": "",
+      "deliverable": "",
+      "notes": "Dans un second temps. Bibliothèque de composants : Ustilz.UI.Blazor si c'est bien notre référence, à confirmer."
+    }
+  ]
+}
+</script>
+
+<script>
+(() => {
+  "use strict";
+
+  const PHASES = [
+    { id: "dotnet", cls: "p1", tag: "Phase 1", title: "Vernis .NET 10 / 11", intro: "Un tour d'horizon de ce que permet .NET et de comment ça marche, en manipulant : chaque demi-journée enchaîne des exercices courts, avec un pont depuis Java, Rust et JavaScript. Le reste du temps, l'alternant corrige des anomalies sur nos applis." },
+    { id: "3b", cls: "p2", tag: "Phase 2", title: "Bonnes pratiques 3B Studio", intro: "Nos conventions, notre architecture et notre façon de livrer. Dans un second temps, à cadrer avec l'équipe : fixez la date de début dans les réglages." }
+  ];
+  const STATUSES = [
+    { id: "cadrer", label: "À cadrer", color: "var(--st-cadrer)" },
+    { id: "redaction", label: "En rédaction", color: "var(--st-redaction)" },
+    { id: "relecture", label: "En relecture", color: "var(--st-relecture)" },
+    { id: "pret", label: "Prêt", color: "var(--st-pret)" },
+    { id: "fait", label: "Réalisé", color: "var(--st-fait)" }
+  ];
+  const ST = Object.fromEntries(STATUSES.map(s => [s.id, s]));
+  const DAY_NAMES = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  const SEED = JSON.parse(document.getElementById("seed").textContent);
+  const LS_KEY = "plan-tp-dotnet-v2";
+
+  const state = {
+    mode: "loading",
+    readOnly: false,
+    config: null,
+    modules: new Map(),
+    tps: new Map(),
+    loaded: { config: false, modules: false, tps: false }
+  };
+  const ui = { tab: "cursus", open: new Set(), filter: "all", q: "", confirm: null, copyText: null };
+  try { const t = localStorage.getItem(LS_KEY + ":tab"); if (t) ui.tab = t; } catch (e) {}
+
+  /* ---------- Utilitaires ---------- */
+  const $ = s => document.querySelector(s);
+  const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const parseDate = s => { if (!s) return null; const [y, m, d] = s.split("-").map(Number); return y ? new Date(y, m - 1, d, 12) : null; };
+  const key = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+  const fmtShort = d => d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  const fmtDM = d => d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+  const fmtDays = n => (Number.isInteger(n) ? String(n) : String(n).replace(".", ",")) + " j";
+  const fmtDur = n => n === 0.5 ? "½ j" : fmtDays(n);
+  const fmtHalves = n => { const h = Math.round(n * 2); return h + (h > 1 ? " demi-journées" : " demi-journée"); };
+  const fmtMin = m => Math.floor(m / 60) + " h " + String(m % 60).padStart(2, "0");
+  const exMinutes = list => (list || []).reduce((s, x) => { const r = /\((\d+)\s*min\)/.exec(x); return s + (r ? Number(r[1]) : 0); }, 0);
+  const today = (() => { const d = new Date(); d.setHours(12, 0, 0, 0); return d; })();
+  const isoWeek = d => { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - n); const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y) / 864e5 + 1) / 7); };
+  const lines = s => String(s || "").split("\n").map(x => x.trim()).filter(Boolean);
+  const tags = s => String(s || "").split(",").map(x => x.trim()).filter(Boolean);
+
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+
+  /* ---------- Stockage : base partagée (db) ou navigateur (local) ---------- */
+  let db = null;
+  const queues = new Map();
+  function enqueue(path, fn) {
+    const prev = queues.get(path) || Promise.resolve();
+    const next = prev.catch(() => {}).then(fn);
+    queues.set(path, next);
+    return next;
+  }
+  function onWriteError(e) {
+    if (e && e.code === "invalid_argument" && state.mode === "db") { state.readOnly = true; render(); toast("Modification refusée : ce plan est en lecture seule pour vous."); return; }
+    if (e && e.code === "quota_exceeded") { toast("Espace de stockage plein : supprimez des TP inutiles."); return; }
+    toast("Enregistrement impossible pour le moment. Réessayez dans un instant.");
+  }
+  function saveLocal() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({ config: state.config, modules: [...state.modules.values()], tps: [...state.tps.values()] }));
+    } catch (e) {}
+  }
+  const store = {
+    set(col, id, data) {
+      if (state.mode === "local") { (col === "tps" ? state.tps : state.modules).set(id, { id, ...data }); saveLocal(); scheduleRender(); return Promise.resolve(); }
+      return enqueue(col + "/" + id, () => db.collection(col).doc(id).set(data)).catch(onWriteError);
+    },
+    update(col, id, patch) {
+      if (state.mode === "local") { const m = col === "tps" ? state.tps : state.modules; m.set(id, { ...m.get(id), ...patch }); saveLocal(); scheduleRender(); return Promise.resolve(); }
+      return enqueue(col + "/" + id, () => db.collection(col).doc(id).update(patch)).catch(onWriteError);
+    },
+    del(col, id) {
+      if (state.mode === "local") { (col === "tps" ? state.tps : state.modules).delete(id); saveLocal(); scheduleRender(); return Promise.resolve(); }
+      return enqueue(col + "/" + id, () => db.collection(col).doc(id).delete()).catch(onWriteError);
+    },
+    setConfig(cfg) {
+      state.config = cfg;
+      if (state.mode === "local") { saveLocal(); scheduleRender(); return Promise.resolve(); }
+      scheduleRender();
+      return enqueue("config/plan", () => db.doc("config/plan").set(cfg)).catch(onWriteError);
+    }
+  };
+  const strip = o => { const { id, ...rest } = o; return rest; };
+
+  function loadLocal(fromSeed) {
+    let data = null;
+    if (!fromSeed) { try { data = JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch (e) {} }
+    if (!data) data = JSON.parse(JSON.stringify(SEED));
+    state.config = data.config;
+    state.modules = new Map(data.modules.map(m => [m.id, m]));
+    state.tps = new Map(data.tps.map(t => [t.id, t]));
+    state.loaded = { config: true, modules: true, tps: true };
+  }
+
+  async function seedDb() {
+    const s = JSON.parse(JSON.stringify(SEED));
+    toast("Chargement du cursus proposé…");
+    try {
+      await db.doc("config/plan").set(s.config);
+      for (const m of s.modules) await db.collection("modules").doc(m.id).set(strip(m));
+      for (const t of s.tps) await db.collection("tps").doc(t.id).set(strip(t));
+      toast("Cursus chargé : " + s.tps.length + " TP.");
+    } catch (e) { onWriteError(e); }
+  }
+
+  async function boot() {
+    const c = window.claude;
+    db = c && typeof c.use === "function" ? await c.use("db").catch(() => null) : null;
+    if (!db) { state.mode = "local"; loadLocal(false); render(); return; }
+    state.mode = "db";
+    const user = await c.use("user").catch(() => null);
+    if (user) { try { if ((await user.can("data.write")) === false) state.readOnly = true; } catch (e) {} }
+    const fail = () => { if (state.mode === "db" && !state.config) { state.mode = "local"; loadLocal(false); } render(); };
+    db.doc("config/plan").onSnapshot(snap => {
+      state.config = snap.exists ? { ...snap.data() } : (state.config || null);
+      state.loaded.config = true; scheduleRender();
+    }, fail);
+    db.collection("modules").onSnapshot(snap => {
+      state.modules = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+      state.loaded.modules = !snap.metadata.fromCache || snap.size > 0; scheduleRender();
+    }, fail);
+    db.collection("tps").onSnapshot(snap => {
+      state.tps = new Map(snap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+      state.loaded.tps = !snap.metadata.fromCache || snap.size > 0; scheduleRender();
+    }, fail);
+  }
+
+  /* ---------- Rendu différé pendant la saisie ---------- */
+  let pending = false;
+  function editing() {
+    const a = document.activeElement;
+    return a && a.closest && a.closest(".wrap") && a.matches("input:not([type=checkbox]), textarea");
+  }
+  /* Un rendu pendant un clic remplacerait le bouton visé : on attend que le pointeur soit relâché. */
+  let pointerDown = false;
+  function flush() { if (pending && !editing() && !pointerDown) render(); }
+  function scheduleRender() { if (editing() || pointerDown) { pending = true; return; } render(); }
+  document.addEventListener("pointerdown", () => { pointerDown = true; }, true);
+  ["pointerup", "pointercancel"].forEach(ev => document.addEventListener(ev, () => { pointerDown = false; if (pending) setTimeout(flush, 0); }, true));
+  document.addEventListener("focusout", () => { if (pending) setTimeout(flush, 0); });
+
+  /* ---------- Modèle dérivé ---------- */
+  function cfg() { return state.config || SEED.config; }
+  function ordered() {
+    const out = [];
+    let n = 0;
+    for (const ph of PHASES) {
+      const mods = [...state.modules.values()].filter(m => m.phase === ph.id).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      const pm = mods.map(m => {
+        const tps = [...state.tps.values()].filter(t => t.moduleId === m.id).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+          .map(t => ({ ...t, code: "TP-" + String(++n).padStart(2, "0") }));
+        return { ...m, tps };
+      });
+      out.push({ ...ph, modules: pm });
+    }
+    const known = new Set(state.modules.keys());
+    const orphans = [...state.tps.values()].filter(t => !known.has(t.moduleId));
+    if (orphans.length) out[0].modules.push({ id: "_orphans", phase: "dotnet", title: "TP sans module", tps: orphans.map(t => ({ ...t, code: "TP-" + String(++n).padStart(2, "0") })) });
+    return out;
+  }
+
+  function computeSchedule(phases) {
+    const c = cfg();
+    const wd = new Set(c.weekdays && c.weekdays.length ? c.weekdays : [1, 2, 3, 4, 5]);
+    const blocked = (c.blocked || []).map(b => ({ from: parseDate(b.from), to: parseDate(b.to || b.from), label: b.label || "Indisponible" })).filter(b => b.from && b.to);
+    const blockOf = d => blocked.find(b => d >= b.from && d <= b.to);
+    const isWork = d => wd.has(d.getDay()) && !blockOf(d);
+    const hv = new Set(c.halves && c.halves.length ? c.halves : [0, 1]);
+    const slots = new Map();
+    const byTp = new Map();
+    const phaseRange = new Map();
+    let cur = parseDate(c.startDate) || today, half = 0, guard = 0;
+    const advance = () => { half++; if (half > 1) { half = 0; cur = addDays(cur, 1); } };
+    const toWork = () => { while ((!isWork(cur) || !hv.has(half)) && guard++ < 4000) advance(); };
+    phases.forEach((ph, i) => {
+      if (i > 0 && c.phase2Start) { const p = parseDate(c.phase2Start); if (p && p > cur) { cur = p; half = 0; } }
+      let first = null, last = null;
+      for (const m of ph.modules) for (const t of m.tps) {
+        let need = Math.max(1, Math.round((Number(t.days) || 0.5) * 2));
+        let start = null, end = null;
+        while (need > 0 && guard++ < 4000) {
+          toWork();
+          const k = key(cur);
+          if (!slots.has(k)) slots.set(k, [[], []]);
+          slots.get(k)[half].push(t.id);
+          if (!start) start = { d: new Date(cur), h: half };
+          end = { d: new Date(cur), h: half };
+          need--; advance();
+        }
+        byTp.set(t.id, { start, end });
+        if (!first) first = start;
+        last = end;
+      }
+      phaseRange.set(ph.id, { first, last });
+    });
+    return { slots, byTp, phaseRange, blockOf, isWork, wd, hv };
+  }
+
+  function urgency(t, sch) {
+    if (t.status === "pret" || t.status === "fait") return null;
+    const s = sch.byTp.get(t.id); if (!s || !s.start) return null;
+    const diff = Math.round((s.start.d - today) / 864e5);
+    if (diff < 0) return { level: "late", text: "Date dépassée" };
+    if (diff <= 3) return { level: "late", text: diff === 0 ? "À préparer pour aujourd'hui" : "À préparer sous " + diff + " j" };
+    return null;
+  }
+
+  /* ---------- Rendu ---------- */
+  function render() {
+    pending = false;
+    const ro = state.readOnly;
+    const titleEl = $("#planTitle");
+    if (document.activeElement !== titleEl) titleEl.value = cfg().title || "";
+    titleEl.readOnly = ro || state.mode === "loading";
+    const modeEl = $("#mode");
+    modeEl.className = "mode " + (state.mode === "db" ? (ro ? "ro" : "db") : "");
+    modeEl.textContent = state.mode === "loading" ? "Chargement…" : state.mode === "db" ? (ro ? "Lecture seule" : "Plan partagé · synchronisé") : "Enregistré dans ce navigateur";
+    document.querySelectorAll("#tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === ui.tab)));
+
+    const app = $("#app");
+    if (state.mode === "loading" || (state.mode === "db" && !(state.loaded.modules && state.loaded.tps))) {
+      $("#summary").innerHTML = '<p class="muted" style="margin:0">Chargement de la synthèse…</p>';
+      app.innerHTML = '<p class="loading">Chargement du plan…</p>';
+      return;
+    }
+    const phases = ordered();
+    const sch = computeSchedule(phases);
+    renderSummary(phases, sch);
+
+    if (state.tps.size === 0 && state.modules.size === 0) {
+      app.innerHTML = `<div class="empty"><h2>Aucun TP dans ce plan</h2>
+        <p>Le plan est vide. Chargez le cursus proposé (${SEED.tps.length} demi-journées réparties en deux phases) pour partir d'une base, ou créez vos modules un par un.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" data-act="seed" ${ro ? "disabled" : ""}>Charger le cursus proposé</button>
+          <button class="btn" data-act="add-module" data-phase="dotnet" ${ro ? "disabled" : ""}>Créer un premier module</button>
+        </div></div>`;
+      return;
+    }
+    if (ui.tab === "calendrier") app.innerHTML = renderCalendar(phases, sch);
+    else if (ui.tab === "reglages") app.innerHTML = renderSettings(phases, sch);
+    else app.innerHTML = renderCursus(phases, sch);
+  }
+
+  function renderSummary(phases, sch) {
+    const all = phases.flatMap(p => p.modules.flatMap(m => m.tps));
+    const totalDays = all.reduce((s, t) => s + (Number(t.days) || 0), 0);
+    const byStatus = Object.fromEntries(STATUSES.map(s => [s.id, 0]));
+    const daysByStatus = Object.fromEntries(STATUSES.map(s => [s.id, 0]));
+    all.forEach(t => { const s = ST[t.status] ? t.status : "cadrer"; byStatus[s]++; daysByStatus[s] += Number(t.days) || 0; });
+    const ready = byStatus.pret + byStatus.fait;
+    const p1 = phases[0].modules.flatMap(m => m.tps), p1Days = p1.reduce((s, t) => s + (Number(t.days) || 0), 0);
+    const laterDays = totalDays - p1Days;
+    const lastEnd = (sch.phaseRange.get(phases[0].id) || {}).last;
+    const next = all.find(t => t.status !== "pret" && t.status !== "fait");
+    const nextS = next && sch.byTp.get(next.id);
+    const lateCount = all.filter(t => urgency(t, sch)).length;
+    const bar = STATUSES.map(s => daysByStatus[s.id] ? `<i style="width:${(daysByStatus[s.id] / totalDays * 100).toFixed(2)}%;background:${s.color}" title="${esc(s.label)} : ${fmtHalves(daysByStatus[s.id])}"></i>` : "").join("");
+    $("#summary").innerHTML = `
+      <div class="figures">
+        <div class="fig"><b>${ready} / ${all.length}</b><span>TP prêts ou réalisés</span></div>
+        <div class="fig"><b>${fmtHalves(p1Days)}</b><span>de TP .NET${laterDays ? ` · + ${fmtHalves(laterDays)} 3B Studio ensuite` : ""}</span></div>
+        <div class="fig"><b>${lastEnd ? esc(fmtShort(lastEnd.d)) : "—"}</b><span>dernière séance .NET prévue</span></div>
+        <div class="fig next"><b>${next ? `<span class="mono">${esc(next.code)}</span> ${esc(next.title)}` : "Tout est prêt"}</b>
+          <span>${next ? "prochain TP à préparer" + (nextS && nextS.start ? ", requis le " + esc(fmtShort(nextS.start.d)) : "") : "aucun TP en attente"}${lateCount ? ` · <span style="color:var(--warn);font-weight:600">${lateCount} en tension</span>` : ""}</span></div>
+      </div>
+      <div class="bar" role="img" aria-label="Avancement de la préparation, pondéré par la durée">${bar}</div>
+      <div class="legend">${STATUSES.map(s => `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)} · ${byStatus[s.id]}</span>`).join("")}<span class="muted">Barre pondérée par durée</span></div>`;
+  }
+
+  function matches(t) {
+    if (ui.filter !== "all" && (t.status || "cadrer") !== ui.filter) return false;
+    if (ui.q) {
+      const hay = [t.code, t.title, t.summary, (t.notions || []).join(" "), (t.objectives || []).join(" "), t.owner].join(" ").toLowerCase();
+      if (!hay.includes(ui.q.toLowerCase())) return false;
+    }
+    return true;
+  }
+
+  function renderCursus(phases, sch) {
+    const ro = state.readOnly;
+    const all = phases.flatMap(p => p.modules.flatMap(m => m.tps));
+    const counts = Object.fromEntries(STATUSES.map(s => [s.id, all.filter(t => (t.status || "cadrer") === s.id).length]));
+    const filtering = ui.filter !== "all" || ui.q;
+    let html = `<div style="display:grid;gap:22px">
+      <div class="toolbar">
+        <div class="chips" role="group" aria-label="Filtrer par statut">
+          <button class="chip" data-act="filter" data-v="all" aria-pressed="${ui.filter === "all"}">Tous <small>${all.length}</small></button>
+          ${STATUSES.map(s => `<button class="chip" data-act="filter" data-v="${s.id}" aria-pressed="${ui.filter === s.id}"><i class="dot" style="background:${s.color}"></i>${esc(s.label)} <small>${counts[s.id]}</small></button>`).join("")}
+        </div>
+        <input class="search" id="q" type="search" placeholder="Rechercher un TP, une notion…" value="${esc(ui.q)}" aria-label="Rechercher">
+      </div>`;
+    for (const ph of phases) {
+      const days = ph.modules.reduce((s, m) => s + m.tps.reduce((a, t) => a + (Number(t.days) || 0), 0), 0);
+      const r = sch.phaseRange.get(ph.id);
+      const mods = ph.modules.map(m => ({ ...m, shown: m.tps.filter(matches) })).filter(m => !filtering || m.shown.length);
+      if (filtering && !mods.length) continue;
+      html += `<section class="phase ${ph.cls}">
+        <div class="phase-head"><div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span class="phase-tag">${ph.tag}</span><h2>${esc(ph.title)}</h2></div>
+          <span class="meta">${fmtHalves(days)}${r && r.first ? " · " + esc(fmtDM(r.first.d)) + " → " + esc(fmtDM(r.last.d)) : ""}</span></div>
+        <p class="phase-intro">${esc(ph.intro)}</p>`;
+      mods.forEach((m, mi) => {
+        const mdays = m.tps.reduce((a, t) => a + (Number(t.days) || 0), 0);
+        const real = m.id !== "_orphans";
+        html += `<div class="module">
+          <div class="module-head">
+            <input class="mtitle" data-mod="${esc(m.id)}" value="${esc(m.title)}" aria-label="Nom du module" ${ro || !real ? "readonly" : ""}>
+            <span class="mdays">${m.tps.length} TP · ${fmtDur(mdays)}</span>
+            ${real && !ro ? `<button class="btn ghost icon-btn" data-act="mod-up" data-id="${esc(m.id)}" title="Monter le module" aria-label="Monter le module" ${mi === 0 ? "disabled" : ""}>↑</button>
+            <button class="btn ghost icon-btn" data-act="mod-down" data-id="${esc(m.id)}" title="Descendre le module" aria-label="Descendre le module" ${mi === mods.length - 1 ? "disabled" : ""}>↓</button>
+            ${m.tps.length === 0 ? `<button class="btn ghost icon-btn danger" data-act="mod-del" data-id="${esc(m.id)}" title="Supprimer le module vide" aria-label="Supprimer le module vide">✕</button>` : ""}` : ""}
+          </div>
+          ${m.shown.map(t => renderTp(t, sch, m, phases)).join("")}
+          ${real && !ro && !filtering ? `<div class="module-foot"><button class="btn ghost" data-act="add-tp" data-mod="${esc(m.id)}">+ Ajouter un TP</button></div>` : ""}
+        </div>`;
+      });
+      if (!ro && !filtering) html += `<div><button class="btn" data-act="add-module" data-phase="${ph.id}">+ Ajouter un module à la ${ph.tag.toLowerCase()}</button></div>`;
+      html += `</section>`;
+    }
+    if (filtering && !phases.some(p => p.modules.some(m => m.tps.some(matches)))) html += `<p class="muted">Aucun TP ne correspond à ce filtre.</p>`;
+    return html + `</div>`;
+  }
+
+  function exHint(t) {
+    const m = exMinutes(t.objectives), cap = Math.round((Number(t.days) || 0.5) * 2) * 210;
+    return "Un exercice par ligne, durée entre parenthèses, par ex. (20 min)" + (m ? ` · total ${fmtMin(m)} pour ~${fmtMin(cap)} disponibles` : "");
+  }
+
+  function renderTp(t, sch, m, phases) {
+    const ro = state.readOnly;
+    const open = ui.open.has(t.id);
+    const s = sch.byTp.get(t.id);
+    const st = ST[t.status] ? t.status : "cadrer";
+    const u = urgency(t, sch);
+    const when = s && s.start ? fmtShort(s.start.d) + (s.start.h ? " après-midi" : " matin") : "non planifié";
+    const sub = [`<span>${esc(when)}</span>`];
+    if (t.owner) sub.push(`<span>Rédaction : ${esc(t.owner)}</span>`);
+    if (u) sub.push(`<span class="late">${esc(u.text)}</span>`);
+    let html = `<div class="tp${open ? " open" : ""}" data-tp="${esc(t.id)}">
+      <div class="tp-row">
+        <span class="tp-code">${esc(t.code)}</span>
+        <div class="tp-main"><button class="tp-title" data-act="toggle" data-id="${esc(t.id)}" aria-expanded="${open}">${esc(t.title || "Sans titre")}</button>
+          <div class="tp-sub">${sub.join("")}</div></div>
+        <span class="tp-days">${fmtDur(Number(t.days) || 0)}</span>
+        <select class="status s-${st}" id="st-${esc(t.id)}" data-act="status" data-id="${esc(t.id)}" aria-label="Statut de ${esc(t.code)}" ${ro ? "disabled" : ""}>
+          ${STATUSES.map(x => `<option value="${x.id}" ${x.id === st ? "selected" : ""}>${esc(x.label)}</option>`).join("")}
+        </select>
+        <button class="caret" data-act="toggle" data-id="${esc(t.id)}" aria-label="${open ? "Replier" : "Déplier"} ${esc(t.code)}"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M4 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      </div>`;
+    if (open) {
+      const dis = ro ? "readonly" : "";
+      const allMods = phases.flatMap(p => p.modules.filter(x => x.id !== "_orphans").map(x => ({ ...x, tag: p.tag })));
+      const idx = m.tps.findIndex(x => x.id === t.id);
+      const f = (name, label, value, opts = {}) => {
+        const id = `f-${t.id}-${name}`;
+        const control = opts.area
+          ? `<textarea id="${id}" class="${opts.code ? "code" : ""}" data-field="${name}" data-id="${esc(t.id)}" rows="${opts.rows || 3}" ${dis}>${esc(value)}</textarea>`
+          : `<input id="${id}" class="${opts.code ? "code" : ""}" data-field="${name}" data-id="${esc(t.id)}" value="${esc(value)}" ${dis}>`;
+        return `<div class="field ${opts.cls || ""}"><label for="${id}">${label}</label>${control}${opts.hint ? `<span class="hint">${opts.hint}</span>` : ""}</div>`;
+      };
+      html += `<div class="editor">
+        ${f("title", "Titre", t.title)}
+        ${f("summary", "Résumé", t.summary, { area: true, rows: 2 })}
+        <div class="grid2">
+          ${f("objectives", "Exercices", (t.objectives || []).join("\n"), { area: true, rows: 8, hint: exHint(t) })}
+          ${f("notions", "Notions abordées", (t.notions || []).join(", "), { area: true, rows: 8, hint: "Séparées par des virgules" })}
+        </div>
+        ${f("bridge", "Pont depuis Java / Rust / JS", t.bridge, { area: true, rows: 2, cls: "bridge" })}
+        <div class="grid2">
+          ${f("start", "Point de départ", t.start, { code: true })}
+          ${f("deliverable", "Livrable attendu", t.deliverable)}
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="f-${esc(t.id)}-days">Durée</label>
+            <select id="f-${esc(t.id)}-days" data-field="days" data-id="${esc(t.id)}" ${ro ? "disabled" : ""}>
+              ${[0.5, 1, 1.5, 2].map(v => `<option value="${v}" ${Number(t.days) === v ? "selected" : ""}>${fmtHalves(v)}</option>`).join("")}
+            </select></div>
+          ${f("owner", "Rédigé par", t.owner)}
+          <div class="field"><label for="f-${esc(t.id)}-module">Module</label>
+            <select id="f-${esc(t.id)}-module" data-act="move-module" data-id="${esc(t.id)}" ${ro ? "disabled" : ""}>
+              ${allMods.map(x => `<option value="${esc(x.id)}" ${x.id === t.moduleId ? "selected" : ""}>${esc(x.tag)} · ${esc(x.title)}</option>`).join("")}
+            </select></div>
+        </div>
+        ${f("notes", "Notes de préparation", t.notes, { area: true, rows: 2 })}
+        <div class="editor-actions">
+          <div>
+            <button class="btn" data-act="tp-up" data-id="${esc(t.id)}" ${ro || idx <= 0 ? "disabled" : ""}>↑ Monter</button>
+            <button class="btn" data-act="tp-down" data-id="${esc(t.id)}" ${ro || idx === m.tps.length - 1 ? "disabled" : ""}>↓ Descendre</button>
+          </div>
+          <div>${ro ? "" : ui.confirm === t.id
+            ? `<span class="confirm">Supprimer ${esc(t.code)} ?</span><button class="btn danger solid" data-act="tp-del-ok" data-id="${esc(t.id)}">Supprimer</button><button class="btn" data-act="tp-del-cancel">Annuler</button>`
+            : `<button class="btn ghost danger" data-act="tp-del" data-id="${esc(t.id)}">Supprimer ce TP</button>`}</div>
+        </div>
+      </div>`;
+    }
+    return html + `</div>`;
+  }
+
+  function renderCalendar(phases, sch) {
+    const c = cfg();
+    const tpById = new Map(phases.flatMap(p => p.modules.flatMap(m => m.tps.map(t => [t.id, { ...t, phase: p }]))));
+    const start = parseDate(c.startDate) || today;
+    const keys = [...sch.slots.keys()].sort();
+    if (!keys.length) return `<p class="muted">Aucun TP à planifier.</p>`;
+    const end = parseDate(keys[keys.length - 1]);
+    const showDays = [1, 2, 3, 4, 5].concat(sch.wd.has(6) ? [6] : []).concat(sch.wd.has(0) ? [0] : []);
+    let monday = addDays(start, -((start.getDay() + 6) % 7));
+    let html = `<div class="cal"><p class="muted" style="margin:0">Planning calculé à partir du ${esc(fmtShort(start))}, une demi-journée par TP, sur les créneaux réservés aux TP. Créneaux, périodes d'école et jours non travaillés se règlent dans l'onglet Réglages.</p>`;
+    let guard = 0;
+    while (monday <= end && guard++ < 120) {
+      const days = showDays.map(wd => addDays(monday, (wd + 6) % 7));
+      const last = days[days.length - 1];
+      html += `<div class="week"><div class="week-head"><b>Semaine ${isoWeek(monday)}</b><span class="muted">${esc(fmtDM(days[0]))} – ${esc(fmtDM(last))}</span></div>
+        <div class="days" style="--n:${days.length}">`;
+      for (const d of days) {
+        const k = key(d);
+        const b = sch.blockOf(d);
+        const before = d < start;
+        const off = !sch.wd.has(d.getDay());
+        const sl = sch.slots.get(k);
+        const head = `<div class="day-h${k === key(today) ? " today" : ""}">${esc(DAY_NAMES[d.getDay()])} ${d.getDate()}</div>`;
+        if (b) { html += `<div class="day off">${head}<div class="half"><span class="off-label">${esc(b.label)}</span></div><div class="half"></div></div>`; continue; }
+        if (off) { html += `<div class="day off">${head}<div class="half"><span class="off-label">Non travaillé</span></div><div class="half"></div></div>`; continue; }
+        const halfHtml = h => {
+          const ids = sl ? sl[h] : [];
+          if (!ids.length) return `<div class="half">${before || d > end ? "" : `<span class="cal-empty">${sch.hv.has(h) ? "Libre" : "Anomalies / projets"}</span>`}</div>`;
+          return `<div class="half">${ids.map(id => { const t = tpById.get(id); if (!t) return ""; const col = ST[t.status] ? ST[t.status].color : ST.cadrer.color; return `<div class="slot" style="--c:${col}" title="${esc(t.title)} · ${esc((ST[t.status] || ST.cadrer).label)}"><b>${esc(t.code)}</b><span>${esc(t.title)}</span></div>`; }).join("")}</div>`;
+        };
+        html += `<div class="day">${head}${halfHtml(0)}${halfHtml(1)}</div>`;
+      }
+      html += `</div></div>`;
+      monday = addDays(monday, 7);
+    }
+    html += `<div class="legend">${STATUSES.map(s => `<span><i class="dot" style="background:${s.color}"></i>${esc(s.label)}</span>`).join("")}<span>Haut : matin · bas : après-midi</span></div>`;
+    return html + `</div>`;
+  }
+
+  function renderSettings(phases, sch) {
+    const c = cfg();
+    const ro = state.readOnly;
+    const dis = ro ? "disabled" : "";
+    const wd = new Set(c.weekdays || []);
+    const r2 = sch.phaseRange.get("3b");
+    const p1 = sch.phaseRange.get("dotnet");
+    let html = `<div style="display:grid;gap:18px">
+      <section class="panel"><h2>Calendrier de l'alternance</h2>
+        <div class="grid2">
+          <div class="field"><label for="cfg-start">Arrivée de l'alternant</label><input type="date" id="cfg-start" data-cfg="startDate" value="${esc(c.startDate)}" ${dis}></div>
+          <div class="field"><label for="cfg-p2">Début de la phase 2</label><input type="date" id="cfg-p2" data-cfg="phase2Start" value="${esc(c.phase2Start || "")}" ${dis}>
+            <span class="hint">Vide : enchaîne après la phase 1${p1 && p1.last ? " (fin le " + esc(fmtShort(p1.last.d)) + ")" : ""}${r2 && r2.first ? ". Début calculé : " + esc(fmtShort(r2.first.d)) : ""}.</span></div>
+        </div>
+        <div class="field"><span class="lbl">Jours en entreprise</span>
+          <div class="weekdays">${[1, 2, 3, 4, 5, 6].map(d => `<label><input type="checkbox" data-wd="${d}" ${wd.has(d) ? "checked" : ""} ${dis}> ${["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"][d]}</label>`).join("")}</div></div>
+        <div class="field"><span class="lbl">Créneaux réservés aux TP</span>
+          <div class="weekdays">${[[0, "Matin"], [1, "Après-midi"]].map(([h, l]) => `<label><input type="checkbox" data-hv="${h}" ${sch.hv.has(h) ? "checked" : ""} ${dis}> ${l}</label>`).join("")}</div>
+          <span class="hint">Les autres demi-journées sont laissées aux anomalies et aux projets.</span></div>
+        <div class="field"><span class="lbl">Périodes d'école et absences</span>
+          <div class="blocked">
+            ${(c.blocked || []).map((b, i) => `<div class="blocked-row">
+              <input type="date" data-b="from" data-i="${i}" value="${esc(b.from)}" aria-label="Du" ${dis}>
+              <input type="date" data-b="to" data-i="${i}" value="${esc(b.to)}" aria-label="Au" ${dis}>
+              <input data-b="label" data-i="${i}" value="${esc(b.label)}" placeholder="École, congés…" aria-label="Libellé" ${dis}>
+              <button class="btn ghost icon-btn danger" data-act="b-del" data-i="${i}" aria-label="Retirer la période" ${dis}>✕</button></div>`).join("") || `<p class="muted">Aucune période renseignée. Ajoutez les semaines d'école du calendrier d'alternance.</p>`}
+            <div><button class="btn" data-act="b-add" ${dis}>+ Ajouter une période</button></div>
+          </div></div>
+      </section>
+      <section class="panel"><h2>Exporter le plan</h2>
+        <p class="muted">Copiez le plan pour le coller dans un ticket, un wiki ou le dépôt Tp.Net, ou pour demander à Claude de rédiger un TP à partir de sa fiche.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" data-act="copy-md">Copier en Markdown</button>
+          <button class="btn" data-act="copy-json">Copier les données JSON</button>
+        </div>
+        ${ui.copyText ? `<textarea class="copybox" id="copybox" readonly aria-label="Texte à copier">${esc(ui.copyText)}</textarea><p class="muted" style="font-size:.82rem">La copie automatique n'est pas disponible ici : le texte est sélectionné, copiez-le avec Ctrl+C.</p>` : ""}
+      </section>`;
+    if (state.mode === "local") {
+      html += `<section class="panel"><h2>Données locales</h2>
+        <p class="muted">Ce plan est enregistré uniquement dans ce navigateur. Publiez-le en artefact Claude pour le partager avec l'équipe.</p>
+        <div>${ui.confirm === "reset"
+          ? `<span class="confirm">Toutes vos modifications seront perdues.</span> <button class="btn danger solid" data-act="reset-ok">Réinitialiser</button> <button class="btn" data-act="tp-del-cancel">Annuler</button>`
+          : `<button class="btn danger" data-act="reset">Réinitialiser avec le cursus proposé</button>`}</div></section>`;
+    }
+    return html + `</div>`;
+  }
+
+  /* ---------- Export ---------- */
+  function toMarkdown() {
+    const phases = ordered(), sch = computeSchedule(phases), c = cfg();
+    let md = `# ${c.title}\n\nDébut : ${fmtShort(parseDate(c.startDate) || today)}\n`;
+    for (const ph of phases) {
+      md += `\n## ${ph.tag} · ${ph.title}\n`;
+      for (const m of ph.modules) {
+        md += `\n### ${m.title}\n`;
+        for (const t of m.tps) {
+          const s = sch.byTp.get(t.id);
+          md += `\n#### ${t.code} · ${t.title}\n\n- Durée : ${fmtHalves(Number(t.days) || 0)}${s && s.start ? ` · prévu le ${fmtShort(s.start.d)} ${s.start.h ? "après-midi" : "matin"}` : ""}\n- Statut : ${(ST[t.status] || ST.cadrer).label}${t.owner ? ` · rédaction : ${t.owner}` : ""}\n`;
+          if (t.summary) md += `- Résumé : ${t.summary}\n`;
+          if ((t.objectives || []).length) md += `- Exercices :\n${t.objectives.map(o => `  - ${o}`).join("\n")}\n`;
+          if ((t.notions || []).length) md += `- Notions : ${t.notions.join(", ")}\n`;
+          if (t.bridge) md += `- Pont Java/Rust/JS : ${t.bridge}\n`;
+          if (t.start) md += `- Point de départ : \`${t.start}\`\n`;
+          if (t.deliverable) md += `- Livrable : ${t.deliverable}\n`;
+          if (t.notes) md += `- Notes : ${t.notes}\n`;
+        }
+      }
+    }
+    return md;
+  }
+  function toJson() {
+    return JSON.stringify({ config: cfg(), modules: [...state.modules.values()], tps: [...state.tps.values()] }, null, 2);
+  }
+  function copy(text, label) {
+    const fallback = () => { ui.copyText = text; render(); const box = $("#copybox"); if (box) { box.focus(); box.select(); } };
+    try {
+      navigator.clipboard.writeText(text).then(() => { ui.copyText = null; render(); toast(label + " copié dans le presse-papiers."); }, fallback);
+    } catch (e) { fallback(); }
+  }
+
+  /* ---------- Actions ---------- */
+  function siblings(t) { return [...state.tps.values()].filter(x => x.moduleId === t.moduleId).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)); }
+  async function swapOrder(col, a, b) {
+    const oa = a.order ?? 0, ob = b.order ?? 0;
+    const na = oa === ob ? ob + 0.5 : ob;
+    await Promise.all([store.update(col, a.id, { order: na }), store.update(col, b.id, { order: oa })]);
+  }
+  function nextOrder(list) { return list.reduce((m, x) => Math.max(m, x.order ?? 0), 0) + 1; }
+
+  document.addEventListener("click", async e => {
+    const el = e.target.closest("[data-act], [data-tab]");
+    if (!el || !el.closest(".wrap") || el.tagName === "SELECT") return;
+    if (el.dataset.tab) {
+      ui.tab = el.dataset.tab; ui.confirm = null; ui.copyText = null;
+      try { localStorage.setItem(LS_KEY + ":tab", ui.tab); } catch (err) {}
+      render(); return;
+    }
+    const act = el.dataset.act, id = el.dataset.id;
+    const t = id ? state.tps.get(id) : null;
+    switch (act) {
+      case "toggle": ui.open.has(id) ? ui.open.delete(id) : ui.open.add(id); ui.confirm = null; render(); break;
+      case "filter": ui.filter = el.dataset.v; render(); break;
+      case "seed": seedDb(); break;
+      case "add-tp": {
+        const mod = el.dataset.mod;
+        const nid = uid("t");
+        ui.open.add(nid);
+        await store.set("tps", nid, { moduleId: mod, order: nextOrder([...state.tps.values()].filter(x => x.moduleId === mod)), days: 1, status: "cadrer", owner: "", title: "Nouveau TP", summary: "", objectives: [], notions: [], bridge: "", start: "", deliverable: "", notes: "" });
+        setTimeout(() => { const f = document.getElementById(`f-${nid}-title`); if (f) { f.focus(); f.select(); } }, 60);
+        break;
+      }
+      case "add-module": {
+        const ph = el.dataset.phase;
+        const nid = uid("m");
+        if (state.mode === "db" && !state.config) store.setConfig(JSON.parse(JSON.stringify(SEED.config)));
+        await store.set("modules", nid, { phase: ph, order: nextOrder([...state.modules.values()].filter(m => m.phase === ph)), title: "Nouveau module" });
+        setTimeout(() => { const f = document.querySelector(`.mtitle[data-mod="${nid}"]`); if (f) { f.focus(); f.select(); } }, 60);
+        break;
+      }
+      case "mod-up": case "mod-down": {
+        const m = state.modules.get(id);
+        const list = [...state.modules.values()].filter(x => x.phase === m.phase).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+        const i = list.findIndex(x => x.id === id), j = act === "mod-up" ? i - 1 : i + 1;
+        if (list[j]) await swapOrder("modules", m, list[j]);
+        break;
+      }
+      case "mod-del": store.del("modules", id); break;
+      case "tp-up": case "tp-down": {
+        const list = siblings(t); const i = list.findIndex(x => x.id === id), j = act === "tp-up" ? i - 1 : i + 1;
+        if (list[j]) await swapOrder("tps", t, list[j]);
+        break;
+      }
+      case "tp-del": ui.confirm = id; render(); break;
+      case "tp-del-cancel": ui.confirm = null; render(); break;
+      case "tp-del-ok": ui.confirm = null; ui.open.delete(id); store.del("tps", id); toast("TP supprimé."); break;
+      case "b-add": { const c = { ...cfg() }; c.blocked = [...(c.blocked || []), { from: "", to: "", label: "École" }]; store.setConfig(c); break; }
+      case "b-del": { const c = { ...cfg() }; c.blocked = (c.blocked || []).filter((_, i) => i !== Number(el.dataset.i)); store.setConfig(c); break; }
+      case "copy-md": copy(toMarkdown(), "Plan Markdown"); break;
+      case "copy-json": copy(toJson(), "JSON"); break;
+      case "reset": ui.confirm = "reset"; render(); break;
+      case "reset-ok": ui.confirm = null; loadLocal(true); saveLocal(); render(); toast("Plan réinitialisé."); break;
+    }
+  });
+
+  document.addEventListener("change", e => {
+    const el = e.target;
+    if (!el.closest || !el.closest(".wrap") || state.readOnly) return;
+    if (el.id === "planTitle") { const v = el.value.trim(); if (v && v !== cfg().title) store.setConfig({ ...cfg(), title: v }); return; }
+    if (el.dataset.act === "status") { store.update("tps", el.dataset.id, { status: el.value }); return; }
+    if (el.dataset.act === "move-module") {
+      const target = el.value;
+      store.update("tps", el.dataset.id, { moduleId: target, order: nextOrder([...state.tps.values()].filter(x => x.moduleId === target)) });
+      return;
+    }
+    if (el.dataset.mod && el.classList.contains("mtitle")) { const v = el.value.trim(); if (v) store.update("modules", el.dataset.mod, { title: v }); return; }
+    if (el.dataset.field) {
+      const f = el.dataset.field, t = state.tps.get(el.dataset.id); if (!t) return;
+      let v = el.value;
+      if (f === "objectives") v = lines(v);
+      else if (f === "notions") v = tags(v);
+      else if (f === "days") v = Number(v);
+      else v = v.trim();
+      if (JSON.stringify(v) !== JSON.stringify(t[f])) store.update("tps", t.id, { [f]: v });
+      return;
+    }
+    if (el.dataset.cfg) { store.setConfig({ ...cfg(), [el.dataset.cfg]: el.value }); return; }
+    if (el.dataset.wd) {
+      const set = new Set(cfg().weekdays || []); const d = Number(el.dataset.wd);
+      el.checked ? set.add(d) : set.delete(d);
+      if (!set.size) { el.checked = true; toast("Gardez au moins un jour en entreprise."); return; }
+      store.setConfig({ ...cfg(), weekdays: [...set].sort() }); return;
+    }
+    if (el.dataset.hv) {
+      const set = new Set(cfg().halves && cfg().halves.length ? cfg().halves : [0, 1]); const h = Number(el.dataset.hv);
+      el.checked ? set.add(h) : set.delete(h);
+      if (!set.size) { el.checked = true; toast("Gardez au moins un créneau de TP."); return; }
+      store.setConfig({ ...cfg(), halves: [...set].sort() }); return;
+    }
+    if (el.dataset.b) {
+      const c = { ...cfg() }; const i = Number(el.dataset.i);
+      c.blocked = (c.blocked || []).map((b, j) => j === i ? { ...b, [el.dataset.b]: el.value } : b);
+      if (el.dataset.b === "from" && !c.blocked[i].to) c.blocked[i].to = el.value;
+      store.setConfig(c);
+    }
+  });
+
+  document.addEventListener("input", e => {
+    if (e.target.id === "q") {
+      ui.q = e.target.value;
+      clearTimeout(document._qt);
+      document._qt = setTimeout(() => { const pos = e.target.selectionStart; render(); const q = $("#q"); if (q) { q.focus(); try { q.setSelectionRange(pos, pos); } catch (err) {} } }, 180);
+    }
+  });
+
+  render();
+  boot();
+})();
+</script>
