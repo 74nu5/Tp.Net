@@ -1,3 +1,4 @@
+using System.Globalization;
 using Katas.Exercise03;
 
 namespace Katas.Tests.Exercise03;
@@ -18,6 +19,22 @@ public class MoneyTests
     [Fact]
     public void Adding_DifferentCurrencies_Throws() =>
         Assert.Throws<InvalidOperationException>(() => new Money(10m, "EUR") + new Money(5m, "USD"));
+
+    [Fact]
+    public void ToString_IgnoresTheRegionalSettings()
+    {
+        // On a French machine, 12.5m.ToString("0.00") gives "12,50": the culture must not leak into this format.
+        var previous = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fr-FR");
+        try
+        {
+            Assert.Equal("12.50 EUR", new Money(12.5m, "EUR").ToString());
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = previous;
+        }
+    }
 }
 
 public class CustomerTests
@@ -60,6 +77,11 @@ public class OrderTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => order.AddLine(Book, 0));
     }
+
+    [Fact]
+    public void Order_IsNotARecord() =>
+        // An order has an identity and a lifecycle: two orders with the same data are still two orders.
+        Assert.False(typeof(IEquatable<Order>).IsAssignableFrom(typeof(Order)), "Order is an entity: keep it a class, not a record.");
 
     [Fact]
     public void TwoOrders_WithTheSameData_AreStillDifferentOrders()

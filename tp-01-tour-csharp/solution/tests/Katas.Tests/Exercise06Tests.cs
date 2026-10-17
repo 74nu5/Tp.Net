@@ -30,7 +30,8 @@ public class PageFetcherTests
 
         await fetcher.FetchSizesAsync(Pages, TestContext.Current.CancellationToken);
 
-        Assert.Equal(3, handler.MaxConcurrentRequests);
+        Assert.True(handler.MaxConcurrentRequests == 3,
+            $"The 3 requests ran at most {handler.MaxConcurrentRequests} at a time: start them all, then await Task.WhenAll.");
     }
 
     [Fact]

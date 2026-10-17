@@ -80,7 +80,7 @@ if (app.Environment.IsDevelopment())
 
 // ---- Endpoints ----
 
-// TP-05, exercise 04: /health and /alive, used by Aspire to know when the API is ready.
+// TP-05, exercise 04: /health and /alive. The app host polls /health (WithHttpHealthCheck) before starting the front end.
 app.MapDefaultEndpoints();
 
 app.MapGet("/", () => "Tickets API");

@@ -12,25 +12,25 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ---- Services: everything registered here can be injected anywhere ----
 
-// Exercise 02: the same kind of class, three lifetimes.
+// TP-02, exercise 02: the same kind of class, three lifetimes.
 builder.Services.AddSingleton<SingletonOperation>();
 builder.Services.AddScoped<ScopedOperation>();
 builder.Services.AddTransient<TransientOperation>();
 
-// Exercise 03: bind the "Tickets" section, validate it with the DataAnnotations, and fail at startup if it is wrong
+// TP-02, exercise 03: bind the "Tickets" section, validate it with the DataAnnotations, and fail at startup if it is wrong
 // rather than at the first request that reads it.
 builder.Services.AddOptions<TicketsOptions>()
     .BindConfiguration(TicketsOptions.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-// Exercise 04: OpenAPI document, ProblemDetails for errors, validation of request bodies, enums as text in JSON.
+// TP-02, exercise 04: OpenAPI document, ProblemDetails for errors, validation of request bodies, enums as text in JSON.
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
-// Exercise 05: EF Core on SQL Server. The connection string comes from user-secrets in development,
+// TP-02, exercise 05: EF Core on SQL Server. The connection string comes from user-secrets in development,
 // from an environment variable on a server: never from appsettings.json.
 // It is read when a DbContext is created, not here: the tests replace it after Program.cs has run.
 builder.Services.AddDbContext<TicketsDbContext>((services, options) =>
@@ -40,11 +40,14 @@ builder.Services.AddDbContext<TicketsDbContext>((services, options) =>
 builder.Services.AddScoped<ITicketRepository, EfTicketRepository>();
 builder.Services.AddSingleton(TimeProvider.System);
 
+// TODO Exercise 01: JWT bearer authentication, configured by the "Authentication:Schemes:Bearer" section.
+// TODO Exercise 02: an authorization policy named "admin" that requires the admin role.
+
 var app = builder.Build();
 
 // ---- Pipeline: middlewares run in this order for every request ----
 
-app.UseMiddleware<RequestTimingMiddleware>();   // Exercise 01
+app.UseMiddleware<RequestTimingMiddleware>();   // TP-02, exercise 01
 // In Development, Minimal APIs throw BadHttpRequestException on an unreadable body (bad JSON, unknown enum value).
 // Without a selector the exception handler would turn it into a 500; the client sent a bad request, so answer 400.
 app.UseExceptionHandler(new ExceptionHandlerOptions
@@ -65,7 +68,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Tickets API");
 
-// Exercise 02: each parameter marked [FromServices] is resolved separately from the container.
+// TP-02, exercise 02: each parameter marked [FromServices] is resolved separately from the container.
 app.MapGet("/lifetimes", (
     [FromServices] SingletonOperation singleton1, [FromServices] SingletonOperation singleton2,
     [FromServices] ScopedOperation scoped1, [FromServices] ScopedOperation scoped2,
@@ -76,8 +79,10 @@ app.MapGet("/lifetimes", (
         Transient = new[] { transient1.Id, transient2.Id },
     });
 
-// Exercise 03: IOptionsSnapshot re-reads the configuration at each request.
+// TP-02, exercise 03: IOptionsSnapshot re-reads the configuration at each request.
 app.MapGet("/settings", (IOptionsSnapshot<TicketsOptions> options) => options.Value);
+
+// TODO Exercise 01: GET /me, for authenticated callers only: name, roles and isAdmin.
 
 app.MapTicketEndpoints();
 

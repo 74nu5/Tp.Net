@@ -1,7 +1,8 @@
 <Project>
   <!--
-    Central Package Management: every package version used by the labs lives here.
+    Central Package Management: the package versions used by the labs live here.
     Projects reference packages without a Version attribute.
+    Exception: TP-01 adds Humanizer.Core in its own depart/ and solution/ Directory.Packages.props (exercise 2).
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -41,7 +42,6 @@
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
     <PackageVersion Include="bunit" Version="2.11.3" />
-    <PackageVersion Include="Testcontainers.MsSql" Version="4.16.0" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <PackageVersion Include="Aspire.Hosting.Testing" Version="13.6.1" />

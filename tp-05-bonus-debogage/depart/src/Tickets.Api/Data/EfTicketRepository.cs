@@ -56,7 +56,7 @@ public sealed class EfTicketRepository(TicketsDbContext db, TimeProvider clock, 
 
     public async Task<int> ImportAsync(IReadOnlyList<ImportedTicket> tickets, CancellationToken cancellationToken)
     {
-        // TODO exercise 04: wrap the import in a span named "ImportTickets" (see Telemetry/TicketsTelemetry.cs),
+        // TODO Exercise 04: wrap the import in a span named "ImportTickets" (see Telemetry/TicketsTelemetry.cs),
         // with a "tickets.count" tag.
 
         var now = clock.GetUtcNow();
@@ -122,7 +122,7 @@ public sealed class EfTicketRepository(TicketsDbContext db, TimeProvider clock, 
         ticket.ClosedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);   // a single UPDATE with the two changed columns
 
-        // TODO exercise 03: a structured log entry rather than an interpolated string (see TicketLog).
+        // TODO Exercise 03: a structured log entry rather than an interpolated string (see TicketLog).
         var openHours = Math.Round((ticket.ClosedAt.Value - ticket.CreatedAt).TotalHours, 1);
         logger.LogInformation($"Ticket {ticket.Id} closed after {openHours} hours");
         return (TicketChange.Applied, ticket);

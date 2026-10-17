@@ -30,7 +30,15 @@ public static class Shipping
         return baseCost + fragileSurcharge;
     }
 
-    /// <summary>Describes any value, to practise type, relational and list patterns.</summary>
+    /// <summary>
+    /// Describes any value:
+    /// null → "nothing"; a negative int → "negative number"; another int → "number 42";
+    /// "" → "empty text"; another string → "text of 5 characters";
+    /// a Money of 0 → "no money"; another Money → its ToString(), e.g. "12.50 EUR";
+    /// an empty int[] → "empty array"; one element → "array of 7"; more → "array from 1 to 3";
+    /// anything else → "unknown".
+    /// </summary>
+    /// <remarks>Practises type, relational, property and list patterns.</remarks>
     public static string Describe(object? value) => value switch
     {
         null => "nothing",

@@ -27,6 +27,7 @@
             <option value="@priority">@priority</option>
         }
     </InputSelect>
+    <ValidationMessage For="() => _ticket.Priority" />
 
     <div>
         <button type="submit" disabled="@_saving">@(_saving ? "Creating…" : "Create")</button>

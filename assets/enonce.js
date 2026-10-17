@@ -7,11 +7,13 @@
     <section class="exercise" id="ex2" data-minutes="15" data-tests="Katas.Tests.Exercise02">
       <h2>Title</h2> ...                                                              one card per exercise
       [data-test-project="depart/tests/…"] or [data-test-command="cd x &amp;&amp; dotnet test …"]       other project, or whole command
+    <details class="answer"><summary>…</summary>…</details>                          an answer, open on demand
+    <div class="bridge"><p data-lang="java">…</p><div class="compare">…</div></div>     comparison block; data-lang works on any element
     <div class="hints"><details class="hint">...</details>...</div>                   hints revealed in order
     <div class="compare"><pre data-lang="csharp">…</pre><pre data-lang="java">…</pre>…</div>       C# + chosen language side by side
     <p data-lang="rust">…</p>                                                         shown only when Rust is chosen
     <div class="compare-picker"></div>                                                language picker slot
-    <section id="summary"></section>                                                  filled with the time report
+    <section id="summary"><div data-report></div><button data-copy-report>…</button></section>   time report (title: document.title)
 
   Progress (done exercises, time spent) is stored in localStorage, per lab, in this browser only.
 */
@@ -95,7 +97,7 @@
       <label class="done-toggle"><input type="checkbox" data-done="${id}"> Terminé</label>`;
     head.append(left, tools);
 
-    if (ex.dataset.tests) {
+    if (ex.dataset.tests || ex.dataset.testCommand) {
       const tests = document.createElement("div");
       tests.className = "tests";
       // An exercise can name its own test project (data-test-project on the section), e.g. API tests in a front-end lab.

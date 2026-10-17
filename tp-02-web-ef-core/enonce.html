@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TP-02 · Serveur web et EF Core</title>
+<title>TP-02 · Serveur web et Entity Framework Core</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -130,7 +130,7 @@ async def timing(request: Request, call_next):
     <!-- ============================================================ 2 -->
     <section class="exercise" id="ex2" data-minutes="15" data-tests="Tickets.Api.Tests.Exercise02">
       <h2>Injection de dépendances et durées de vie</h2>
-      <p>Le conteneur d'injection de dépendances est intégré : on enregistre un service dans <code>builder.Services</code>, et ASP.NET Core le fournit à qui le demande, en paramètre de constructeur ou de route. Chaque enregistrement choisit une <strong>durée de vie</strong> :</p>
+      <p>Le conteneur d'injection de dépendances est intégré : on enregistre un service dans <code>builder.Services</code>, et ASP.NET Core le fournit à qui le demande, en paramètre de constructeur ou du handler d'une route. Chaque enregistrement choisit une <strong>durée de vie</strong> :</p>
       <div class="table-wrap"><table>
         <thead><tr><th>Durée de vie</th><th>Une instance…</th><th>Exemple typique</th></tr></thead>
         <tbody>
@@ -212,7 +212,7 @@ export class EmailBuilder {}</code></pre>
         <tbody>
           <tr><td>1</td><td><code>appsettings.json</code></td><td>valeurs par défaut, versionnées</td></tr>
           <tr><td>2</td><td><code>appsettings.Development.json</code></td><td>réglages propres à un environnement</td></tr>
-          <tr><td>3</td><td>user-secrets (en développement)</td><td>secrets locaux, hors du dépôt</td></tr>
+          <tr><td>3</td><td>user-secrets (en développement)</td><td>secrets locaux, hors du dépôt Git</td></tr>
           <tr><td>4</td><td>variables d'environnement</td><td>serveurs, conteneurs, CI</td></tr>
           <tr><td>5</td><td>ligne de commande</td><td>essais ponctuels</td></tr>
         </tbody>
@@ -221,8 +221,9 @@ export class EmailBuilder {}</code></pre>
         <li>Dans <code>Settings/TicketsOptions.cs</code>, ajoutez les règles : <code>PageSize</code> entre 1 et 100, <code>SupportEmail</code> obligatoire et au format email.</li>
         <li>Dans <code>Program.cs</code>, liez la section <code>"Tickets"</code> de la configuration à <code>TicketsOptions</code>, validez-la, et faites échouer le démarrage si elle est invalide.</li>
         <li>Appelez <code>GET /settings</code> : vous devez voir les valeurs d'<code>appsettings.json</code>.</li>
-        <li>Remplacez une valeur par une variable d'environnement : <code>$env:Tickets__PageSize=5</code> sous PowerShell, <code>Tickets__PageSize=5</code> sous bash. Le double tiret bas remplace le <code>:</code> des sections.</li>
+        <li>Remplacez une valeur par une variable d'environnement : <code>$env:Tickets__PageSize=5</code> sous PowerShell, <code>export Tickets__PageSize=5</code> sous bash, puis relancez l'API dans ce même terminal. Le double tiret bas remplace le <code>:</code> des sections.</li>
         <li>Remplacez <code>SupportEmail</code> avec un secret local, depuis <code>depart/src/Tickets.Api</code> : <code>dotnet user-secrets set "Tickets:SupportEmail" "vous@3b.studio"</code>. Où ce secret est-il stocké ?</li>
+        <li>Remettez tout en place avant de lancer les tests : ils démarrent l'API en environnement Development, donc avec vos user-secrets et vos variables d'environnement, et attendent les valeurs d'<code>appsettings.json</code>. <code>dotnet user-secrets remove "Tickets:SupportEmail"</code>, puis <code>Remove-Item Env:Tickets__PageSize</code> sous PowerShell ou <code>unset Tickets__PageSize</code> sous bash.</li>
       </ol>
       <div class="hints">
         <details class="hint"><summary>les règles</summary><p>Les attributs de <code>System.ComponentModel.DataAnnotations</code> : <code>[Range(1, 100)]</code>, <code>[Required, EmailAddress]</code>.</p></details>
@@ -230,7 +231,7 @@ export class EmailBuilder {}</code></pre>
     .BindConfiguration(TicketsOptions.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();</code></pre></details>
-        <details class="hint"><summary>où est le secret ?</summary><p>Dans votre profil utilisateur (<code>%APPDATA%\Microsoft\UserSecrets\tp-net-tickets-api\secrets.json</code> sous Windows), jamais dans le dépôt. L'identifiant vient de <code>&lt;UserSecretsId&gt;</code> dans le <code>.csproj</code>.</p></details>
+        <details class="hint"><summary>où est le secret ?</summary><p>Dans votre profil utilisateur (<code>%APPDATA%\Microsoft\UserSecrets\tp-net-tickets-api\secrets.json</code> sous Windows), jamais dans le dépôt Git. L'identifiant vient de <code>&lt;UserSecretsId&gt;</code> dans le <code>.csproj</code>.</p></details>
       </div>
       <div class="bridge">
         <span class="lbl">Comparaison</span>
@@ -302,10 +303,10 @@ const smtp = z.object({
         <details class="hint"><summary>201 Created</summary><p>Nommez la route de lecture avec <code>.WithName("GetTicket")</code>, puis <code>TypedResults.CreatedAtRoute(response, "GetTicket", new { id = ticket.Id })</code> remplit l'en-tête <code>Location</code>.</p></details>
         <details class="hint"><summary>validation et OpenAPI</summary><p><code>[Required, StringLength(200)]</code> sur les propriétés, puis <code>builder.Services.AddValidation();</code> et <code>builder.Services.AddOpenApi();</code>. Dans le pipeline : <code>if (app.Environment.IsDevelopment()) { app.MapOpenApi(); app.MapScalarApiReference(); }</code>.</p></details>
       </div>
-      <p><strong>Lisez aussi</strong> le bloc <code>UseExceptionHandler</code> de <code>Program.cs</code> : sans lui, un JSON invalide reçu en développement donnerait une erreur 500 au lieu d'une 400.</p>
+      <p><strong>Lisez aussi</strong> le bloc <code>UseExceptionHandler</code> de <code>Program.cs</code> : sans son <code>StatusCodeSelector</code>, un JSON invalide reçu en développement donnerait une erreur 500 au lieu d'une 400.</p>
       <div class="bridge">
         <span class="lbl">Comparaison</span>
-        <p data-lang="java">Minimal APIs ≈ les routes fonctionnelles de Spring WebFlux, ou Javalin. L'équivalent d'un <code>@RestController</code> existe aussi en .NET : les Controllers MVC.</p>
+        <p data-lang="java">Minimal APIs ≈ les routes fonctionnelles de Spring WebFlux, ou Javalin. Ci-dessous, la forme la plus courante en Spring, un <code>@RestController</code> : son équivalent .NET, ce sont les Controllers MVC, qui existent toujours.</p>
         <p data-lang="rust">Très proche d'Axum : une fonction par route, et des paramètres extraits de la requête selon leur type.</p>
         <p data-lang="python">Très proche de FastAPI : paramètres liés par nom et par type, documentation OpenAPI générée.</p>
         <p data-lang="javascript">≈ Express, avec en plus le typage des paramètres, la validation et le document OpenAPI générés.</p>
@@ -446,11 +447,11 @@ model Review {
       <p>Les requêtes SQL envoyées par EF s'affichent dans la console de l'API (réglage <code>Microsoft.EntityFrameworkCore.Database.Command</code> dans <code>appsettings.json</code>).</p>
       <ol>
         <li>Créez trois ou quatre tickets, puis appelez <code>GET /tickets/summary</code>. Comptez les <code>SELECT</code> dans la console. D'où viennent-ils ? Corrigez <code>GetSummariesAsync</code> pour n'envoyer <strong>qu'une seule requête</strong>, quel que soit le nombre de tickets. Un test compte les commandes SQL.</li>
-        <li><code>GET /tickets/{id}</code> renvoie une liste de commentaires vide, même quand il y en a : EF Core ne charge pas les relations tout seul. Chargez-les dans <code>GetAsync</code>.</li>
+        <li><code>GET /tickets/{id}</code> renvoie une liste de commentaires vide, même quand il y en a : EF Core ne charge pas les relations tout seul. Il n'y a pas encore de route pour commenter (elle arrive à l'exercice 7) : le test insère lui-même des commentaires en base. Chargez-les dans <code>GetAsync</code>.</li>
         <li>Les lectures n'ont pas besoin du suivi des modifications : désactivez-le dans <code>ListAsync</code> et <code>GetAsync</code>. Un test vérifie que le contexte ne suit aucune entité après ces lectures.</li>
       </ol>
       <div class="hints">
-        <details class="hint"><summary>N+1</summary><p>Une requête pour les tickets, puis une par ticket pour compter ses commentaires : 1 + N. Une <strong>projection</strong> fait tout en une fois : <code>db.Tickets.Select(t =&gt; new TicketSummary(t.Id, t.Title, t.Status, t.Comments.Count))</code>. EF traduit <code>Count</code> en sous-requête SQL.</p></details>
+        <details class="hint"><summary>N+1</summary><p>Une requête pour les tickets, puis une par ticket pour compter ses commentaires : 1 + N. Une <strong>projection</strong> fait tout en une fois : <code>db.Tickets.OrderBy(t =&gt; t.Id).Select(t =&gt; new TicketSummary(t.Id, t.Title, t.Status, t.Comments.Count))</code>. EF traduit <code>Count</code> en sous-requête SQL.</p></details>
         <details class="hint"><summary>charger les commentaires</summary><p><code>db.Tickets.Include(t =&gt; t.Comments).FirstOrDefaultAsync(…)</code> : une jointure, dans la même requête.</p></details>
         <details class="hint"><summary>sans suivi</summary><p><code>db.Tickets.AsNoTracking()…</code> en tête de requête.</p></details>
       </div>

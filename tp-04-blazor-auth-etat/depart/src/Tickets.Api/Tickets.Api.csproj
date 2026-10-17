@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <!-- Shared by TP-02 to TP-04: the connection string is set once with dotnet user-secrets. -->
+    <!-- Shared by TP-02 to TP-05: the connection string is set once with dotnet user-secrets. -->
     <UserSecretsId>tp-net-tickets-api</UserSecretsId>
   </PropertyGroup>
 

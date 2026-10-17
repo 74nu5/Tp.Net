@@ -1,7 +1,7 @@
 namespace Katas.Exercise03;
 
 /// <summary>
-/// Exercise 03, nullability. TODO: this code crashes on null. Fix it until the build shows no warning.
+/// TODO Exercise 03: nullability. This code crashes on null. Fix it until the build shows no warning.
 /// </summary>
 public static class CustomerDirectory
 {

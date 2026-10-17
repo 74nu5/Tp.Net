@@ -7,7 +7,8 @@ public sealed class RequestTimingMiddleware(RequestDelegate next, ILogger<Reques
 {
     public const string HeaderName = "X-Request-Duration-Ms";
 
-    // Injected by the container: use it to write the log line.
+    // Injected by the container: use _logger to write the log line. (Using the logger parameter as well
+    // would capture it twice, warning CS9124; the solution keeps the parameter and drops the field.)
     private readonly ILogger _logger = logger;
 
     public async Task InvokeAsync(HttpContext context)

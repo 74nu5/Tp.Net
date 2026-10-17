@@ -10,7 +10,7 @@ namespace Tickets.Api.Data;
 /// </remarks>
 internal static partial class TicketLog
 {
-    // TODO exercise 03: a TicketClosed message, "Ticket {TicketId} closed after {OpenHours} hours", event id 1001.
+    // TODO Exercise 03: a TicketClosed message, "Ticket {TicketId} closed after {OpenHours} hours", event id 1001.
 
     [LoggerMessage(EventId = 1002, Level = LogLevel.Information, Message = "Imported {Count} tickets")]
     public static partial void TicketsImported(this ILogger logger, int count);

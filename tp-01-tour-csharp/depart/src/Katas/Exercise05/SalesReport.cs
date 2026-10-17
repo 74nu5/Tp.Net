@@ -17,7 +17,7 @@ public sealed record ProductSales(string Sku, int Quantity);
 /// </remarks>
 public sealed class SalesReport(IEnumerable<Order> orders)
 {
-    // Provided. Materialise once: the source could be a lazy sequence that would be re-evaluated by every query.
+    // Provided. Why copy the sequence instead of keeping it? See the question at the end of exercise 5.
     private readonly IReadOnlyList<Order> _orders = [.. orders];
 
     /// <summary>1. Sum of all order totals.</summary>

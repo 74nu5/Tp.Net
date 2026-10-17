@@ -68,9 +68,14 @@
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
         // Only local addresses: never redirect to a URL chosen by a third party (open redirect).
-        var target = Uri.IsWellFormedUriString(ReturnUrl, UriKind.Relative) && ReturnUrl!.StartsWith('/') ? ReturnUrl : "/";
+        var target = IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/";
         Navigation.NavigateTo(target, forceLoad: true);
     }
+
+    // A local URL starts with one "/" and no host: "//evil.example" and "/\evil.example" are read by browsers
+    // as another site. Same rule as Url.IsLocalUrl in MVC.
+    private static bool IsLocalUrl(string? url) =>
+        url is ['/'] or ['/', not '/' and not '\\', ..];
 
     private sealed class LoginInput
     {

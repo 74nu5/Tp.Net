@@ -1,7 +1,8 @@
 <Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="new[] { typeof(Client._Imports).Assembly }" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
-        @* AuthorizeRouteView honours [Authorize] on pages rendered interactively; on a first request,
-           the authorization middleware has already redirected an anonymous user to the login page. *@
+        @* Here the router runs in static server rendering: every navigation is an HTTP request, and the authorization
+           middleware enforces [Authorize] before the page renders. AuthorizeRouteView enforces it itself when the router
+           is interactive (global interactivity), and in any case shows NotAuthorized to a user who lacks a role. *@
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
                 <p class="error">You are not allowed to see this page. <a href="account/login">Log in</a></p>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TP-05 · Déboguer une appli existante</title>
+<title>TP-05 · S'orienter et déboguer dans une appli existante</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,7 +42,7 @@
             <li><code>src/Tickets.ServiceDefaults</code> (complet) et <code>src/Tickets.AppHost</code> (à écrire), pour Aspire ;</li>
             <li><code>ANOMALIES.md</code>, à remplir à l'exercice 6.</li>
           </ul></li>
-        <li>Un seul projet de tests, <code>tests/Tickets.Tests</code>, avec SQL Server comme au TP-02. Au départ, 22 tests sur 26 échouent.
+        <li>Un seul projet de tests, <code>tests/Tickets.Tests</code>, avec SQL Server comme au TP-02. Au départ, 23 tests sur 27 échouent.
           <pre><code class="language-bash">dotnet test --solution depart/Tickets.slnx</code></pre></li>
         <li>Il faut un IDE avec débogueur : Rider, Visual Studio, ou VS Code avec C# Dev Kit. Pour l'exercice 5, installez aussi le SDK .NET 11 (<a href="https://dotnet.microsoft.com/download/dotnet/11.0" target="_blank" rel="noopener">version RC</a> à ce jour) : il s'installe à côté du SDK .NET 10 sans le remplacer.</li>
         <li>Aspire n'a pas besoin de Docker ici : il lance l'API et le front comme de simples processus.</li>
@@ -71,7 +71,7 @@
         <li>Au premier arrêt, regardez les variables locales : <code>lineNumber</code>, <code>line</code>, <code>fields</code>. Ajoutez un espion (<em>watch</em>) sur <code>fields.Length</code>. Notez le numéro de la ligne dans <code>tests/Tickets.Tests/Answers.cs</code> (<code>FirstSkippedLine</code>).</li>
         <li>Sans vous arrêter, listez toutes les lignes perdues avec un <strong>point de trace</strong> (Visual Studio : <em>Actions</em> ; Rider : <em>Log evaluated expression</em> ; VS Code : <em>Logpoint</em>) qui écrit <code>{lineNumber}: {fields.Length}</code> dans la sortie de débogage.</li>
         <li>Corrigez le parseur : un champ entre guillemets peut contenir des virgules, et <code>""</code> dans un champ entre guillemets vaut un guillemet (RFC 4180). Une ligne qui reste mal formée doit arrêter l'import avec une <code>FormatException</code> qui donne son numéro (« Line 3: … ») : perdre des données en silence est pire qu'une erreur.</li>
-        <li><strong>Hot Reload</strong> : lancez <code>dotnet watch --project depart/src/Tickets.Api</code>, ouvrez <code>http://localhost:5080/</code>, changez le texte renvoyé par <code>app.MapGet("/", …)</code> dans <code>Program.cs</code> et enregistrez. La page affiche le nouveau texte sans redémarrage. Certaines modifications, dites <em>rude edits</em>, ne peuvent pas s'appliquer à chaud : <code>dotnet watch</code> propose alors de redémarrer.</li>
+        <li><strong>Hot Reload</strong> : lancez <code>dotnet watch --project depart/src/Tickets.Api</code>, ouvrez <code>http://localhost:5080/</code>, changez le texte renvoyé par <code>app.MapGet("/", …)</code> dans <code>Program.cs</code>, enregistrez, puis rechargez la page : elle affiche le nouveau texte sans que l'API ait redémarré. Certaines modifications, dites <em>rude edits</em>, ne peuvent pas s'appliquer à chaud : <code>dotnet watch</code> propose alors de redémarrer.</li>
       </ol>
       <div class="hints">
         <details class="hint"><summary>la condition ne s'arrête jamais</summary><p>La condition est une expression C# évaluée dans le contexte de la ligne : les variables doivent déjà exister à cet endroit. Placez le point d'arrêt sur le <code>if</code>, après <code>var fields = …</code>, pas sur la ligne qui déclare <code>fields</code>.</p></details>
@@ -112,7 +112,7 @@
       <div class="bridge">
         <span class="lbl">Comparaison</span>
         <p data-lang="java">Le débogueur d'IntelliJ fonctionne de la même façon : points d'arrêt conditionnels, <em>Evaluate expression</em>, et Rider vient du même éditeur. Hot Reload ≈ HotSwap de la JVM, ou le redémarrage rapide de Spring DevTools.</p>
-        <p data-lang="rust">Avec CodeLLDB ou rust-analyzer, on pose aussi des points d'arrêt conditionnels, mais beaucoup de développeurs Rust déboguent avec <code>dbg!</code>. Il n'y a pas de Hot Reload : on recompile.</p>
+        <p data-lang="rust">Avec CodeLLDB (que lance le « Debug » de rust-analyzer dans VS Code) ou RustRover, on pose aussi des points d'arrêt conditionnels, mais beaucoup de développeurs Rust déboguent avec <code>dbg!</code>. Il n'y a pas de Hot Reload : on recompile.</p>
         <p data-lang="python">≈ <code>breakpoint()</code> et pdb (<code>b fichier:ligne, condition</code>), ou le débogueur de VS Code et PyCharm. Python recharge à chaud avec <code>uvicorn --reload</code>, qui redémarre en fait le processus.</p>
         <p data-lang="javascript">≈ les points d'arrêt conditionnels et les <em>logpoints</em> des DevTools de Chrome, ou l'instruction <code>debugger;</code>. Hot Reload ≈ le HMR de Vite, ou <code>node --watch</code> qui redémarre.</p>
         <div class="compare">
@@ -126,7 +126,7 @@ foreach (var line in File.ReadLines("legacy-tickets.csv").Skip(1))
           <pre data-lang="java"><code class="language-java">// Apache Commons CSV
 try (var reader = Files.newBufferedReader(Path.of("legacy-tickets.csv"));
      var parser = CSVFormat.DEFAULT.builder()
-         .setHeader().setSkipHeaderRecord(true).build()
+         .setHeader().setSkipHeaderRecord(true).get()   // build() avant la 1.12
          .parse(reader)) {
     for (CSVRecord record : parser) {
         System.out.println(record.get("title") + " (" + record.get("priority") + ")");
@@ -183,7 +183,7 @@ for (const row of rows) console.log(`${row.title} (${row.priority})`);</code></p
       <p>Le message propose d'ajouter <code>AsEnumerable()</code> avant <code>Sum</code>. Bonne idée ?</p>
       <details class="answer"><summary>Voir la réponse</summary><p>Non. Le calcul passerait côté C# après avoir chargé tous les tickets, et <code>Comments</code> ne serait pas chargé (pas d'<code>Include</code>) : la somme vaudrait 0, sans erreur. Le bon correctif reste en SQL : <code>await db.Comments.CountAsync(cancellationToken)</code>.</p></details>
       <p>Pourquoi les frames d'EF Core n'ont-elles pas de numéro de ligne ?</p>
-      <details class="answer"><summary>Voir la réponse</summary><p>Les numéros de ligne viennent des fichiers de symboles (<code>.pdb</code>) produits par notre compilation en Debug. Pour les packages, il faut les symboles publiés et Source Link : Rider et Visual Studio savent alors entrer dans le code d'EF Core en débogage.</p></details>
+      <details class="answer"><summary>Voir la réponse</summary><p>Les numéros de ligne viennent des fichiers de symboles (<code>.pdb</code>) produits par notre compilation, en Debug comme en Release. Pour les packages, il faut les symboles publiés et Source Link : Rider et Visual Studio savent alors entrer dans le code d'EF Core en débogage.</p></details>
       <p>Deux formes reviennent souvent dans une stack trace .NET : <code>---&gt;</code> introduit une <em>InnerException</em> (l'erreur d'origine, enveloppée dans une autre), et <code>--- End of stack trace from previous location ---</code> marque un <code>await</code> où l'exception a été relancée. Lisez toujours jusqu'à l'exception la plus intérieure.</p>
       <div class="hints">
         <details class="hint"><summary>la première frame de notre code</summary><p>Les frames <code>Microsoft.*</code> et <code>System.*</code> sont celles du framework. La première frame <code>Tickets.*</code> en partant du haut, avec un fichier et une ligne, est <code>EfTicketRepository.GetStatsAsync</code>.</p></details>
@@ -285,7 +285,7 @@ logger.info({ ticketId: ticket.id, openHours }, "ticket closed");</code></pre>
       <ol>
         <li>Lisez <code>src/Tickets.ServiceDefaults/Extensions.cs</code>, fourni (il vient du modèle <code>aspire-servicedefaults</code>). Qu'ajoute <code>AddServiceDefaults()</code> à un service ?</li>
         <li>Dans le <code>Program.cs</code> de l'API <strong>et</strong> du front, appelez <code>builder.AddServiceDefaults()</code> et <code>app.MapDefaultEndpoints()</code>. L'API répond alors sur <code>/health</code> et <code>/alive</code>.</li>
-        <li>Écrivez <code>src/Tickets.AppHost/AppHost.cs</code> : une ressource <code>api</code> pour <code>Projects.Tickets_Api</code>, une ressource <code>web</code> pour <code>Projects.Tickets_Web</code> qui reçoit l'adresse de l'API dans la variable <code>TicketsApi__BaseUrl</code> et attend que l'API soit prête (<code>WaitFor</code>).</li>
+        <li>Écrivez <code>src/Tickets.AppHost/AppHost.cs</code> : une ressource <code>api</code> pour <code>Projects.Tickets_Api</code>, dont Aspire surveille la santé sur <code>/health</code> (<code>WithHttpHealthCheck</code>), une ressource <code>web</code> pour <code>Projects.Tickets_Web</code> qui reçoit l'adresse de l'API dans la variable <code>TicketsApi__BaseUrl</code> et ne démarre qu'une fois l'API en bonne santé (<code>WaitFor</code>).</li>
         <li>Lancez <code>dotnet run --project depart/src/Tickets.AppHost</code>. La console affiche l'URL de connexion au tableau de bord (avec un jeton) : ouvrez-la. Les ressources <code>api</code> et <code>web</code> passent à <em>Running</em> ; leurs consoles sont dans l'onglet <em>Console</em>.</li>
         <li><strong>Suivez une requête</strong> : ouvrez le front, puis la page des tickets. Dans <em>Traces</em>, trouvez la trace <code>web: GET /tickets</code> : un span du front, l'appel HTTP vers l'API, la requête de l'API et sa commande SQL. Quelle étape prend le plus de temps ?</li>
         <li>Ajoutez un span à vous dans <code>EfTicketRepository.ImportAsync</code> : une activité <code>ImportTickets</code> de <code>TicketsTelemetry.Source</code>, avec l'étiquette <code>tickets.count</code>. Importez le fichier d'exemple avec un jeton administrateur, et retrouvez le span et ses commandes SQL dans la trace de <code>POST /tickets/import</code> :
@@ -300,7 +300,8 @@ curl -X POST http://localhost:5080/tickets/import -H "Authorization: Bearer $TOK
       <div class="hints">
         <details class="hint"><summary>le modèle d'application</summary><pre><code class="language-csharp">var builder = DistributedApplication.CreateBuilder(args);
 
-var api = builder.AddProject&lt;Projects.Tickets_Api&gt;("api");
+var api = builder.AddProject&lt;Projects.Tickets_Api&gt;("api")
+    .WithHttpHealthCheck("/health");
 
 builder.AddProject&lt;Projects.Tickets_Web&gt;("web")
     .WithEnvironment("TicketsApi__BaseUrl", api.GetEndpoint("http"))
@@ -357,7 +358,7 @@ await tracer.startActiveSpan("ImportTickets", async span =&gt; {
     </section>
 
     <!-- ============================================================ 5 -->
-    <section class="exercise" id="ex5" data-minutes="20" data-tests="Tickets.Preview.Tests.Exercise05" data-test-command="cd net11 &amp;&amp; dotnet test --solution depart/Preview.slnx">
+    <section class="exercise" id="ex5" data-minutes="20" data-test-command="cd net11 &amp;&amp; dotnet test --solution depart/Preview.slnx">
       <h2>Aperçu de .NET 11 : les unions de C# 15</h2>
       <p>.NET 11 sort en novembre 2026 ; ce n'est pas une version LTS, nos applis restent sur .NET 10. Mais C# 15 apporte une nouveauté attendue depuis longtemps : les <strong>unions</strong>, l'équivalent des enums de Rust ou des unions discriminées de TypeScript. On l'essaie dans un petit projet à part, <code>net11/</code>.</p>
       <ol>
@@ -368,7 +369,7 @@ await tracer.startActiveSpan("ImportTickets", async span =&gt; {
       </ol>
       <p>Dans l'API, <code>CloseAsync</code> renvoie <code>(TicketChange Result, Ticket? Ticket)</code>. Qu'apporte l'union par rapport à ce tuple ?</p>
       <details class="answer"><summary>Voir la réponse</summary><p>Avec le tuple, rien n'empêche de lire <code>Ticket</code> quand le résultat est <code>NotFound</code> : il vaut <code>null</code>, et le <code>!</code> du code d'appel le cache. Avec l'union, chaque cas porte exactement ses données (<code>NotFound</code> n'a qu'un identifiant), et le compilateur vérifie que chaque <code>switch</code> traite tous les cas. Ajouter un cas montre tous les endroits à mettre à jour.</p></details>
-      <p>Les autres nouveautés de C# 15 : des arguments dans les expressions de collection (<code>[with(StringComparer.OrdinalIgnoreCase), …]</code>), les hiérarchies fermées (<code>closed</code>, ≈ <code>sealed</code> de Java), les indexeurs d'extension, <code>break</code> et <code>continue</code> avec étiquette, et un nouveau modèle de sécurité mémoire pour <code>unsafe</code>. Côté runtime, l'async natif (<em>Runtime Async</em>) remplace les machines à états générées par le compilateur : la pile d'appels que montre le débogueur dans du code async ne contient plus que vos méthodes. Pour suivre :</p>
+      <p>Les autres nouveautés de C# 15 : des arguments dans les expressions de collection (<code>[with(StringComparer.OrdinalIgnoreCase), …]</code>), les hiérarchies fermées (<code>closed</code>, ≈ <code>sealed</code> de Java), les indexeurs d'extension, <code>break</code> et <code>continue</code> avec étiquette, et un nouveau modèle de sécurité mémoire pour <code>unsafe</code>. Côté runtime, l'async natif (<em>Runtime Async</em>, en préversion : <code>&lt;Features&gt;runtime-async=on&lt;/Features&gt;</code> dans le projet) remplace les machines à états générées par le compilateur : la pile d'appels que montre le débogueur dans du code async ne contient plus que vos méthodes. Pour suivre :</p>
       <ul>
         <li><a href="https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-15" target="_blank" rel="noopener">What's new in C# 15</a> et <a href="https://learn.microsoft.com/dotnet/core/whats-new/dotnet-11/overview" target="_blank" rel="noopener">What's new in .NET 11</a> sur Microsoft Learn ;</li>
         <li>le <a href="https://devblogs.microsoft.com/dotnet/" target="_blank" rel="noopener">blog .NET</a>, avec un article par préversion ;</li>

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Tickets.Api.Settings;
 
 /// <summary>
-/// Exercise 03: the "Tickets" section of the configuration, bound to a class.
+/// TP-02, exercise 03: the "Tickets" section of the configuration, bound to a class.
 /// </summary>
 public sealed class TicketsOptions
 {

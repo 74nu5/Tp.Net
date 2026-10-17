@@ -5,7 +5,7 @@ using Tickets.Api.Domain;
 namespace Tickets.Api.Data;
 
 /// <summary>
-/// Exercises 05 to 07: the EF Core implementation of <see cref="ITicketRepository"/>.
+/// TP-02, exercises 05 to 07: the EF Core implementation of <see cref="ITicketRepository"/>.
 /// </summary>
 public sealed class EfTicketRepository(TicketsDbContext db, TimeProvider clock) : ITicketRepository
 {
@@ -27,7 +27,7 @@ public sealed class EfTicketRepository(TicketsDbContext db, TimeProvider clock) 
             .Include(t => t.Comments)
             .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
-    // Exercise 06: a projection. EF translates the whole expression, Count included, into a single SQL query.
+    // TP-02, exercise 06: a projection. EF translates the whole expression, Count included, into a single SQL query.
     // The starting version looped over the tickets and ran one COUNT query per ticket: the N+1 problem.
     public async Task<IReadOnlyList<TicketSummary>> GetSummariesAsync(CancellationToken cancellationToken) =>
         await db.Tickets

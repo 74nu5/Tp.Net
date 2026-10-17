@@ -12,7 +12,7 @@ using Tickets.Api.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// TODO exercise 04: add the Aspire service defaults (Tickets.ServiceDefaults, already referenced).
+// TODO Exercise 04: add the Aspire service defaults (Tickets.ServiceDefaults, already referenced).
 
 // ---- Services: everything registered here can be injected anywhere ----
 
@@ -79,7 +79,7 @@ if (app.Environment.IsDevelopment())
 
 // ---- Endpoints ----
 
-// TODO exercise 04: map /health and /alive.
+// TODO Exercise 04: map /health and /alive.
 
 app.MapGet("/", () => "Tickets API");
 

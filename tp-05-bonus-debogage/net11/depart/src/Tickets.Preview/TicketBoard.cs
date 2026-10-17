@@ -20,7 +20,7 @@ public sealed record AlreadyClosed(Ticket Ticket);
 /// C# 15: a union type. A CloseResult holds exactly one of the case types, and each case converts implicitly
 /// to it. A switch on a CloseResult must handle every case, or the compiler reports CS8509 (an error in this project).
 /// </summary>
-// TODO exercise 05: AlreadyClosed is not a case of the union yet. Add it, then let the compiler show you
+// TODO Exercise 05: AlreadyClosed is not a case of the union yet. Add it, then let the compiler show you
 // every switch that must handle it.
 public union CloseResult(Closed, NotFound);
 
@@ -46,7 +46,7 @@ public sealed class TicketBoard(TimeProvider clock)
 
         if (ticket.Status == TicketStatus.Closed)
         {
-            // TODO exercise 05: return an AlreadyClosed instead of throwing.
+            // TODO Exercise 05: return an AlreadyClosed instead of throwing.
             throw new InvalidOperationException($"Ticket {id} is already closed.");
         }
 

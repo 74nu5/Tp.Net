@@ -9,6 +9,9 @@ namespace Katas.Exercise06;
 /// </remarks>
 public sealed class PageFetcher(HttpClient http)
 {
+    // Provided in the starting version: the HttpClient to download with. In the tests, it talks to a fake server.
+    private readonly HttpClient _http = http;
+
     /// <summary>
     /// Downloads every page concurrently and returns their sizes in characters, in the order of <paramref name="uris"/>.
     /// </summary>
@@ -16,7 +19,7 @@ public sealed class PageFetcher(HttpClient http)
     {
         // Start every download first, then await them together: the requests overlap.
         // Awaiting inside a foreach would download the pages one after the other.
-        var downloads = uris.Select(uri => http.GetStringAsync(uri, cancellationToken));
+        var downloads = uris.Select(uri => _http.GetStringAsync(uri, cancellationToken));
         var pages = await Task.WhenAll(downloads);
         return [.. pages.Select(page => page.Length)];
     }
@@ -40,7 +43,7 @@ public sealed class PageFetcher(HttpClient http)
 
         try
         {
-            var page = await http.GetStringAsync(uri, timeoutSource.Token);
+            var page = await _http.GetStringAsync(uri, timeoutSource.Token);
             return page.Length;
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)

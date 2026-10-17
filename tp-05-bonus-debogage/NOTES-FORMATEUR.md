@@ -6,7 +6,7 @@
 - Un débogueur qui fonctionne sur les tests : Rider, Visual Studio, ou VS Code avec C# Dev Kit. Le faire tourner une fois avant la séance (lancer un test en débogage).
 - SQL Server et le secret `ConnectionStrings:Tickets` de l'API (les mêmes qu'aux TP précédents), base `TicketsDev` migrée.
 - Aspire n'a besoin ni de Docker ni du CLI `aspire` : l'orchestrateur et le tableau de bord viennent des packages NuGet (`AspireUseCliBundle=false` dans l'AppHost). Le premier `dotnet run` de l'AppHost télécharge ces packages.
-- Solution : 26 tests verts (`dotnet test --solution tp-05-bonus-debogage/solution/Tickets.slnx`), et 3 pour `net11/solution`. Au départ, 22 tests sur 26 échouent.
+- Solution : 27 tests verts (`dotnet test --solution tp-05-bonus-debogage/solution/Tickets.slnx`), et 3 pour `net11/solution`. Au départ, 23 tests sur 27 échouent.
 
 ## Déroulé et timing
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TP-03 · Blazor, composants</title>
+<title>TP-03 · Blazor : composants, modes de rendu et formulaires</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -202,7 +202,7 @@ function Alert({ level = "info", onClose, children }) {
     <!-- ============================================================ 3 -->
     <section class="exercise" id="ex3" data-minutes="30" data-tests="Tickets.Web.Tests.Exercise03">
       <h2>Charger des données : le cycle de vie</h2>
-      <p>Dans <code>Components/Pages/TicketList.razor</code>, chargez les tickets au démarrage du composant avec <code>ITicketsClient</code>, déjà injecté. Gérez les quatre états que décrit le <code>TODO</code> : chargement, erreur, liste vide, liste. Chaque ticket s'affiche avec votre <code>TicketCard</code> ; la carte sélectionnée s'affiche au-dessus de la liste.</p>
+      <p>Dans <code>Components/Pages/TicketList.razor</code>, chargez les tickets au démarrage du composant avec <code>ITicketsClient</code>, déjà injecté. Gérez les quatre états que décrit le <code>TODO</code> : chargement, erreur, liste vide, liste. Chaque ticket s'affiche avec votre <code>TicketCard</code> ; le titre du ticket sélectionné s'affiche au-dessus de la liste.</p>
       <p>Ouvrez ensuite <code>/tickets</code> avec l'API lancée, et regardez la console de l'API : combien d'appels à <code>GET /tickets</code> pour un seul affichage ?</p>
       <div class="hints">
         <details class="hint"><summary>au démarrage</summary><p>Redéfinissez <code>protected override async Task OnInitializedAsync()</code>. Blazor ré-affiche le composant quand la méthode se termine.</p></details>
@@ -277,7 +277,7 @@ fn WeatherPanel() -&gt; impl IntoView {
       </ol>
       <p>En mode Auto, la première visite passe par le serveur, le temps que le navigateur télécharge le runtime .NET ; les visites suivantes passent en WebAssembly.</p>
       <div class="hints">
-        <details class="hint"><summary>la syntaxe</summary><p>Sur l'instance du composant : <code>&lt;RenderModeProbe Label="…" @rendermode="InteractiveServer" /&gt;</code>. Ou pour toute une page : la directive <code>@rendermode InteractiveServer</code> en tête de fichier, comme dans <code>TicketList.razor</code>.</p></details>
+        <details class="hint"><summary>la syntaxe</summary><p>Sur l'instance du composant : <code>&lt;RenderModeProbe Label="…" @rendermode="InteractiveServer" /&gt;</code>. Ou pour toute une page : la directive <code>@rendermode InteractiveServer</code> en tête de fichier, comme dans <code>TicketList.razor</code>. Mais seulement pour le mode Server : les pages WebAssembly et Auto vivent dans <code>Tickets.Web</code>, que le navigateur ne télécharge jamais. Laissez-leur un mode sur l'instance de <code>RenderModeProbe</code>, rangé dans <code>Tickets.Web.Client</code>.</p></details>
         <details class="hint"><summary>pourquoi deux projets ?</summary><p>Un composant rendu en WebAssembly est téléchargé dans le navigateur : il doit vivre dans <code>Tickets.Web.Client</code>, et il n'a pas accès aux services du serveur (base de données, secrets). C'est pour cela que <code>RenderModeProbe</code> y est rangé.</p></details>
       </div>
       <h3>Question</h3>
@@ -337,7 +337,7 @@ export default function Counter() {
         <li>Dans <code>Tickets.Web.Client/Api/TicketModels.cs</code>, ajoutez à <code>NewTicketForm</code> les mêmes règles que l'API : titre obligatoire de 200 caractères au plus, description de 2 000 au plus, avec un message d'erreur lisible.</li>
         <li>Dans <code>Components/Pages/NewTicket.razor</code>, construisez le formulaire décrit par le <code>TODO</code>. Les champs doivent avoir les identifiants <code>title</code>, <code>description</code> et <code>priority</code>.</li>
         <li>À la soumission valide, créez le ticket puis revenez à la liste.</li>
-        <li>Essayez dans le navigateur : soumettez un titre vide, puis tapez un titre. Les messages apparaissent et disparaissent sans recharger la page ni appeler l'API.</li>
+        <li>Essayez dans le navigateur : soumettez un titre vide, puis tapez un titre et quittez le champ. Les messages apparaissent et disparaissent sans recharger la page ni appeler l'API.</li>
       </ol>
       <div class="hints">
         <details class="hint"><summary>le squelette</summary><pre><code class="language-xml">&lt;EditForm Model="_ticket" OnValidSubmit="SaveAsync" FormName="new-ticket"&gt;
@@ -496,23 +496,25 @@ export function copyText(text) {
 }</code></pre></details>
         <details class="hint"><summary>l'appel</summary><pre><code class="language-csharp">@inject IJSRuntime JS
 
-private IJSObjectReference? _module;
+@code {
+    private IJSObjectReference? _module;
 
-private async Task CopyTitleAsync()
-{
-    _module ??= await JS.InvokeAsync&lt;IJSObjectReference&gt;("import", "./Components/TicketCard.razor.js");
-    await _module.InvokeVoidAsync("copyText", Ticket.Title);
+    private async Task CopyTitleAsync()
+    {
+        _module ??= await JS.InvokeAsync&lt;IJSObjectReference&gt;("import", "./Components/TicketCard.razor.js");
+        await _module.InvokeVoidAsync("copyText", Ticket.Title);
+    }
 }</code></pre></details>
         <details class="hint"><summary>le chemin, et le nettoyage</summary><p>Le module est servi au même chemin que le fichier <code>.razor</code>. Dans une Blazor Web App, les fichiers du projet client sont servis à la racine du site ; dans une bibliothèque de composants, ce serait <code>_content/&lt;bibliothèque&gt;/…</code>. Libérez le module en implémentant <code>IAsyncDisposable</code>, et ignorez <code>JSDisconnectedException</code> : en mode Server, le navigateur peut être déjà parti.</p></details>
       </div>
       <div class="bridge">
         <span class="lbl">Comparaison</span>
-        <p data-lang="java">≈ <code>@CssImport</code> et <code>getElement().executeJs(…)</code> dans Vaadin.</p>
+        <p data-lang="java">≈ <code>getElement().executeJs(…)</code> dans Vaadin. Attention, <code>@CssImport</code> charge une feuille globale : l'isolation ressemble plutôt au shadow DOM d'un composant Lit.</p>
         <p data-lang="rust">≈ <code>#[wasm_bindgen(module = "…")]</code> pour appeler une fonction JavaScript depuis du Rust compilé en WebAssembly.</p>
         <p data-lang="python">Côté Python, le JavaScript reste dans le template : pas de pont nécessaire, mais pas de typage non plus.</p>
         <p data-lang="javascript">Le CSS isolé ≈ les CSS Modules : des classes renommées pour ne s'appliquer qu'au composant. L'interop n'a pas d'équivalent : en JS, on appelle directement l'API du navigateur.</p>
         <div class="compare">
-          <pre data-lang="csharp"><code class="language-csharp">// Toast.razor.css ne s'applique qu'à Toast.razor
+          <pre data-lang="csharp"><code class="language-csharp">@* Toast.razor.css ne s'applique qu'à Toast.razor *@
 @inject IJSRuntime JS
 
 &lt;button class="beep" @onclick="BeepAsync"&gt;Beep&lt;/button&gt;

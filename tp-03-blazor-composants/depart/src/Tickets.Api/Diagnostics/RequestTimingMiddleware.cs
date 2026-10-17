@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace Tickets.Api.Diagnostics;
 
 /// <summary>
-/// Exercise 01: times every request, logs it and returns the duration in the X-Request-Duration-Ms header.
+/// TP-02, exercise 01: times every request, logs it and returns the duration in the X-Request-Duration-Ms header.
 /// </summary>
 /// <remarks>
 /// A convention-based middleware: a constructor taking the next delegate, and an InvokeAsync method.

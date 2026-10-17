@@ -34,7 +34,6 @@ public sealed class Ticket
     public List<Comment> Comments { get; set; } = [];
 
     /// <summary>A shortcut for the pages: the Comments collection must be loaded (Include).</summary>
-    /// <remarks>A read-only property is not mapped to a column: EF Core cannot use it inside a query.</remarks>
     public int CommentCount => Comments.Count;
 }
 

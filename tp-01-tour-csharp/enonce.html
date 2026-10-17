@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TP-01 · Tour de .NET et C#</title>
+<title>TP-01 · Tour de .NET et C# express</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,7 +74,7 @@ dotnet run</code></pre>
         <li><code>Nullable</code> et <code>ImplicitUsings</code> apparaissent dans <code>Hello.csproj</code>, mais aussi dans <code>Directory.Build.props</code> à la racine du dépôt. Comment MSBuild trouve-t-il ce fichier ?
           <details class="answer"><summary>Voir la réponse</summary><p>MSBuild cherche <code>Directory.Build.props</code> (et <code>Directory.Packages.props</code>) en remontant les dossiers depuis le projet, et importe le premier trouvé. C'est ainsi qu'un réglage s'applique à tous les projets d'un dépôt.</p></details></li>
       </ol>
-      <p>Enfin, depuis .NET 10, un fichier C# seul se lance sans projet. Créez <code>hello.cs</code> :</p>
+      <p>Enfin, depuis .NET 10, un fichier C# seul se lance sans projet. Revenez dans <code>depart/sandbox/</code> (<code>cd ..</code>) : un fichier <code>.cs</code> posé dans le dossier d'un projet en ferait partie. Créez-y <code>hello.cs</code> :</p>
       <pre><code class="language-csharp">Console.WriteLine($"Hello from .NET {Environment.Version}");</code></pre>
       <p>et lancez <code>dotnet run hello.cs</code>.</p>
       <div class="bridge">
@@ -106,16 +106,16 @@ dotnet run</code></pre>
         <li>Ajoutez le package <code>Humanizer.Core</code> en version <code>3.0.10</code> :
           <ul>
             <li>une ligne <code>&lt;PackageVersion Include="Humanizer.Core" Version="3.0.10" /&gt;</code> dans <code>depart/Directory.Packages.props</code> ;</li>
-            <li>une ligne <code>&lt;PackageReference Include="Humanizer.Core" /&gt;</code>, <strong>sans version</strong>, dans <code>src/Katas/Katas.csproj</code>.</li>
+            <li>une ligne <code>&lt;PackageReference Include="Humanizer.Core" /&gt;</code>, <strong>sans version</strong>, dans <code>depart/src/Katas/Katas.csproj</code>.</li>
           </ul>
-          Vous pouvez aussi essayer <code>dotnet add src/Katas package Humanizer.Core</code> et regarder où la version a été écrite.</li>
+          Vous pouvez aussi essayer <code>dotnet add depart/src/Katas package Humanizer.Core</code> et regarder où la version a été écrite.</li>
         <li>Implémentez les deux méthodes de <code>Exercise02/TextFormatter.cs</code> avec Humanizer.</li>
-        <li>Listez les dépendances : <code>dotnet list src/Katas package --include-transitive</code>, puis avec <code>--vulnerable</code>.</li>
+        <li>Listez les dépendances : <code>dotnet list depart/src/Katas package --include-transitive</code>, puis avec <code>--vulnerable</code>.</li>
       </ol>
       <div class="hints">
         <details class="hint"><summary>la durée</summary><p><code>TimeSpan</code> reçoit une méthode d'extension <code>Humanize(precision, culture)</code>.</p></details>
         <details class="hint"><summary>la phrase</summary><p><code>string</code> reçoit <code>Humanize(LetterCasing.Sentence)</code>.</p></details>
-        <details class="hint"><summary>la langue</summary><p>Le test attend de l'anglais : passez <code>CultureInfo.GetCultureInfo("en-US")</code>, sinon le résultat dépend des réglages régionaux de la machine.</p></details>
+        <details class="hint"><summary>la langue</summary><p>Le test attend de l'anglais : passez <code>CultureInfo.GetCultureInfo("en-US")</code>. <code>Humanizer.Core</code> ne contient que l'anglais, mais dès qu'on ajoute un package de langue (<code>Humanizer.Core.fr</code>…), le résultat suit la culture de la machine : autant la fixer.</p></details>
       </div>
       <div class="bridge">
         <span class="lbl">Comparaison</span>
@@ -365,7 +365,7 @@ timeoutSource.CancelAfter(timeout);</code></pre></details>
       <div class="bridge">
         <span class="lbl">Comparaison</span>
         <p data-lang="java"><code>Task</code> ≈ <code>CompletableFuture</code>, mais <code>await</code> évite les chaînes de <code>thenApply</code>. <code>CancellationToken</code> n'a pas d'équivalent direct : en Java, on interrompt un thread ou on annule un futur.</p>
-        <p data-lang="rust"><code>Task.WhenAll</code> ≈ <code>try_join_all</code>. Contrairement à Rust, pas de runtime à choisir : le pool de threads est intégré, et une <code>Task</code> démarre dès qu'on l'appelle, sans attendre d'être <code>.await</code>.</p>
+        <p data-lang="rust"><code>Task.WhenAll</code> ≈ <code>join_all</code> : il attend toutes les tâches, puis relance l'exception s'il y en a une (<code>try_join_all</code>, lui, s'arrête à la première erreur). Contrairement à Rust, pas de runtime à choisir : le pool de threads est intégré, et une <code>Task</code> démarre dès qu'on l'appelle, sans attendre d'être <code>.await</code>.</p>
         <p data-lang="python"><code>Task.WhenAll</code> ≈ <code>asyncio.gather</code>. Pas de boucle d'événements à lancer, et le code async peut aussi utiliser plusieurs cœurs.</p>
         <p data-lang="javascript"><code>Task</code> ≈ <code>Promise</code>, <code>Task.WhenAll</code> ≈ <code>Promise.all</code>, <code>CancellationToken</code> ≈ <code>AbortSignal</code>. Comme en JS, une tâche démarre dès qu'on l'appelle.</p>
         <div class="compare">
@@ -400,7 +400,7 @@ pages = await asyncio.gather(*(fetch(session, url) for url in urls))</code></pre
       <h2>Écrire ses propres tests</h2>
       <p>Dans <code>tests/Katas.Tests/MyTests.cs</code>, écrivez <strong>au moins trois tests</strong> sur le code de la matinée. Un test vérifie qu'il y en a au moins trois. Par exemple :</p>
       <ul>
-        <li>un <code>[Theory]</code> avec plusieurs <code>[InlineData]</code>, pour les frais de port selon le pays ;</li>
+        <li>un <code>[Theory]</code> avec plusieurs <code>[InlineData]</code>, pour les frais de port selon le pays (un attribut n'accepte pas de <code>decimal</code> : passez un <code>double</code> et convertissez-le avec <code>(decimal)</code>) ;</li>
         <li>un test qui vérifie une exception avec <code>Assert.Throws&lt;T&gt;(…)</code> ;</li>
         <li>un test asynchrone (méthode <code>async Task</code>) pour <code>PageFetcher</code>, avec <code>FakeHttpHandler</code>.</li>
       </ul>

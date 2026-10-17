@@ -38,6 +38,34 @@ public class LoginFlowTests(WebAppFactory app) : IClassFixture<WebAppFactory>
         var response = await browser.GetAsync("/tickets/new", Xunit.TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
     }
+
+    // Provided login page: it must never send the user to another site after login (open redirect).
+    [Theory]
+    [InlineData("/tickets/new", "/tickets/new")]
+    [InlineData("//evil.example", "/")]
+    [InlineData("/\\evil.example", "/")]
+    [InlineData("https://evil.example/", "/")]
+    public async Task AfterLogin_OnlyLocalAddressesAreFollowed(string returnUrl, string expectedPath)
+    {
+        var login = await app.LogInAsync(app.CreateBrowser(), "alice", "demo", returnUrl);
+
+        Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
+        var target = new Uri(new Uri("http://localhost/"), login.Headers.Location!);
+        Assert.Equal("localhost", target.Host);
+        Assert.Equal(expectedPath, target.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task Logout_RequiresTheAntiforgeryToken()
+    {
+        var browser = app.CreateBrowser();
+        await app.LogInAsync(browser, "alice", "demo");
+
+        var response = await browser.PostAsync("/account/logout", new FormUrlEncodedContent([]), Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("<h1>New ticket</h1>", await app.GetHtmlAsync("/tickets/new", browser));   // still logged in
+    }
 }
 
 public class NavMenuTests : ComponentTest

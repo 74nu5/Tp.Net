@@ -4,7 +4,7 @@ using Tickets.Api.Domain;
 namespace Tickets.Api.Data;
 
 /// <summary>
-/// Exercise 05: the unit of work with the database. One DbSet per table we query directly.
+/// TP-02, exercise 05: the unit of work with the database. One DbSet per table we query directly.
 /// </summary>
 public sealed class TicketsDbContext(DbContextOptions<TicketsDbContext> options) : DbContext(options)
 {

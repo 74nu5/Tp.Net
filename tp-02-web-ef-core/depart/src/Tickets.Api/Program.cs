@@ -16,7 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 // TODO Exercise 03: bind the "Tickets" section to TicketsOptions, validate it with its DataAnnotations,
 // and make the application refuse to start when it is invalid.
 
-// Exercise 04. TODO: add the OpenAPI document and the validation of request bodies.
+// TODO Exercise 04: add the OpenAPI document and the validation of request bodies.
 builder.Services.AddProblemDetails();
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 

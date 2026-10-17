@@ -1,7 +1,7 @@
 namespace Tickets.Api.Diagnostics;
 
 /// <summary>
-/// Exercise 02: three identical classes, registered with three different lifetimes.
+/// TP-02, exercise 02: three identical classes, registered with three different lifetimes.
 /// Each instance gets a new id, so the ids show when the container creates a new instance.
 /// </summary>
 public abstract class Operation

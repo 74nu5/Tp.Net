@@ -37,7 +37,7 @@ public sealed class NewTicketForm
     [StringLength(200, ErrorMessage = "The title must be at most 200 characters long.")]
     public string Title { get; set; } = "";
 
-    [StringLength(2000)]
+    [StringLength(2000, ErrorMessage = "The description must be at most 2000 characters long.")]
     public string? Description { get; set; }
 
     public TicketPriority Priority { get; set; } = TicketPriority.Normal;

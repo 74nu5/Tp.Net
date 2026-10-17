@@ -3,8 +3,8 @@
 ## À préparer avant la séance
 
 - L'API du TP-02 doit démarrer sur son poste : secret `ConnectionStrings:Tickets`, base `TicketsDev` migrée.
-- Vérifier que `dotnet user-jwts` fonctionne (outil livré avec le SDK) : `dotnet user-jwts create --project tp-04-blazor-auth-etat/depart/src/Tickets.Api`. La première exécution écrit la clé de signature dans les user-secrets de l'API et la section `Authentication:Schemes:Bearer` dans `appsettings.Development.json` (déjà présente dans `depart/`).
-- Les tests de l'API (exercices 1 et 2) ont besoin de SQL Server, comme au TP-02 ; ceux du front (exercices 3 à 7) n'ont besoin de rien : `dotnet test --project tp-04-blazor-auth-etat/solution/tests/Tickets.Web.Tests` donne 24 tests verts en quelques secondes. Toute la solution : 72 tests.
+- Vérifier que `dotnet user-jwts` fonctionne (outil livré avec le SDK) : `dotnet user-jwts create --project tp-04-blazor-auth-etat/solution/src/Tickets.Api` (sur `solution/`, pour ne pas modifier `depart/`). La première exécution écrit la clé de signature dans les user-secrets de l'API ; elle ajoute aussi la section `Authentication:Schemes:Bearer` à `appsettings.Development.json`, absente de `depart/` : l'alternant la voit apparaître à l'exercice 1.
+- Les tests de l'API (exercices 1 et 2) ont besoin de SQL Server, comme au TP-02 ; ceux du front (exercices 3 à 7) n'ont besoin de rien : `dotnet test --project tp-04-blazor-auth-etat/solution/tests/Tickets.Web.Tests` donne 29 tests verts en quelques secondes. Toute la solution : 77 tests.
 - Un client HTTP sous la main (fichier `.http` de l'IDE, curl ou Scalar) pour l'exercice 2.
 - Si nos applis utilisent un fournisseur d'identité (Entra ID, Keycloak…), préparer 5 minutes pour montrer où il se branche : le cookie et le jeton du TP sont remplacés par OpenID Connect, le reste (`AuthorizeView`, `[Authorize]`, policies) ne change pas.
 
@@ -29,6 +29,8 @@ Total : 2 h 50. L'exercice 3 est le plus long : il touche `Program.cs`, le route
 - **`[PersistentState]`** (nouveau en .NET 10) remplace `PersistentComponentState` manipulé à la main. Le test de l'exercice 5 déchiffre l'état sérialisé dans la page : c'est la preuve que la liste traverse le prérendu, et donc qu'un seul appel part vers l'API.
 - **Razor Class Library** : `Badge` part dans `Tickets.Components` ; `PriorityBadge` reste dans le client et l'utilise. Le CSS isolé de la bibliothèque est servi sous `_content/Tickets.Components/`.
 
+- **Page de connexion fournie** : après la connexion, elle ne suit que les adresses locales (`/…`, mais ni `//…` ni `/\…`, que les navigateurs lisent comme un autre site). Les tests de `LoginFlowTests` vérifient cette protection contre les redirections ouvertes.
+
 ## Pièges attendus
 
 - **Ordre des middlewares** : `UseAuthentication` avant `UseAuthorization`. Avec `WebApplication`, ils sont ajoutés automatiquement quand les services sont enregistrés, mais un appel explicite dans le mauvais ordre casse tout.
@@ -36,7 +38,7 @@ Total : 2 h 50. L'exercice 3 est le plus long : il touche `Program.cs`, le route
 - **Jeton `user-jwts` refusé** : audience ou émetteur différents de `appsettings.Development.json`, ou API lancée hors environnement `Development` (`--no-launch-profile` passe en Production).
 - **`AuthorizeView` sans état d'authentification** : sans `AddCascadingAuthenticationState`, erreur « Authorization requires a cascading parameter of type Task&lt;AuthenticationState&gt; ».
 - **Deux `AuthorizeView` imbriqués** : conflit sur `context` ; il faut renommer avec `Context="adminContext"`.
-- **Formulaire de déconnexion sans antiforgery** : `POST /account/logout` répond 400. Le composant `<AntiforgeryToken />` est obligatoire dans un `<form>` HTML brut.
+- **Formulaire de déconnexion sans antiforgery** : `POST /account/logout` répond 400. Le composant `<AntiforgeryToken />` est obligatoire dans un `<form>` HTML brut. L'endpoint fourni le vérifie lui-même (`IAntiforgery.IsRequestValidAsync`) : une Minimal API ne contrôle ce jeton seule que si elle lie des données de formulaire.
 - **État partagé qui ne rafraîchit pas** : le compteur doit s'abonner à l'événement `Changed`, appeler `InvokeAsync(StateHasChanged)` et se désabonner dans `Dispose`, sinon fuite mémoire et mises à jour sur un composant mort.
 - **Durée de vie du service d'état** : `Singleton` partagerait les favoris entre tous les utilisateurs du serveur. `Scoped` = un circuit en mode Server, l'application entière en WebAssembly.
 - **Version sur le `PackageReference`** de la nouvelle bibliothèque : erreur NU1008 à cause de la gestion centralisée des paquets. L'énoncé le signale.

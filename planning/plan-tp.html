@@ -269,7 +269,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       "moduleId": "m1",
       "order": 1,
       "days": 0.5,
-      "status": "cadrer",
+      "status": "relecture",
       "owner": "",
       "title": "Tour de .NET et C# express",
       "summary": "L'écosystème, la CLI, les dépendances et l'essentiel du langage, en katas courts. Pas de théorie longue : on lit, on tape, on lance.",
@@ -295,8 +295,8 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         "xUnit"
       ],
       "bridge": "dotnet ≈ cargo ou mvn, NuGet ≈ crates.io / Maven Central, LINQ ≈ Java Streams ou itérateurs Rust, Task ≈ Promise JS. Les nullable reference types sont une analyse à la compilation, moins stricte qu'Option<T>.",
-      "start": "dotnet new console -n Katas",
-      "deliverable": "Un dépôt « katas » avec un fichier par exercice et des tests au vert.",
+      "start": "Solution Katas fournie (depart/Katas.slnx), un dossier et un fichier de tests par exercice",
+      "deliverable": "La solution Katas avec tous ses tests au vert, plus au moins trois tests écrits soi-même.",
       "notes": ""
     },
     {
@@ -304,7 +304,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       "moduleId": "m1",
       "order": 2,
       "days": 0.5,
-      "status": "cadrer",
+      "status": "relecture",
       "owner": "",
       "title": "Serveur web et Entity Framework Core",
       "summary": "Comment tourne une application web .NET (host, injection de dépendances, configuration, Minimal APIs), puis la persistance avec EF Core : la moitié de la séance y est consacrée.",
@@ -336,7 +336,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         "chaîne de connexion"
       ],
       "bridge": "ASP.NET Core ≈ Spring Boot, tout se déclare dans Program.cs ; Minimal APIs ≈ Express ou Axum. EF Core ≈ JPA/Hibernate ; les migrations ≈ Flyway/Liquibase ou celles de diesel/sqlx ; LINQ to Entities ≈ Criteria API, typé à la compilation.",
-      "start": "dotnet new webapi -n Tickets.Api, puis dotnet tool install --global dotnet-ef et dotnet add package Microsoft.EntityFrameworkCore.SqlServer",
+      "start": "API Tickets fournie, avec un dépôt en mémoire ; outil dotnet-ef installé (dotnet tool install --global dotnet-ef)",
       "deliverable": "Une API « tickets » persistée dans SQL Server par EF Core, avec deux migrations, réutilisée par les demi-journées Blazor.",
       "notes": "SQL Server installé sur son poste : vérifier avant lundi l'instance (nom, authentification Windows ou SQL) et SSMS. En local, prévoir TrustServerCertificate=True dans la chaîne de connexion, sinon la connexion échoue sur le certificat auto-signé. Les tickets font écho aux anomalies qu'il traitera l'après-midi."
     },
@@ -345,12 +345,12 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       "moduleId": "m1",
       "order": 3,
       "days": 0.5,
-      "status": "cadrer",
+      "status": "relecture",
       "owner": "",
       "title": "Blazor : composants, modes de rendu et formulaires",
       "summary": "Le modèle de composants Razor et le choix du mode de rendu, puis un premier écran utile branché sur l'API.",
       "objectives": [
-        "Créer une Blazor Web App et lire sa structure : App.razor, Routes, layouts (15 min)",
+        "Lire la structure de la Blazor Web App fournie : App.razor, Routes, layouts, et ajouter une page (15 min)",
         "Composant paramétré : [Parameter], EventCallback, RenderFragment (30 min)",
         "Charger les tickets de l'API dans OnInitializedAsync (30 min)",
         "Afficher la même page en Static SSR, Interactive Server et WebAssembly ; observer le réseau et SignalR dans les devtools (40 min)",
@@ -371,7 +371,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         "JS interop"
       ],
       "bridge": "Composants ≈ React ou Vue, en C#. Interactive Server garde l'état côté serveur via SignalR ; WebAssembly exécute .NET dans le navigateur (comme Rust compilé en wasm).",
-      "start": "dotnet new blazor --interactivity Auto -n Tickets.Web",
+      "start": "API du TP-02, plus Tickets.Web et Tickets.Web.Client fournis (modèle Blazor Web App)",
       "deliverable": "Un front qui liste et crée des tickets via l'API, avec un mot sur le mode de rendu retenu et pourquoi.",
       "notes": ""
     },
@@ -380,13 +380,13 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       "moduleId": "m1",
       "order": 4,
       "days": 0.5,
-      "status": "cadrer",
+      "status": "relecture",
       "owner": "",
       "title": "Blazor : authentification, état et composants réutilisables",
       "summary": "Sécuriser l'application de bout en bout et découvrir comment on structure du Blazor qui dure.",
       "objectives": [
-        "Authentification vs autorisation : schémas, ClaimsPrincipal, policies (15 min)",
-        "Protéger l'API avec JWT Bearer (jetons de test via dotnet user-jwts) et une policy « admin » sur DELETE (30 min)",
+        "Authentifier les appels à l'API avec un JWT (jetons de test via dotnet user-jwts), ClaimsPrincipal (15 min)",
+        "Autoriser : écritures réservées aux utilisateurs connectés, policy « admin » sur DELETE, 401 contre 403 (30 min)",
         "Ajouter l'authentification à la Blazor Web App ; AuthorizeView et [Authorize] (40 min)",
         "Partager l'état entre composants : cascading value et service scoped (20 min)",
         "Éviter le double chargement au prérendu avec [PersistentState] (15 min)",
@@ -406,7 +406,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
         "bUnit"
       ],
       "bridge": "≈ Spring Security en plus explicite. Un state container ≈ un store Redux ou Pinia. Une Razor Class Library ≈ une librairie de composants npm distribuée en package NuGet.",
-      "start": "Solution Tickets des demi-journées précédentes",
+      "start": "Solution du TP-03, plus la page de connexion et les comptes de démonstration fournis",
       "deliverable": "L'application tickets authentifiée, avec un composant partagé testé.",
       "notes": "Aligner l'exemple d'authentification sur le fournisseur d'identité de nos applis."
     },
@@ -415,7 +415,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
       "moduleId": "m2",
       "order": 1,
       "days": 0.5,
-      "status": "cadrer",
+      "status": "relecture",
       "owner": "",
       "title": "S'orienter et déboguer dans une appli existante",
       "summary": "Les outils pour diagnostiquer vite, directement utiles pour la correction d'anomalies, et un coup d'œil à ce qu'apporte .NET 11.",
@@ -501,7 +501,7 @@ nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: 
   "use strict";
 
   const PHASES = [
-    { id: "dotnet", cls: "p1", tag: "Phase 1", title: "Vernis .NET 10 / 11", intro: "Un tour d'horizon de ce que permet .NET et de comment ça marche, en manipulant : chaque demi-journée enchaîne des exercices courts, avec un pont depuis Java, Rust et JavaScript. Le reste du temps, l'alternant corrige des anomalies sur nos applis." },
+    { id: "dotnet", cls: "p1", tag: "Phase 1", title: "Vernis .NET 10 / 11", intro: "Un tour d'horizon de ce que permet .NET et de comment ça marche, en manipulant : chaque demi-journée enchaîne des exercices courts, avec un pont depuis Java, Rust, Python et JavaScript. Le reste du temps, l'alternant corrige des anomalies sur nos applis." },
     { id: "3b", cls: "p2", tag: "Phase 2", title: "Bonnes pratiques 3B Studio", intro: "Nos conventions, notre architecture et notre façon de livrer. Dans un second temps, à cadrer avec l'équipe : fixez la date de début dans les réglages." }
   ];
   const STATUSES = [

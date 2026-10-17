@@ -3,7 +3,8 @@
 @inject ITicketsClient Client
 @inject NavigationManager Navigation
 
-@* Exercise 05: a form bound to a model, validated with its DataAnnotations. *@
+@* TP-03, exercise 05: a form bound to a model, validated with its DataAnnotations.
+   TODO Exercise 03: only for logged-in users. *@
 
 <PageTitle>New ticket</PageTitle>
 
@@ -27,6 +28,7 @@
             <option value="@priority">@priority</option>
         }
     </InputSelect>
+    <ValidationMessage For="() => _ticket.Priority" />
 
     <div>
         <button type="submit" disabled="@_saving">@(_saving ? "Creating…" : "Create")</button>

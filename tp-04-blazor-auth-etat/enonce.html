@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>TP-04 · Blazor, sécurité et état</title>
+<title>TP-04 · Blazor : authentification, état et composants réutilisables</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,7 +25,7 @@
     <header class="intro">
       <div class="eyebrow">TP-04 · jeudi 22 octobre, matin · environ 3 h</div>
       <h1>Blazor : authentification, état et composants réutilisables</h1>
-      <p>Dernière demi-journée sur l'application de tickets. On la sécurise de bout en bout : l'API exige un jeton, le front connaît son utilisateur. On partage ensuite de l'état entre composants, on supprime le double chargement constaté hier, et on extrait un composant dans une bibliothèque réutilisable, testée avec bUnit.</p>
+      <p>Dernière demi-journée de construction de l'application de tickets. On la sécurise de bout en bout : l'API exige un jeton, le front connaît son utilisateur. On partage ensuite de l'état entre composants, on supprime le double chargement constaté hier, et on extrait un composant dans une bibliothèque réutilisable, testée avec bUnit.</p>
       <p class="muted">Cochez « Terminé » à la fin de chaque exercice ; le chrono est facultatif. Tout reste dans ce navigateur.</p>
       <p>Les exemples de code montrent le C#, et à côté l'équivalent dans l'écosystème de votre choix :</p>
       <div class="compare-picker"></div>
@@ -39,7 +39,7 @@
         <li>Les tests sont répartis dans <strong>deux projets</strong> : ceux des exercices 1 et 2 sont dans <code>tests/Tickets.Api.Tests</code> (SQL Server requis, comme au TP-02), ceux des exercices 3 à 7 dans <code>tests/Tickets.Web.Tests</code>. Chaque exercice donne sa commande.
           <pre><code class="language-bash">dotnet test --project depart/tests/Tickets.Api.Tests
 dotnet test --project depart/tests/Tickets.Web.Tests</code></pre>
-          Au départ, 9 tests de l'API et 18 tests du front échouent. Les tests du TP-02 restent dans le projet de l'API et doivent rester verts : ils appellent l'API en administrateur.</li>
+          Au départ, 9 tests de l'API et 22 tests du front échouent. Les tests du TP-02 restent dans le projet de l'API et doivent rester verts : ils appellent l'API en administrateur. Côté front, les tests du TP-03 sont remplacés par ceux de ce TP : vérifiez à la main que les pages du TP-03 marchent toujours.</li>
       </ol>
       <p><strong>Vocabulaire</strong> : l'<em>authentification</em> établit qui est l'utilisateur ; l'<em>autorisation</em> décide ce qu'il a le droit de faire. En .NET, un utilisateur est un <code>ClaimsPrincipal</code> : un ensemble de <em>claims</em> (nom, rôles, e-mail…) émis par un <em>schéma</em> d'authentification (jeton JWT, cookie…).</p>
     </div>
@@ -89,7 +89,7 @@ SecurityFilterChain api(HttpSecurity http) throws Exception {
 String me(@AuthenticationPrincipal Jwt jwt) {
     return jwt.getSubject();
 }</code></pre>
-          <pre data-lang="rust"><code class="language-rust">struct User { name: String }
+          <pre data-lang="rust"><code class="language-rust">struct User { name: String, roles: Vec&lt;String&gt; }
 
 impl&lt;S: Send + Sync&gt; FromRequestParts&lt;S&gt; for User {
     type Rejection = StatusCode;
@@ -98,26 +98,32 @@ impl&lt;S: Send + Sync&gt; FromRequestParts&lt;S&gt; for User {
         let token = parts.headers.get(AUTHORIZATION)
             .and_then(|value| value.to_str().ok()?.strip_prefix("Bearer "))
             .ok_or(StatusCode::UNAUTHORIZED)?;
-        let claims = decode::&lt;Claims&gt;(token, &amp;KEY, &amp;Validation::default())
+        let mut validation = Validation::new(Algorithm::HS256);
+        validation.set_audience(&amp;["tickets-api"]);
+        let claims = decode::&lt;Claims&gt;(token, &amp;KEY, &amp;validation)
             .map_err(|_| StatusCode::UNAUTHORIZED)?
             .claims;
-        Ok(User { name: claims.sub })
+        Ok(User { name: claims.sub, roles: claims.roles })
     }
 }
 
 async fn me(user: User) -&gt; String { user.name }</code></pre>
           <pre data-lang="python"><code class="language-python">bearer = HTTPBearer()
 
-def current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer)) -&gt; str:
+class User(BaseModel):
+    name: str
+    roles: list[str] = []
+
+def current_user(credentials: HTTPAuthorizationCredentials = Depends(bearer)) -&gt; User:
     try:
         claims = jwt.decode(credentials.credentials, KEY, algorithms=["HS256"], audience="tickets-api")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401)
-    return claims["sub"]
+    return User(name=claims["sub"], roles=claims.get("roles", []))
 
 @app.get("/me")
-def me(user: str = Depends(current_user)):
-    return {"name": user}</code></pre>
+def me(user: User = Depends(current_user)):
+    return {"name": user.name}</code></pre>
           <pre data-lang="javascript"><code class="language-javascript">import { expressjwt } from "express-jwt";
 
 app.use("/me", expressjwt({ secret: KEY, algorithms: ["HS256"], audience: "tickets-api" }));
@@ -168,6 +174,8 @@ products.MapDelete("/{id:int}", DeleteAsync).RequireAuthorization("admin");</cod
     .requestMatchers(HttpMethod.GET, "/products/**").permitAll()
     .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("ADMIN")
     .anyRequest().authenticated());
+// hasRole suppose un JwtAuthenticationConverter qui transforme le claim "roles" en ROLE_* :
+// par défaut, Spring ne lit que les scopes (SCOPE_*).
 
 // ou sur la méthode : @PreAuthorize("hasRole('ADMIN')")</code></pre>
           <pre data-lang="rust"><code class="language-rust">let admin = Router::new()
@@ -311,7 +319,7 @@ public void Toggle(int ticketId)
         <p data-lang="java">Avec Vaadin, un bean <code>@UIScope</code> partagé par les vues d'un onglet joue le rôle du service scoped ; les écouteurs remplacent l'événement <code>Changed</code>.</p>
         <p data-lang="rust">≈ <code>provide_context</code> et <code>expect_context</code> de Leptos avec un signal : la réactivité est automatique, alors qu'en Blazor on s'abonne à un événement.</p>
         <p data-lang="python">Côté serveur, l'état par utilisateur vit dans la session ; chaque requête relit et réécrit le fragment HTML concerné.</p>
-        <p data-lang="javascript">Le service scoped ≈ un store Zustand ou un contexte React ; <code>CascadingValue</code> ≈ <code>Context.Provider</code>, sans le ré-affichage automatique des abonnés.</p>
+        <p data-lang="javascript">Le service scoped ≈ un store Zustand ou un contexte React ; <code>CascadingValue</code> ≈ <code>Context.Provider</code> : les descendants se réaffichent quand la valeur change. Le service scoped, lui, demande de s'abonner à <code>Changed</code>.</p>
         <div class="compare">
           <pre data-lang="csharp"><code class="language-csharp">public sealed class CartState
 {
@@ -352,7 +360,7 @@ def add(request: Request, item: str = Form()):
     cart = request.session.get("cart", [])
     request.session["cart"] = [*cart, item]
     return HTMLResponse(f"&lt;span id='cart-count'&gt;{len(cart) + 1}&lt;/span&gt;")</code></pre>
-          <pre data-lang="javascript"><code class="language-javascript">// Zustand : un store partagé, les composants qui le lisent se ré-affichent
+          <pre data-lang="javascript"><code class="language-javascript">// Zustand : un store partagé, les composants qui le lisent se réaffichent
 const useCart = create(set =&gt; ({
   items: [],
   add: item =&gt; set(state =&gt; ({ items: [...state.items, item] })),
@@ -537,7 +545,7 @@ fn renders_its_content() {
       <pre><code class="language-bash">dotnet build depart/Tickets.slnx                          # 0 avertissement
 dotnet test --project depart/tests/Tickets.Api.Tests      # API : sécurité et tests du TP-02
 dotnet test --project depart/tests/Tickets.Web.Tests      # front : tous au vert</code></pre>
-      <p>C'est la fin de l'application de tickets. Comparez avec <code>solution/</code>. Demain, le bonus vous plonge dans une application existante à déboguer.</p>
+      <p>L'application de tickets est complète. Comparez avec <code>solution/</code>. Demain, le bonus la reprend, modifiée entre-temps par un collègue, pour la déboguer.</p>
       <div data-report></div>
       <div><button class="btn primary" type="button" data-copy-report>Copier mon bilan</button></div>
     </section>

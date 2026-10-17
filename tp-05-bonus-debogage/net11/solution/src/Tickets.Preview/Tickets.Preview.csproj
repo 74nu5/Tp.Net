@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- TP-05, exercise 05: a glimpse of C# 15. Built with the .NET 11 SDK chosen by ../../global.json. -->
+  <!-- TP-05, exercise 05: a glimpse of C# 15. Built with the .NET 11 SDK chosen by net11/global.json. -->
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <!-- As in Rust, a switch that forgets a case of the union does not build: CS8509 becomes an error. -->

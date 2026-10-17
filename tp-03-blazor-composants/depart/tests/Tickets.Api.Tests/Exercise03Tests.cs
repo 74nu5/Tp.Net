@@ -11,6 +11,8 @@ public class SettingsTests
 
         var json = await (await factory.CreateClient().GetAsync("/settings", TestContext.Current.CancellationToken)).ReadJsonAsync();
 
+        // The tests run in Development, so user-secrets and environment variables apply too:
+        // if this fails on your machine only, remove Tickets:SupportEmail from user-secrets and unset Tickets__PageSize.
         Assert.Equal(25, json["pageSize"]!.GetValue<int>());
         Assert.Equal("support@example.com", json["supportEmail"]!.GetValue<string>());
     }

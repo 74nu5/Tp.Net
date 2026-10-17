@@ -8,7 +8,7 @@ using Tickets.Api.Settings;
 namespace Tickets.Api.Endpoints;
 
 /// <summary>
-/// Exercises 04 and 07: the HTTP surface of the API, as Minimal API endpoints.
+/// TP-02, exercises 04 and 07: the HTTP surface of the API, as Minimal API endpoints.
 /// </summary>
 public static class TicketEndpoints
 {

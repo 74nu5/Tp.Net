@@ -43,13 +43,14 @@ public sealed partial class WebAppFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>Logs in through the real login form, antiforgery token included. Returns the response to the POST.</summary>
-    public async Task<HttpResponseMessage> LogInAsync(HttpClient browser, string userName, string password)
+    public async Task<HttpResponseMessage> LogInAsync(HttpClient browser, string userName, string password, string? returnUrl = null)
     {
-        var form = await GetHtmlAsync("/account/login", browser);
+        var page = returnUrl is null ? "/account/login" : $"/account/login?ReturnUrl={Uri.EscapeDataString(returnUrl)}";
+        var form = await GetHtmlAsync(page, browser);
         var token = AntiforgeryToken().Match(form);
         Assert.True(token.Success, "No antiforgery token in the login form.");
 
-        return await browser.PostAsync("/account/login", new FormUrlEncodedContent(new Dictionary<string, string>
+        return await browser.PostAsync(page, new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["_handler"] = "login",
             ["__RequestVerificationToken"] = token.Groups[1].Value,

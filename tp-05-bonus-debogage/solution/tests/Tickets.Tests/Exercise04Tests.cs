@@ -85,6 +85,15 @@ public class AppHostTests
     }
 
     [Fact]
+    public async Task TheApi_IsHealthChecked()
+    {
+        await using var appHost = await CreateAppHostAsync();
+
+        Assert.True(Project(appHost, "api").TryGetAnnotationsOfType<HealthCheckAnnotation>(out var checks) && checks.Any(),
+            "Add WithHttpHealthCheck(\"/health\") to the api resource.");
+    }
+
+    [Fact]
     public async Task TheFrontEnd_WaitsForTheApi()
     {
         await using var appHost = await CreateAppHostAsync();

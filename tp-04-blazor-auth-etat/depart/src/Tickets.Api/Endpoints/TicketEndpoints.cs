@@ -8,7 +8,7 @@ using Tickets.Api.Settings;
 namespace Tickets.Api.Endpoints;
 
 /// <summary>
-/// Exercises 04 and 07: the HTTP surface of the API, as Minimal API endpoints.
+/// TP-02, exercises 04 and 07: the HTTP surface of the API, as Minimal API endpoints.
 /// </summary>
 public static class TicketEndpoints
 {
@@ -20,6 +20,7 @@ public static class TicketEndpoints
         tickets.MapGet("/", ListAsync);
         tickets.MapGet("/summary", SummaryAsync);
         tickets.MapGet("/{id:int}", GetAsync).WithName("GetTicket");
+        // TODO Exercise 02: reading stays open; writing needs an authenticated caller; deleting needs the admin policy.
         tickets.MapPost("/", CreateAsync);
         tickets.MapPut("/{id:int}", UpdateAsync);
         tickets.MapDelete("/{id:int}", DeleteAsync);

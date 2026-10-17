@@ -6,8 +6,8 @@ namespace Katas.Exercise03;
 /// An amount in a given currency.
 /// </summary>
 /// <remarks>
-/// A <c>readonly record struct</c>: a small immutable value, compared by value, allocated on the stack.
-/// Java equivalent: a <c>record</c>; Rust equivalent: <c>#[derive(Clone, Copy, PartialEq)] struct</c>.
+/// A <c>readonly record struct</c>: a small immutable value, compared by value, stored inline (no separate allocation, unless boxed).
+/// Java equivalent: a <c>record</c>; Rust equivalent: <c>#[derive(Clone, PartialEq)] struct</c> (not <c>Copy</c>: the currency is a <c>String</c>).
 /// </remarks>
 public readonly record struct Money(decimal Amount, string Currency)
 {

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Tickets.Web.Client.Api;
 using Tickets.Web.Client.State;
 using Tickets.Web.Components;
@@ -7,7 +9,7 @@ using Tickets.Web.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// TODO exercise 04: add the Aspire service defaults here too.
+// TODO Exercise 04: add the Aspire service defaults here too.
 
 // Razor components, with the two interactive render modes available: Server (SignalR) and WebAssembly.
 builder.Services.AddRazorComponents()
@@ -47,11 +49,18 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-// TODO exercise 04: map /health and /alive.
+// TODO Exercise 04: map /health and /alive.
 
 // TP-04, exercise 03: logging out is a plain HTTP endpoint that deletes the cookie.
-app.MapPost("/account/logout", async (HttpContext context) =>
+// It changes state, so it is a POST that carries the antiforgery token of the form: otherwise any site could log
+// our users out. Minimal APIs check that token by themselves only when they bind form data, hence the explicit check.
+app.MapPost("/account/logout", async Task<Results<BadRequest, RedirectHttpResult>> (HttpContext context, IAntiforgery antiforgery) =>
 {
+    if (!await antiforgery.IsRequestValidAsync(context))
+    {
+        return TypedResults.BadRequest();
+    }
+
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return TypedResults.LocalRedirect("/");
 });

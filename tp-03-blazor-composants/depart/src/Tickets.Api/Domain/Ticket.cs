@@ -28,7 +28,7 @@ public sealed class Ticket
 
     public DateTimeOffset CreatedAt { get; set; }
 
-    /// <summary>Exercise 07: added by the second migration.</summary>
+    /// <summary>TP-02, exercise 07: added by the second migration.</summary>
     public DateTimeOffset? ClosedAt { get; set; }
 
     public List<Comment> Comments { get; set; } = [];

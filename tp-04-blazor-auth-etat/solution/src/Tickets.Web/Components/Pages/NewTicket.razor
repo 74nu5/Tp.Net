@@ -4,7 +4,7 @@
 @inject ITicketsClient Client
 @inject NavigationManager Navigation
 
-@* Exercise 05 (TP-03): a form bound to a model, validated with its DataAnnotations.
+@* TP-03, exercise 05: a form bound to a model, validated with its DataAnnotations.
    TP-04, exercise 03: [Authorize] reserves the page to logged-in users. *@
 
 <PageTitle>New ticket</PageTitle>
@@ -29,6 +29,7 @@
             <option value="@priority">@priority</option>
         }
     </InputSelect>
+    <ValidationMessage For="() => _ticket.Priority" />
 
     <div>
         <button type="submit" disabled="@_saving">@(_saving ? "Creating…" : "Create")</button>

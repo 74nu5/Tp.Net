@@ -5,7 +5,7 @@
 - **SQL Server sur son poste**, avec SSMS. Noter le nom de l'instance (`localhost`, `.\SQLEXPRESS`, `(localdb)\MSSQLLocalDB`) et le mode d'authentification. La chaîne par défaut des tests (`testsettings.json`) suppose `localhost` en authentification Windows : à adapter sinon.
 - `dotnet tool install --global dotnet-ef` (version 10).
 - Vérifier une fois `dotnet test --solution tp-02-web-ef-core/solution/Tickets.slnx` sur son poste : c'est le test le plus sûr que SQL Server, la chaîne de connexion et les droits de création de base sont bons. Attendu : 36 tests verts en une dizaine de secondes.
-- Les tests créent et suppriment eux-mêmes la base `TicketsTests` ; l'alternant crée `TicketsDev` à l'exercice 5 avec `dotnet ef database update`. L'identifiant user-secrets (`tp-net-tickets-api`) est partagé par les TP 02 à 04.
+- Les tests créent et suppriment eux-mêmes la base `TicketsTests` ; l'alternant crée `TicketsDev` à l'exercice 5 avec `dotnet ef database update`. L'identifiant user-secrets (`tp-net-tickets-api`) est partagé par les TP 02 à 05.
 
 ## Déroulé et timing
 
@@ -24,11 +24,11 @@ Une démo de 5 minutes avant l'exercice 5 (le cycle modèle → migration → ba
 
 ## Pièges attendus
 
-- **Chaîne de connexion lue trop tôt** : si elle est lue dans `Program.cs` avant `builder.Build()`, les tests ne peuvent pas la remplacer et tous les tests de base échouent avec « Connection string 'Tickets' is missing » ou visent la base de dev. D'où la consigne de la lire dans la lambda d'`AddDbContext`.
+- **Chaîne de connexion lue trop tôt** : si elle est lue dans `Program.cs` avant `builder.Build()`, les tests ne peuvent pas la remplacer et tous les tests de base échouent (chaîne absente) ou visent la base de dev. D'où la consigne de la lire dans la lambda d'`AddDbContext`.
 - **`TrustServerCertificate=True` oublié** : erreur de certificat à la première connexion. L'expliquer, c'est un vrai sujet de prod.
 - **Dépôt laissé en singleton** : `EfTicketRepository` dépend du `DbContext` scoped ; en développement l'application refuse de démarrer (captive dependency). Bon moment pour revenir sur l'exercice 2.
 - **`SaveChangesAsync` oublié** : rien n'est écrit, sans erreur.
-- **`dotnet ef` lancé depuis le mauvais dossier** : il faut être dans `src/Tickets.Api` (ou passer `--project`). Le secret doit être défini avant `migrations add`, car l'outil démarre l'application.
+- **`dotnet ef` lancé depuis le mauvais dossier** : il faut être dans `depart/src/Tickets.Api` (ou passer `--project`). Le secret est indispensable pour `database update` ; pour `migrations add`, seulement si le code lève une exception quand la chaîne manque, car l'outil construit l'hôte et crée le `DbContext`.
 - **Migration mal nommée** : le test de l'exercice 7 attend une dernière migration qui se termine par `_AddClosedAt`.
 - **JSON invalide → 500 au lieu de 400** : déjà corrigé dans `depart/` par le `StatusCodeSelector` d'`UseExceptionHandler`. À lui faire lire, c'est une particularité du mode Development.
 - **Le test N+1 compte les commandes SQL** : une projection avec `t.Comments.Count` passe ; un `Include` puis un `Count()` en mémoire passe aussi, mais charge tous les commentaires. En discuter.
