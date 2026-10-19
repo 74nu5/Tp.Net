@@ -39,7 +39,7 @@
         <li>Les tests sont répartis dans <strong>deux projets</strong> : ceux des exercices 1 et 2 sont dans <code>tests/Tickets.Api.Tests</code> (SQL Server requis, comme au TP-02), ceux des exercices 3 à 7 dans <code>tests/Tickets.Web.Tests</code>. Chaque exercice donne sa commande.
           <pre><code class="language-bash">dotnet test --project depart/tests/Tickets.Api.Tests
 dotnet test --project depart/tests/Tickets.Web.Tests</code></pre>
-          Au départ, 9 tests de l'API et 22 tests du front échouent. Les tests du TP-02 restent dans le projet de l'API et doivent rester verts : ils appellent l'API en administrateur. Côté front, les tests du TP-03 sont remplacés par ceux de ce TP : vérifiez à la main que les pages du TP-03 marchent toujours.</li>
+          Au départ, 9 tests de l'API et 22 tests du front échouent. Les tests du TP-02 restent dans le projet de l'API et doivent rester verts : ils appellent l'API en administrateur. Côté front, les 25 tests du TP-03 sont toujours là, dans <code>tests/Tickets.Web.Tests/Tp03/</code> : ils passent au départ et doivent rester verts, pour vérifier que vos changements ne cassent pas les pages d'hier.</li>
       </ol>
       <p><strong>Vocabulaire</strong> : l'<em>authentification</em> établit qui est l'utilisateur ; l'<em>autorisation</em> décide ce qu'il a le droit de faire. En .NET, un utilisateur est un <code>ClaimsPrincipal</code> : un ensemble de <em>claims</em> (nom, rôles, e-mail…) émis par un <em>schéma</em> d'authentification (jeton JWT, cookie…).</p>
     </div>

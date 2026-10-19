@@ -4,7 +4,7 @@
 
 - L'API du TP-02 doit démarrer sur son poste : secret `ConnectionStrings:Tickets`, base `TicketsDev` migrée.
 - Vérifier que `dotnet user-jwts` fonctionne (outil livré avec le SDK) : `dotnet user-jwts create --project tp-04-blazor-auth-etat/solution/src/Tickets.Api` (sur `solution/`, pour ne pas modifier `depart/`). La première exécution écrit la clé de signature dans les user-secrets de l'API ; elle ajoute aussi la section `Authentication:Schemes:Bearer` à `appsettings.Development.json`, absente de `depart/` : l'alternant la voit apparaître à l'exercice 1.
-- Les tests de l'API (exercices 1 et 2) ont besoin de SQL Server, comme au TP-02 ; ceux du front (exercices 3 à 7) n'ont besoin de rien : `dotnet test --project tp-04-blazor-auth-etat/solution/tests/Tickets.Web.Tests` donne 29 tests verts en quelques secondes. Toute la solution : 77 tests.
+- Les tests de l'API (exercices 1 et 2) ont besoin de SQL Server, comme au TP-02 ; ceux du front (exercices 3 à 7) n'ont besoin de rien : `dotnet test --project tp-04-blazor-auth-etat/solution/tests/Tickets.Web.Tests` donne 54 tests verts en quelques secondes : 29 pour ce TP, et les 25 du TP-03 dans `Tp03/`, gardés comme tests de non-régression (ils passent au départ et doivent rester verts). Toute la solution : 102 tests.
 - Un client HTTP sous la main (fichier `.http` de l'IDE, curl ou Scalar) pour l'exercice 2.
 - Si nos applis utilisent un fournisseur d'identité (Entra ID, Keycloak…), préparer 5 minutes pour montrer où il se branche : le cookie et le jeton du TP sont remplacés par OpenID Connect, le reste (`AuthorizeView`, `[Authorize]`, policies) ne change pas.
 
